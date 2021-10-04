@@ -24,3 +24,6 @@ test/tmp/*
 doc/html
 contrib/vms/.vagrant
 /.vscode
+
+# SSE
+_rez_build
