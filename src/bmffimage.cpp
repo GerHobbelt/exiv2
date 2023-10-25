@@ -239,9 +239,10 @@ uint64_t BmffImage::boxHandler(std::ostream& out /* = std::cout*/, Exiv2::PrintS
   }
   visits_.insert(address);
 
-  bool bTrace = option == kpsBasic || option == kpsRecursive;
 #ifdef EXIV2_DEBUG_MESSAGES
-  bTrace = true;
+  bool bTrace = true;
+#else
+  bool bTrace = option == kpsBasic || option == kpsRecursive;
 #endif
 
   // 8-byte buffer for parsing the box length and type.
@@ -765,7 +766,7 @@ void BmffImage::writeMetadata() {
 Image::UniquePtr newBmffInstance(BasicIo::UniquePtr io, bool create) {
   auto image = std::make_unique<BmffImage>(std::move(io), create);
   if (!image->good()) {
-    image.reset();
+    return nullptr;
   }
   return image;
 }
