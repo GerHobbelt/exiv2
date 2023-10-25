@@ -39,7 +39,6 @@ add_library( exiv2lib_int OBJECT
 )
 
 set(PUBLIC_HEADERS
-    ../include/exiv2/asfvideo.hpp
     ../include/exiv2/basicio.hpp
     ../include/exiv2/bmffimage.hpp
     ../include/exiv2/bmpimage.hpp
@@ -58,11 +57,9 @@ set(PUBLIC_HEADERS
     ../include/exiv2/http.hpp
     ../include/exiv2/image.hpp
     ../include/exiv2/image_types.hpp
-    ../include/exiv2/ini.hpp
     ../include/exiv2/iptc.hpp
     ../include/exiv2/jp2image.hpp
     ../include/exiv2/jpgimage.hpp
-    ../include/exiv2/matroskavideo.hpp
     ../include/exiv2/metadatum.hpp
     ../include/exiv2/mrwimage.hpp
     ../include/exiv2/orfimage.hpp
@@ -72,7 +69,6 @@ set(PUBLIC_HEADERS
     ../include/exiv2/properties.hpp
     ../include/exiv2/psdimage.hpp
     ../include/exiv2/rafimage.hpp
-    ../include/exiv2/riffvideo.hpp
     ../include/exiv2/rw2image.hpp
     ../include/exiv2/slice.hpp
     ../include/exiv2/tags.hpp
@@ -84,7 +80,6 @@ set(PUBLIC_HEADERS
     ../include/exiv2/webpimage.hpp
     ../include/exiv2/xmp_exiv2.hpp
     ../include/exiv2/xmpsidecar.hpp
-    ../include/exiv2/quicktimevideo.hpp
 )
 
 add_library( exiv2lib
@@ -105,11 +100,9 @@ add_library( exiv2lib
     gifimage.cpp
     http.cpp
     image.cpp
-    ini.cpp
     iptc.cpp
     jp2image.cpp
     jpgimage.cpp
-    matroskavideo.cpp
     metadatum.cpp
     mrwimage.cpp
     orfimage.cpp
@@ -119,7 +112,6 @@ add_library( exiv2lib
     properties.cpp
     psdimage.cpp
     rafimage.cpp
-    riffvideo.cpp
     rw2image.cpp
     tags.cpp
     tgaimage.cpp
@@ -130,7 +122,6 @@ add_library( exiv2lib
     webpimage.cpp
     xmp.cpp
     xmpsidecar.cpp
-    quicktimevideo.cpp
     ${PUBLIC_HEADERS}
     $<TARGET_OBJECTS:exiv2lib_int>
 )
@@ -150,6 +141,19 @@ if( EXIV2_ENABLE_PNG )
     target_sources(exiv2lib PRIVATE pngimage.cpp ../include/exiv2/pngimage.hpp)
 endif()
 
+if( EXV_ENABLE_VIDEO )
+    set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ../include/exiv2/asfvideo.hpp)
+    target_sources(exiv2lib PRIVATE asfvideo.cpp ../include/exiv2/asfvideo.hpp)
+
+    set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ../include/exiv2/matroskavideo.hpp)
+    target_sources(exiv2lib PRIVATE matroskavideo.cpp ../include/exiv2/matroskavideo.hpp)
+
+    set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ../include/exiv2/quicktimevideo.hpp)
+    target_sources(exiv2lib PRIVATE quicktimevideo.cpp ../include/exiv2/quicktimevideo.hpp)
+
+    set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ../include/exiv2/riffvideo.hpp)
+    target_sources(exiv2lib PRIVATE riffvideo.cpp ../include/exiv2/riffvideo.hpp)
+endif()
 
 # Other library target properties
 # ---------------------------------------------------------
@@ -255,6 +259,11 @@ endif()
 if( ICONV_FOUND )
     target_link_libraries( exiv2lib PRIVATE Iconv::Iconv )
 endif()
+
+target_link_libraries( exiv2lib_int PRIVATE inih::libinih )
+target_link_libraries( exiv2lib_int PRIVATE inih::inireader )
+target_link_libraries( exiv2lib PRIVATE inih::libinih )
+target_link_libraries( exiv2lib PRIVATE inih::inireader )
 
 write_basic_package_version_file(exiv2ConfigVersion.cmake COMPATIBILITY ExactVersion)
 

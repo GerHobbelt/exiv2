@@ -123,10 +123,10 @@ static std::vector<std::string> getLoadedLibraries() {
   // enumerate loaded libraries and determine path to executable
   HMODULE handles[200];
   DWORD cbNeeded;
-  if (EnumProcessModules(GetCurrentProcess(), handles, DWORD(std::size(handles)), &cbNeeded)) {
+  if (EnumProcessModules(GetCurrentProcess(), handles, static_cast<DWORD>(std::size(handles)), &cbNeeded)) {
     char szFilename[_MAX_PATH];
     for (DWORD h = 0; h < cbNeeded / sizeof(handles[0]); h++) {
-      GetModuleFileNameA(handles[h], szFilename, DWORD(std::size(szFilename)));
+      GetModuleFileNameA(handles[h], szFilename, static_cast<DWORD>(std::size(szFilename)));
       std::string path(szFilename);
       pushPath(path, libs, paths);
     }
@@ -309,6 +309,7 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
   int enable_bmff = 0;
   int enable_webready = 0;
   int enable_nls = 0;
+  int enable_video = 0;
   int use_curl = 0;
 
 #ifdef EXV_HAVE_INTTYPES_H
@@ -421,6 +422,10 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
   enable_nls = 1;
 #endif
 
+#ifdef EXV_ENABLE_VIDEO
+  enable_video = 1;
+#endif
+
 #ifdef EXV_USE_CURL
   use_curl = 1;
 #endif
@@ -487,6 +492,7 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
   output(os, keys, "enable_bmff", enable_bmff);
   output(os, keys, "enable_webready", enable_webready);
   output(os, keys, "enable_nls", enable_nls);
+  output(os, keys, "enable_video", enable_video);
   output(os, keys, "use_curl", use_curl);
 
   output(os, keys, "config_path", Exiv2::Internal::getExiv2ConfigPath());
