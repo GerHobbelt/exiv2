@@ -14,6 +14,7 @@
 #ifdef EXV_ENABLE_BMFF
 #include "bmffimage.hpp"
 #endif  // EXV_ENABLE_BMFF
+#include "asfvideo.hpp"
 #include "cr2image.hpp"
 #include "crwimage.hpp"
 #include "epsimage.hpp"
@@ -25,12 +26,14 @@
 #include "bmpimage.hpp"
 #include "gifimage.hpp"
 #include "jp2image.hpp"
+#include "matroskavideo.hpp"
 #include "nikonmn_int.hpp"
 #include "orfimage.hpp"
 #include "pgfimage.hpp"
 #include "psdimage.hpp"
 #include "quicktimevideo.hpp"
 #include "rafimage.hpp"
+#include "riffvideo.hpp"
 #include "rw2image.hpp"
 #include "tags_int.hpp"
 #include "tgaimage.hpp"
@@ -100,6 +103,10 @@ constexpr auto registry = std::array{
     // needs to be before bmff because some ftyp files are handled as qt and
     // the rest should fall through to bmff
     Registry{ImageType::qtime, newQTimeInstance, isQTimeType, amRead, amNone, amRead, amNone},
+    Registry{ImageType::asf, newAsfInstance, isAsfType, amRead, amNone, amRead, amNone},
+    Registry{ImageType::riff, newRiffInstance, isRiffType, amRead, amNone, amRead, amNone},
+    Registry{ImageType::mkv, newMkvInstance, isMkvType, amRead, amNone, amRead, amNone},
+
 #ifdef EXV_ENABLE_BMFF
     Registry{ImageType::bmff, newBmffInstance, isBmffType, amRead, amRead, amRead, amNone},
 #endif  // EXV_ENABLE_BMFF

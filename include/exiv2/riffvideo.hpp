@@ -14,11 +14,11 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
+ * asize_t with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, 5th Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef QUICKTIMEVIDEO_HPP
-#define QUICKTIMEVIDEO_HPP
+#ifndef RIFFVIDEO_HPP
+#define RIFFVIDEO_HPP
 
 // *****************************************************************************
 #include "exiv2lib_export.h"
@@ -35,14 +35,14 @@ namespace Exiv2 {
 // class definitions
 
 /*!
-  @brief Class to access QuickTime video files.
+  @brief Class to access RIFF video files.
  */
-class QuickTimeVideo : public Image {
+class EXIV2API RiffVideo : public Image {
  public:
   //! @name Creators
   //@{
   /*!
-    @brief Constructor for a QuickTime video. Since the constructor
+    @brief Constructor for a Riff video. Since the constructor
         can not return a result, callers should check the good() method
         after object construction to determine success or failure.
     @param io An auto-pointer that owns a BasicIo instance used for
@@ -52,26 +52,26 @@ class QuickTimeVideo : public Image {
         instance after it is passed to this method. Use the Image::io()
         method to get a temporary reference.
    */
-  QuickTimeVideo(BasicIo::UniquePtr io);
-  //@}
+  explicit RiffVideo(BasicIo::UniquePtr io);
 
-  //! @name NOT Implemented
-  //@{
   //! Copy constructor
-  QuickTimeVideo(const QuickTimeVideo&) = delete;
+  RiffVideo(const RiffVideo& rhs) = delete;
   //! Assignment operator
-  QuickTimeVideo& operator=(const QuickTimeVideo&) = delete;
+  RiffVideo& operator=(const RiffVideo& rhs) = delete;
+
   //@}
 
   //! @name Manipulators
   //@{
+  void printStructure(std::ostream& out, PrintStructureOption option, size_t depth) override;
   void readMetadata() override;
   void writeMetadata() override;
   //@}
 
   //! @name Accessors
   //@{
-  std::string mimeType() const override;
+  [[nodiscard]] std::string mimeType() const override;
+  [[nodiscard]] const char* printAudioEncoding(uint64_t i);
   //@}
 
  protected:
@@ -79,7 +79,7 @@ class QuickTimeVideo : public Image {
     @brief Check for a valid tag and decode the block at the current IO
     position. Calls tagDecoder() or skips to next tag, if required.
    */
-  void decodeBlock(std::string const& parent_box = "");
+  void decodeBlock();
   /*!
     @brief Interpret tag information, and call the respective function
         to save it in the respective XMP container. Decodes a Tag
@@ -89,134 +89,103 @@ class QuickTimeVideo : public Image {
     @param size Size of the data block used to store Tag Information.
    */
   void tagDecoder(Exiv2::DataBuf& buf, size_t size);
-
- private:
   /*!
-    @brief Interpret file type of the video, and save it
+    @brief Interpret Junk tag information, and save it
         in the respective XMP container.
     @param size Size of the data block used to store Tag Information.
    */
-  void fileTypeDecoder(size_t size);
+  void junkHandler(size_t size);
   /*!
-    @brief Interpret Media Header Tag, and save it
+    @brief Interpret Stream tag information, and save it
         in the respective XMP container.
     @param size Size of the data block used to store Tag Information.
    */
-  void mediaHeaderDecoder(size_t size);
+  void streamHandler(size_t size);
   /*!
-    @brief Interpret Video Header Tag, and save it
+    @brief Interpret Stream Format tag information, and save it
         in the respective XMP container.
     @param size Size of the data block used to store Tag Information.
    */
-  void videoHeaderDecoder(size_t size);
+  void streamFormatHandler(size_t size);
   /*!
-    @brief Interpret Movie Header Tag, and save it
+    @brief Interpret Riff Header tag information, and save it
         in the respective XMP container.
     @param size Size of the data block used to store Tag Information.
    */
-  void movieHeaderDecoder(size_t size);
+  void aviHeaderTagsHandler(size_t size);
   /*!
-    @brief Interpret Track Header Tag, and save it
+    @brief Interpret Riff List tag information, and save it
         in the respective XMP container.
     @param size Size of the data block used to store Tag Information.
    */
-  void trackHeaderDecoder(size_t size);
+  void listHandler(size_t size);
   /*!
-    @brief Interpret Handler Tag, and save it
+    @brief Interpret Riff Stream Data tag information, and save it
         in the respective XMP container.
     @param size Size of the data block used to store Tag Information.
    */
-  void handlerDecoder(size_t size);
+  void streamDataTagHandler(size_t size);
   /*!
-    @brief Interpret Tag which contain other sub-tags,
-        and save it in the respective XMP container.
-   */
-  void multipleEntriesDecoder();
-  /*!
-    @brief Interpret Sample Description Tag, and save it
+    @brief Interpret INFO tag information, and save it
         in the respective XMP container.
+   */
+  void infoTagsHandler();
+  /*!
+    @brief Interpret Nikon Tags related to Video information, and
+        save it in the respective XMP container.
+   */
+  void nikonTagsHandler();
+  /*!
+    @brief Interpret OpenDML tag information, and save it
+        in the respective XMP container.
+   */
+  void odmlTagsHandler();
+  //! @brief Skips Particular Blocks of Metadata List.
+  void skipListData();
+  /*!
+    @brief Interprets DateTimeOriginal tag or stream name tag
+        information, and save it in the respective XMP container.
     @param size Size of the data block used to store Tag Information.
+    @param i parameter used to overload function
    */
-  void sampleDesc(size_t size);
+  void dateTimeOriginal(size_t size, int i = 0);
   /*!
-    @brief Interpret Image Description Tag, and save it
-        in the respective XMP container.
+    @brief Calculates Sample Rate of a particular stream.
+    @param buf Data buffer with the dividend.
+    @param divisor The Divisor required to calculate sample rate.
+    @return Return the sample rate of the stream.
    */
-  void imageDescDecoder();
-  /*!
-    @brief Interpret User Data Tag, and save it
-        in the respective XMP container.
-    @param size Size of the data block used to store Tag Information.
-   */
-  void userDataDecoder(size_t size);
-  /*!
-    @brief Interpret Preview Tag, and save it
-        in the respective XMP container.
-    @param size Size of the data block used to store Tag Information.
-   */
-  void previewTagDecoder(size_t size);
-  /*!
-    @brief Interpret Meta Keys Tags, and save it
-        in the respective XMP container.
-    @param size Size of the data block used to store Tag Information.
-   */
-  void keysTagDecoder(size_t size);
-  /*!
-    @brief Interpret Track Aperture Tags, and save it
-        in the respective XMP container.
-    @param size Size of the data block used to store Tag Information.
-   */
-  void trackApertureTagDecoder(size_t size);
-  /*!
-    @brief Interpret Nikon Tag, and save it
-        in the respective XMP container.
-    @param size Size of the data block used to store Tag Information.
-   */
-  void NikonTagsDecoder(size_t size);
-  /*!
-    @brief Interpret Tags from Different Camera make, and save it
-        in the respective XMP container.
-    @param size Size of the data block used to store Tag Information.
-   */
-  void CameraTagsDecoder(size_t size);
-  /*!
-    @brief Interpret Audio Description Tag, and save it
-        in the respective XMP container.
-   */
-  void audioDescDecoder();
-  /*!
-    @brief Helps to calculate Frame Rate from timeToSample chunk,
-        and save it in the respective XMP container.
-   */
-  void timeToSampleDecoder();
-  /*!
-    @brief Recognizes which stream is currently under processing,
-        and save its information in currentStream_ .
-   */
-  void setMediaStream();
-  /*!
-    @brief Used to discard a tag along with its data. The Tag will
-        be skipped and not decoded.
-    @param size Size of the data block that is to skipped.
-   */
-  void discard(size_t size);
+  [[nodiscard]] double returnSampleRate(Exiv2::DataBuf& buf, size_t divisor = 1);
   /*!
     @brief Calculates Aspect Ratio of a video, and stores it in the
         respective XMP container.
+    @param width Width of the video.
+    @param height Height of the video.
    */
-  void aspectRatio();
+  void fillAspectRatio(size_t width = 1, size_t height = 1);
+  /*!
+    @brief Calculates Duration of a video, and stores it in the
+        respective XMP container.
+    @param frame_rate Frame rate of the video.
+    @param frame_count Total number of frames present in the video.
+   */
+  void fillDuration(double frame_rate, size_t frame_count);
+
+  [[nodiscard]] bool equalsRiffTag(Exiv2::DataBuf& buf, const char* str);
+
+  void copyTagValue(DataBuf& buf_dest, DataBuf& buf_src, size_t index = RIFF_TAG_SIZE);
 
  private:
-  //! Variable which stores Time Scale unit, used to calculate time.
-  uint64_t timeScale_ = 0;
-  //! Variable which stores current stream being processsed.
-  int currentStream_ = 0;
+  static constexpr size_t RIFF_TAG_SIZE = 0x4;
+  static constexpr auto RIFF_CHUNK_HEADER_ICCP = "ICCP";
+  static constexpr auto RIFF_CHUNK_HEADER_EXIF = "EXIF";
+  static constexpr auto RIFF_CHUNK_HEADER_XMP = "XMP ";
   //! Variable to check the end of metadata traversing.
-  bool continueTraversing_ = false;
-  //! Variable to store height and width of a video frame.
-  uint64_t height_ = 0, width_ = 0;
+  bool continueTraversing_;
+  //! Variable which stores current stream being processsed.
+  int streamType_;
 
-};  // QuickTimeVideo End
+};  // Class RiffVideo
 
 // *****************************************************************************
 // template, inline and free functions
@@ -224,15 +193,15 @@ class QuickTimeVideo : public Image {
 // These could be static private functions on Image subclasses but then
 // ImageFactory needs to be made a friend.
 /*!
-  @brief Create a new QuicktimeVideo instance and return an auto-pointer to it.
+  @brief Create a new RiffVideo instance and return an auto-pointer to it.
       Caller owns the returned object and the auto-pointer ensures that
       it will be deleted.
  */
-Image::UniquePtr newQTimeInstance(BasicIo::UniquePtr io, bool create);
+EXIV2API Image::UniquePtr newRiffInstance(BasicIo::UniquePtr io, bool create);
 
-//! Check if the file iIo is a Quick Time Video.
-bool isQTimeType(BasicIo& iIo, bool advance);
+//! Check if the file iIo is a Riff Video.
+EXIV2API bool isRiffType(BasicIo& iIo, bool advance);
 
 }  // namespace Exiv2
 
-#endif  // QUICKTIMEVIDEO_HPP
+#endif  // RIFFVIDEO_HPP

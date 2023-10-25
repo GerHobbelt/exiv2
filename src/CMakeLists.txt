@@ -39,6 +39,7 @@ add_library( exiv2lib_int OBJECT
 )
 
 set(PUBLIC_HEADERS
+    ../include/exiv2/asfvideo.hpp
     ../include/exiv2/basicio.hpp
     ../include/exiv2/bmffimage.hpp
     ../include/exiv2/bmpimage.hpp
@@ -61,6 +62,7 @@ set(PUBLIC_HEADERS
     ../include/exiv2/iptc.hpp
     ../include/exiv2/jp2image.hpp
     ../include/exiv2/jpgimage.hpp
+    ../include/exiv2/matroskavideo.hpp
     ../include/exiv2/metadatum.hpp
     ../include/exiv2/mrwimage.hpp
     ../include/exiv2/orfimage.hpp
@@ -70,6 +72,7 @@ set(PUBLIC_HEADERS
     ../include/exiv2/properties.hpp
     ../include/exiv2/psdimage.hpp
     ../include/exiv2/rafimage.hpp
+    ../include/exiv2/riffvideo.hpp
     ../include/exiv2/rw2image.hpp
     ../include/exiv2/slice.hpp
     ../include/exiv2/tags.hpp
@@ -85,6 +88,7 @@ set(PUBLIC_HEADERS
 )
 
 add_library( exiv2lib
+    asfvideo.cpp
     basicio.cpp
     bmffimage.cpp
     bmpimage.cpp
@@ -105,6 +109,7 @@ add_library( exiv2lib
     iptc.cpp
     jp2image.cpp
     jpgimage.cpp
+    matroskavideo.cpp
     metadatum.cpp
     mrwimage.cpp
     orfimage.cpp
@@ -114,6 +119,7 @@ add_library( exiv2lib
     properties.cpp
     psdimage.cpp
     rafimage.cpp
+    riffvideo.cpp
     rw2image.cpp
     tags.cpp
     tgaimage.cpp

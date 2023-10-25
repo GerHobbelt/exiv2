@@ -253,12 +253,12 @@ ExifData::const_iterator lensName(const ExifData& ed) {
                                "Exif.Photo.LensSpecification",
                                "Exif.Nikon3.Lens"};
 
-  for (size_t i = 0; i < std::size(keys); ++i) {
-    Exiv2::ExifData::const_iterator pos = ed.findKey(ExifKey(keys[i]));
+  for (auto& key : keys) {
+    auto pos = ed.findKey(ExifKey(key));
     if (pos != ed.end()) {
       // Exif.NikonLd4.LensID and Exif.NikonLd4.LensIDNumber are usually together included,
       // one of them has value 0 (which means undefined), so skip tag with value 0
-      if (strncmp(keys[i], "Exif.NikonLd4", 13) == 0) {
+      if (strncmp(key, "Exif.NikonLd4", 13) == 0) {
         if (pos->getValue()->toInt64(0) > 0)
           return pos;
       } else
@@ -380,8 +380,8 @@ ExifData::const_iterator subjectDistance(const ExifData& ed) {
       "Exif.Photo.SubjectDistance",      "Exif.Image.SubjectDistance",      "Exif.CanonSi.SubjectDistance",
       "Exif.CanonFi.FocusDistanceUpper", "Exif.CanonFi.FocusDistanceLower", "Exif.MinoltaCsNew.FocusDistance",
       "Exif.Nikon1.FocusDistance",       "Exif.Nikon3.FocusDistance",       "Exif.NikonLd2.FocusDistance",
-      "Exif.NikonLd3.FocusDistance",     "Exif.Olympus.FocusDistance",      "Exif.OlympusFi.FocusDistance",
-      "Exif.Casio.ObjectDistance",       "Exif.Casio2.ObjectDistance"};
+      "Exif.NikonLd3.FocusDistance",     "Exif.NikonLd4.FocusDistance",     "Exif.Olympus.FocusDistance",
+      "Exif.OlympusFi.FocusDistance",    "Exif.Casio.ObjectDistance",       "Exif.Casio2.ObjectDistance"};
   return findMetadatum(ed, keys, std::size(keys));
 }
 

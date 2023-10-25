@@ -1034,8 +1034,8 @@ std::ostream& SonyMakerNote::printWBShiftABGMPrecise(std::ostream& os, const Val
   }
   std::ios::fmtflags f(os.flags());
 
-  const auto temp0 = static_cast<double>(value.toInt64(0)) / double(1000.0);
-  const auto temp1 = static_cast<double>(value.toInt64(1)) / double(1000.0);
+  const auto temp0 = static_cast<double>(value.toInt64(0)) / (1000.0);
+  const auto temp1 = static_cast<double>(value.toInt64(1)) / (1000.0);
 
   os << "A/B: ";
   if (temp0 == 0) {
@@ -1067,7 +1067,7 @@ std::ostream& SonyMakerNote::printExposureStandardAdjustment(std::ostream& os, c
   std::ios::fmtflags f(os.flags());
 
   const auto [r, s] = value.toRational();
-  os << std::fixed << std::setprecision(1) << (double(r) / double(s));
+  os << std::fixed << std::setprecision(1) << (static_cast<double>(r) / static_cast<double>(s));
   os.flags(f);
 
   return os;
@@ -1188,9 +1188,7 @@ static void findLensSpecFlags(const Value& value, std::string& flagsStart, std::
   for (const auto& i : lSFArray) {
     temp = i.mask & joinedV0V7;
     if (temp) {  // Check if a flag matches in the current LensSpecFlags
-      const auto it =
-          std::find_if(i.flags.begin(), i.flags.end(), [temp](const TagDetails& td) { return (temp == td.val_); });
-
+      const auto it = std::find(i.flags.begin(), i.flags.end(), temp);
       if (it == i.flags.end()) {
         // Should never get in here. LensSpecFlags.mask should contain all the
         // bits in all the LensSpecFlags.flags.val_ entries
@@ -2083,7 +2081,7 @@ std::ostream& SonyMakerNote::printSonyMisc3cShotNumberSincePowerUp(std::ostream&
       "DSC-RX100M3", "DSC-RX100M4", "DSC-RX100M5", "DSC-WX220",  "DSC-WX350", "DSC-WX500",
   };
 
-  if (std::any_of(models.begin(), models.end(), [&model](auto& m) { return (model == m); })) {
+  if (std::find(models.begin(), models.end(), model) != models.end()) {
     return os << value.toInt64();
   }
   return os << N_("n/a");
@@ -2110,7 +2108,7 @@ std::ostream& SonyMakerNote::printSonyMisc3cQuality2(std::ostream& os, const Val
   // https://github.com/exiftool/exiftool/blob/7368629751669ba170511419b3d1e05bf0076d0e/lib/Image/ExifTool/Sony.pm#L8219
   constexpr std::array models{"ILCE-1", "ILCE-7M4", "ILCE-7RM5", "ILCE-7SM3", "ILME-FX3"};
 
-  if (std::any_of(models.begin(), models.end(), [&model](auto& m) { return (model == m); })) {
+  if (std::find(models.begin(), models.end(), model) != models.end()) {
     EXV_PRINT_TAG(sonyMisc3cQuality2a)(os, val, metadata);
     return os;
   }
@@ -2133,7 +2131,7 @@ std::ostream& SonyMakerNote::printSonyMisc3cSonyImageHeight(std::ostream& os, co
   // https://github.com/exiftool/exiftool/blob/7368629751669ba170511419b3d1e05bf0076d0e/lib/Image/ExifTool/Sony.pm#L8239
   constexpr std::array models{"ILCE-1", "ILCE-7M4", "ILCE-7RM5", "ILCE-7SM3", "ILME-FX3"};
 
-  if (std::any_of(models.begin(), models.end(), [&model](auto& m) { return (model == m); })) {
+  if (std::find(models.begin(), models.end(), model) != models.end()) {
     return os << N_("n/a");
   }
   const auto val = value.toInt64();
@@ -2156,7 +2154,7 @@ std::ostream& SonyMakerNote::printSonyMisc3cModelReleaseYear(std::ostream& os, c
   // https://github.com/exiftool/exiftool/blob/7368629751669ba170511419b3d1e05bf0076d0e/lib/Image/ExifTool/Sony.pm#L8245
   constexpr std::array models{"ILCE-1", "ILCE-7M4", "ILCE-7RM5", "ILCE-7SM3", "ILME-FX3"};
 
-  if (std::any_of(models.begin(), models.end(), [&model](auto& m) { return (model == m); })) {
+  if (std::find(models.begin(), models.end(), model) != models.end()) {
     return os << N_("n/a");
   }
 
@@ -2213,7 +2211,7 @@ constexpr TagInfo SonyMakerNote::tagInfo2010e_[] = {
      printValue},
     {4444, "ReleaseMode3", N_("ReleaseMode3"), N_("ReleaseMode3"), IfdId::sony2010eId, SectionId::makerTags,
      unsignedByte, 1, printValue},
-    {4448, "ReleaseMode2", N_("ReleaseMode2"), N_("ReleaseMode2"), IfdId::sony2010eId, SectionId::makerTags,
+    {4448, "ReleaseMode4", N_("ReleaseMode4"), N_("ReleaseMode4"), IfdId::sony2010eId, SectionId::makerTags,
      unsignedByte, 1, printValue},
     {4456, "SelfTimer", N_("SelfTimer"), N_("SelfTimer"), IfdId::sony2010eId, SectionId::makerTags, unsignedByte, 1,
      printValue},
@@ -2223,7 +2221,7 @@ constexpr TagInfo SonyMakerNote::tagInfo2010e_[] = {
      SectionId::makerTags, unsignedShort, 1, printValue},
     {4468, "BrightnessValue", N_("BrightnessValue"), N_("BrightnessValue"), IfdId::sony2010eId, SectionId::makerTags,
      unsignedShort, 1, printValue},
-    {4472, "DynamicRangeOptimizer", N_("DynamicRangeOptimizer"), N_("DynamicRangeOptimizer"), IfdId::sony2010eId,
+    {4472, "DynamicRangeOptimizer2", N_("DynamicRangeOptimizer 2"), N_("DynamicRangeOptimizer 2"), IfdId::sony2010eId,
      SectionId::makerTags, unsignedByte, 1, printValue},
     {4476, "HDRSetting", N_("HDRSetting"), N_("HDRSetting"), IfdId::sony2010eId, SectionId::makerTags, unsignedByte, 1,
      printValue},
