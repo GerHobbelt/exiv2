@@ -509,7 +509,21 @@ int FileIo::open(const std::string& mode) {
   close();
   p_->openMode_ = mode;
   p_->opMode_ = Impl::opSeek;
+
+#ifndef _WIN32
   p_->fp_ = ::fopen(path().c_str(), mode.c_str());
+#else
+  const auto pathSize = MultiByteToWideChar(CP_UTF8, 0, path().c_str(), path().size(), nullptr, 0);
+  std::wstring pathW(pathSize, wchar_t(0));
+  MultiByteToWideChar(CP_UTF8, 0, path().c_str(), path().size(), pathW.data(), pathW.size());
+
+  const auto modeSize = MultiByteToWideChar(CP_UTF8, 0, mode.c_str(), mode.size(), nullptr, 0);
+  std::wstring modeW(modeSize, wchar_t(0));
+  MultiByteToWideChar(CP_UTF8, 0, mode.c_str(), mode.size(), modeW.data(), modeW.size());
+
+  p_->fp_ = ::_wfopen(pathW.c_str(), modeW.c_str());
+#endif
+
   if (!p_->fp_)
     return 1;
   return 0;

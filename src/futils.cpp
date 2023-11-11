@@ -226,7 +226,7 @@ bool fileExists(const std::string& path) {
   if (fileProtocol(path) != pFile) {
     return true;
   }
-  return fs::exists(path);
+  return fs::exists(fs::u8path(path));
 }
 
 std::string strError() {
