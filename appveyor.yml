@@ -15,6 +15,8 @@ environment:
 shallow_clone: true
 
 install:
+    - ps: $env:EXIV2_VERSION=$(sed -n 's@^ *VERSION \+\(.*\)@\1@p' CMakeLists.txt)
+    - echo %EXIV2_VERSION%
     - set PATH=%PYTHON%;%PATH%;%PYTHON%/Scripts/
     - echo %APPVEYOR_BUILD_FOLDER%
     - if not exist deps mkdir deps
@@ -46,11 +48,14 @@ build_script:
     - cmd: md build
     - cmd: cd build
     - cmd: if "%platform%"=="x64" (set VC_ARCH=x86_amd64) else (set VC_ARCH=x86)
+    - cmd: if "%platform%"=="x64" (set EXIV2_PLATFORM=2017msvc64) else (set EXIV2_PLATFORM=2017msvc32)
     - cmd: call "%VCVARS%" %VC_ARCH%
     - cmd: conan install .. --build missing -o webready=True
-    - cmd: cmake -GNinja -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DEXIV2_ENABLE_NLS=OFF -DEXIV2_ENABLE_PNG=ON -DEXIV2_ENABLE_WEBREADY=ON -DEXIV2_ENABLE_CURL=ON -DEXIV2_BUILD_UNIT_TESTS=ON -DEXIV2_BUILD_SAMPLES=ON -DEXIV2_ENABLE_BMFF=ON -DCMAKE_INSTALL_PREFIX=install ..
+    - cmd: cmake -GNinja -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DEXIV2_ENABLE_NLS=OFF -DEXIV2_ENABLE_PNG=ON -DEXIV2_ENABLE_WEBREADY=ON -DEXIV2_ENABLE_CURL=ON -DEXIV2_BUILD_UNIT_TESTS=ON -DEXIV2_BUILD_SAMPLES=ON -DEXIV2_ENABLE_BMFF=ON -DCMAKE_INSTALL_PREFIX=exiv2-%EXIV2_VERSION%-%EXIV2_PLATFORM% ..
     - cmd: ninja
     - cmd: ninja install
+    - cmd: 7z a exiv2-%EXIV2_VERSION%-%EXIV2_PLATFORM%.zip exiv2-%EXIV2_VERSION%-%EXIV2_PLATFORM%
+    - cmd: appveyor PushArtifact exiv2-%EXIV2_VERSION%-%EXIV2_PLATFORM%.zip
     - cmd: cd bin
     - cmd: unit_tests.exe
     - cmd: cd ../../tests/
