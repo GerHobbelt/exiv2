@@ -375,6 +375,9 @@ std::string getProcessPath() {
     auto path = fs::read_symlink(Internal::stringFormat("/proc/%d/path/a.out", getpid()));
 #elif defined(__unix__)
     auto path = fs::read_symlink("/proc/self/exe");
+#elif defined(__OS2__)
+    auto path = fs::path("unknown");
+    return "unknown";  // needs some better code once
 #endif
     return path.parent_path().string();
   } catch (const fs::filesystem_error&) {

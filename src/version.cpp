@@ -278,6 +278,8 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
           "freebsd";
 #elif defined(__linux__)
           "linux";
+#elif defined(__OS2__)
+      "OS/2";
 #else
           "unknown";
 #endif
