@@ -25,6 +25,13 @@ endif()
 
 target_link_libraries(exiv2 PRIVATE std::filesystem)
 
+if(OS2)
+   set_target_properties(exiv2 PROPERTIES
+      OS2_DEF_VENDOR "$ENV{VENDOR}"
+      OS2_DEF_PATCH "${PROJECT_VERSION_PATCH}"
+      OS2_DEF_VERSION "${PROJECT_VERSION}")
+endif()
+
 if(MSVC OR MINGW)
     # Trick to get properly UTF-8 encoded argv 
     # More info at: https://github.com/huangqinjin/wmain
