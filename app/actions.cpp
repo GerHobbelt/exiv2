@@ -39,7 +39,14 @@
 #include <utime.h>
 #endif
 
-#ifndef _WIN32
+#if defined(__OS2__)
+#include <fcntl.h>
+#include <io.h>
+#define _setmode setmode
+#define _O_BINARY O_BINARY
+#endif
+
+#if !defined(_WIN32) && !defined(__OS2__)
 #define _setmode(a, b) \
   do {                 \
   } while (false)

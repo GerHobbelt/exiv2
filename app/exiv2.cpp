@@ -32,6 +32,11 @@
 #include <unistd.h>
 #endif
 
+#if defined(__OS2__)
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 // *****************************************************************************
 // local declarations
 namespace {
@@ -964,6 +969,9 @@ void Params::getStdin(Exiv2::DataBuf& buf) {
     if (!GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &fdwMode)) {  // failed: stdin has bytes!
 #else
     // http://stackoverflow.com/questions/34479795/make-c-not-wait-for-user-input/34479916#34479916
+#ifdef __OS2__
+    setmode(fileno(stdin), O_BINARY);
+#endif
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(STDIN_FILENO, &readfds);

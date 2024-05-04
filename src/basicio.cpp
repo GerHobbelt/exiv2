@@ -42,6 +42,10 @@ using mode_t = unsigned short;
 #include <windows.h>
 #endif
 
+#ifdef __OS2__
+#include <io.h>
+#endif
+
 #if __has_include(<filesystem>)
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -959,6 +963,11 @@ std::string XPathIo::writeDataToFile(const std::string& orgPath) {
 #ifdef _WIN32
     // convert stdin to binary
     if (_setmode(_fileno(stdin), _O_BINARY) == -1)
+      throw Error(ErrorCode::kerInputDataReadFailed);
+#endif
+#ifdef __OS2__
+    // convert stdin to binary
+    if (setmode(fileno(stdin), O_BINARY) == -1)
       throw Error(ErrorCode::kerInputDataReadFailed);
 #endif
     std::ofstream fs(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
