@@ -12,7 +12,7 @@ bool isEqual(float a, float b) {
   return d < 0.00001;
 }
 
-int main() try {
+int main(void) try {
   Exiv2::XmpParser::initialize();
   ::atexit(Exiv2::XmpParser::terminate);
 #ifdef EXV_ENABLE_BMFF

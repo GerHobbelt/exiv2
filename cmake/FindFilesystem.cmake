@@ -197,7 +197,7 @@ if(CXX_FILESYSTEM_HAVE_FS)
         #include <cstdlib>
         #include <@CXX_FILESYSTEM_HEADER@>
 
-        int main() {
+        int main(void) {
             auto cwd = @CXX_FILESYSTEM_NAMESPACE@::current_path();
             printf("%s", cwd.c_str());
             return EXIT_SUCCESS;

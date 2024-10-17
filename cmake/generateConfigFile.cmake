@@ -28,7 +28,7 @@ check_cxx_symbol_exists(strerror_r  string.h       EXV_HAVE_STRERROR_R )
 
 check_cxx_source_compiles( "
 #include <string.h>
-int main() {
+int main(void) {
     char buff[100];
     const char* c = strerror_r(0,buff,100);
     (void)c;  // ignore unuse-variable
