@@ -56,7 +56,7 @@
 #endif
 #endif
 
-#if defined(ICONV_ACCEPTS_CONST_INPUT) || (defined(__NetBSD__) && !NETBSD_POSIX_ICONV)
+#if defined(ICONV_ACCEPTS_CONST_INPUT) || (defined(__NetBSD__) && !NETBSD_POSIX_ICONV) || defined(BUILD_MONOLITHIC)
 #define EXV_ICONV_CONST const
 #else
 #define EXV_ICONV_CONST
