@@ -35,8 +35,12 @@ class MnHeader;
 
 class TiffVisitor;
 class TiffFinder;
-class TiffDecoder;
-class TiffEncoder;
+
+// warning C5243: 'Exiv2::Internal::DecoderFct': using incomplete class 'Exiv2::Internal::TiffDecoder' can cause potential one definition rule violation due to ABI limitation
+// message : see declaration of 'Exiv2::Internal::TiffDecoder'
+// message : consider using inheritance keywords on the forward declaration of the class to avoid the issue: 'class [__single_inheritance|__multiple_inheritance|__virtual_inheritance] class-name;'
+class __single_inheritance TiffDecoder;
+class __single_inheritance TiffEncoder;
 class TiffReader;
 
 class TiffRwState;
