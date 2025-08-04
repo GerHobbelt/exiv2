@@ -36,6 +36,9 @@ namespace fs = std::filesystem;
 
 #endif
 
+#undef min
+#undef max
+
 // *****************************************************************************
 namespace {
 // Todo: Can be generalized further - get any tag as a string/long/...
