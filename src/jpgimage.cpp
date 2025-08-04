@@ -15,6 +15,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
+
+#undef min
+#undef max
 #else
 #define BYTE char
 #define USHORT uint16_t
