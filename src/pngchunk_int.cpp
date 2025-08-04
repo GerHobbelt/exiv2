@@ -4,7 +4,7 @@
 #include "config.h"
 
 #ifdef EXV_HAVE_LIBZ
-#include <zlib.h>  // To uncompress or compress text chunk
+#include <zlib-ng.h>  // To uncompress or compress text chunk
 
 #include "enforce.hpp"
 #include "error.hpp"
@@ -331,13 +331,13 @@ std::string PngChunk::makeMetadataChunk(std::string_view metadata, MetadataId ty
 }  // PngChunk::makeMetadataChunk
 
 void PngChunk::zlibUncompress(const byte* compressedText, unsigned int compressedTextSize, DataBuf& arr) {
-  uLongf uncompressedLen = compressedTextSize * 2;  // just a starting point
+  size_t uncompressedLen = compressedTextSize * 2;  // just a starting point
   int zlibResult = Z_BUF_ERROR;
   int dos = 0;
 
   while (zlibResult == Z_BUF_ERROR) {
     arr.alloc(uncompressedLen);
-    zlibResult = uncompress(arr.data(), &uncompressedLen, compressedText, compressedTextSize);
+    zlibResult = zng_uncompress(arr.data(), &uncompressedLen, compressedText, compressedTextSize);
     if (zlibResult == Z_OK) {
       arr.resize(uncompressedLen);
     } else if (zlibResult == Z_BUF_ERROR) {
@@ -361,13 +361,13 @@ void PngChunk::zlibUncompress(const byte* compressedText, unsigned int compresse
 }  // PngChunk::zlibUncompress
 
 std::string PngChunk::zlibCompress(std::string_view text) {
-  auto compressedLen = static_cast<uLongf>(text.size() * 2);  // just a starting point
+  auto compressedLen = static_cast<size_t>(text.size() * 2);  // just a starting point
   int zlibResult = Z_BUF_ERROR;
 
   DataBuf arr;
   while (zlibResult == Z_BUF_ERROR) {
     arr.resize(compressedLen);
-    zlibResult = compress2(arr.data(), &compressedLen, reinterpret_cast<const Bytef*>(text.data()),
+    zlibResult = zng_compress2(arr.data(), &compressedLen, reinterpret_cast<const Bytef*>(text.data()),
                            static_cast<uLong>(text.size()), Z_BEST_COMPRESSION);
 
     switch (zlibResult) {
@@ -420,8 +420,8 @@ std::string PngChunk::makeAsciiTxtChunk(std::string_view keyword, std::string_vi
   ul2Data(length, static_cast<uint32_t>(chunkData.size()), bigEndian);
   // Calculate CRC on chunk type and chunk data
   std::string crcData = chunkType + chunkData;
-  uLong tmp = crc32(0L, Z_NULL, 0);
-  tmp = crc32(tmp, reinterpret_cast<const Bytef*>(crcData.data()), static_cast<uInt>(crcData.size()));
+  uLong tmp = zng_crc32(0L, Z_NULL, 0);
+  tmp = zng_crc32(tmp, reinterpret_cast<const Bytef*>(crcData.data()), static_cast<uInt>(crcData.size()));
   byte crc[4];
   ul2Data(crc, tmp, bigEndian);
   // Assemble the chunk
@@ -454,8 +454,8 @@ std::string PngChunk::makeUtf8TxtChunk(std::string_view keyword, std::string_vie
   // Calculate CRC on chunk type and chunk data
   std::string chunkType = "iTXt";
   std::string crcData = chunkType + chunkData;
-  uLong tmp = crc32(0L, Z_NULL, 0);
-  tmp = crc32(tmp, reinterpret_cast<const Bytef*>(crcData.data()), static_cast<uInt>(crcData.size()));
+  uLong tmp = zng_crc32(0L, Z_NULL, 0);
+  tmp = zng_crc32(tmp, reinterpret_cast<const Bytef*>(crcData.data()), static_cast<uInt>(crcData.size()));
   byte crc[4];
   ul2Data(crc, tmp, bigEndian);
   // Assemble the chunk

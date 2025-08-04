@@ -4,7 +4,7 @@
 #include "config.h"
 
 #ifdef EXV_HAVE_LIBZ
-#include <zlib.h>  // To uncompress IccProfiles
+#include <zlib-ng.h>  // To uncompress IccProfiles
 
 #include "basicio.hpp"
 #include "enforce.hpp"
@@ -71,18 +71,18 @@ std::string PngImage::mimeType() const {
 }
 
 static bool zlibToDataBuf(const byte* bytes, uLongf length, DataBuf& result) {
-  uLongf uncompressedLen = length;  // just a starting point
+  size_t uncompressedLen = length;  // just a starting point
   int zlibResult = Z_BUF_ERROR;
 
   while (zlibResult == Z_BUF_ERROR) {
     result.alloc(uncompressedLen);
-    zlibResult = uncompress(result.data(), &uncompressedLen, bytes, length);
+    zlibResult = zng_uncompress(result.data(), &uncompressedLen, bytes, length);
     // if result buffer is large than necessary, redo to fit perfectly.
     if (zlibResult == Z_OK && uncompressedLen < result.size()) {
       result.reset();
 
       result.alloc(uncompressedLen);
-      zlibResult = uncompress(result.data(), &uncompressedLen, bytes, length);
+      zlibResult = zng_uncompress(result.data(), &uncompressedLen, bytes, length);
     }
     if (zlibResult == Z_BUF_ERROR) {
       // the uncompressed buffer needs to be larger
@@ -100,12 +100,12 @@ static bool zlibToDataBuf(const byte* bytes, uLongf length, DataBuf& result) {
 }
 
 static bool zlibToCompressed(const byte* bytes, uLongf length, DataBuf& result) {
-  uLongf compressedLen = length;  // just a starting point
+  size_t compressedLen = length;  // just a starting point
   int zlibResult = Z_BUF_ERROR;
 
   while (zlibResult == Z_BUF_ERROR) {
     result.alloc(compressedLen);
-    zlibResult = compress(result.data(), &compressedLen, bytes, length);
+    zlibResult = zng_compress(result.data(), &compressedLen, bytes, length);
     if (zlibResult == Z_BUF_ERROR) {
       // the compressedArray needs to be larger
       result.reset();
@@ -113,7 +113,7 @@ static bool zlibToCompressed(const byte* bytes, uLongf length, DataBuf& result) 
     } else {
       result.reset();
       result.alloc(compressedLen);
-      zlibResult = compress(result.data(), &compressedLen, bytes, length);
+      zlibResult = zng_compress(result.data(), &compressedLen, bytes, length);
     }
   }
 
@@ -570,9 +570,9 @@ void PngImage::doWriteMetadata(BasicIo& outIo) {
           ul2Data(length, static_cast<uint32_t>(blob.size()), bigEndian);
 
           // calculate CRC
-          uLong tmp = crc32(0L, Z_NULL, 0);
-          tmp = crc32(tmp, typeExif, 4);
-          tmp = crc32(tmp, blob.data(), static_cast<uint32_t>(blob.size()));
+          uLong tmp = zng_crc32(0L, Z_NULL, 0);
+          tmp = zng_crc32(tmp, typeExif, 4);
+          tmp = zng_crc32(tmp, blob.data(), static_cast<uint32_t>(blob.size()));
           byte crc[4];
           ul2Data(crc, tmp, bigEndian);
 
@@ -609,11 +609,11 @@ void PngImage::doWriteMetadata(BasicIo& outIo) {
           ul2Data(length, chunkLength, bigEndian);
 
           // calculate CRC
-          uLong tmp = crc32(0L, Z_NULL, 0);
-          tmp = crc32(tmp, typeICCP, 4);
-          tmp = crc32(tmp, reinterpret_cast<const Bytef*>(profileName_.data()), nameLength);
-          tmp = crc32(tmp, nullComp, 2);
-          tmp = crc32(tmp, compressed.c_data(), static_cast<uint32_t>(compressed.size()));
+          uLong tmp = zng_crc32(0L, Z_NULL, 0);
+          tmp = zng_crc32(tmp, typeICCP, 4);
+          tmp = zng_crc32(tmp, reinterpret_cast<const Bytef*>(profileName_.data()), nameLength);
+          tmp = zng_crc32(tmp, nullComp, 2);
+          tmp = zng_crc32(tmp, compressed.c_data(), static_cast<uint32_t>(compressed.size()));
           byte crc[4];
           ul2Data(crc, tmp, bigEndian);
 
