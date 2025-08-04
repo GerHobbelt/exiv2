@@ -24,6 +24,9 @@
 
 #include <stdio.h>	// For snprintf.
 
+#undef min
+#undef max
+
 #if XMP_WinBuild
 #ifdef _MSC_VER
 	#pragma warning ( disable : 4800 )	// forcing value to bool 'true' or 'false' (performance warning)
