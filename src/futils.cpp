@@ -336,8 +336,8 @@ std::string getProcessPath() {
   HANDLE processHandle = nullptr;
   processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetCurrentProcessId());
   if (processHandle) {
-    TCHAR filename[MAX_PATH];
-    if (GetModuleFileNameEx(processHandle, nullptr, filename, MAX_PATH) != 0) {
+    CHAR filename[MAX_PATH];
+    if (GetModuleFileNameExA(processHandle, nullptr, filename, MAX_PATH) != 0) {
       ret = filename;
     }
     CloseHandle(processHandle);
