@@ -238,7 +238,7 @@ DumpNodeOptions	( XMP_OptionBits	 options,
 	} else {
 	
 		OutProcNChars ( "(0x", 3 );
-		OutProcHexInt ( options );
+		OutProcHexInt ( (unsigned long)options );
 		OutProcNChars ( " :", 2 );
 
 		XMP_OptionBits mask = 0x80000000;
