@@ -13,12 +13,6 @@
 // + standard includes
 #include <memory>
 
-// The way to handle data from stdin or data uri path. If EXV_XPATH_MEMIO = 1,
-// it uses MemIo. Otherwises, it uses FileIo.
-#ifndef EXV_XPATH_MEMIO
-#define EXV_XPATH_MEMIO 0
-#endif
-
 // *****************************************************************************
 // namespace extensions
 namespace Exiv2 {
@@ -42,8 +36,11 @@ class EXIV2API BasicIo {
 
   //! @name Creators
   //@{
+  BasicIo() = default;
   //! Destructor
-  virtual ~BasicIo() = default;
+  virtual ~BasicIo();
+  BasicIo(const BasicIo&) = delete;
+  BasicIo& operator=(const BasicIo&) = delete;
   //@}
 
   //! @name Manipulators
@@ -268,14 +265,9 @@ class EXIV2API IoCloser {
   // DATA
   //! The BasicIo reference
   BasicIo& bio_;
-
-  // Not implemented
-  //! Copy constructor
-  IoCloser(const IoCloser&) = delete;
-  //! Assignment operator
-  IoCloser& operator=(const IoCloser&) = delete;
 };  // class IoCloser
 
+#ifdef EXV_ENABLE_FILESYSTEM
 /*!
   @brief Provides binary file IO by implementing the BasicIo
       interface.
@@ -291,6 +283,9 @@ class EXIV2API FileIo : public BasicIo {
     @param path The full path of a file
    */
   explicit FileIo(const std::string& path);
+#ifdef _WIN32
+  explicit FileIo(const std::wstring& path);
+#endif
 
   //! Destructor. Flushes and closes an open file.
   ~FileIo() override;
@@ -432,6 +427,9 @@ class EXIV2API FileIo : public BasicIo {
     @brief close the file source and set a new path.
    */
   virtual void setPath(const std::string& path);
+#ifdef _WIN32
+  virtual void setPath(const std::wstring& path);
+#endif
 
   //@}
   //! @name Accessors
@@ -467,18 +465,13 @@ class EXIV2API FileIo : public BasicIo {
   void populateFakeData() override;
   //@}
 
-  // NOT IMPLEMENTED
-  //! Copy constructor
-  FileIo(const FileIo&) = delete;
-  //! Assignment operator
-  FileIo& operator=(const FileIo&) = delete;
-
  private:
   // Pimpl idiom
   class Impl;
   std::unique_ptr<Impl> p_;
 
 };  // class FileIo
+#endif
 
 /*!
   @brief Provides binary IO on blocks of memory by implementing the BasicIo
@@ -649,12 +642,6 @@ class EXIV2API MemIo : public BasicIo {
 
   //@}
 
-  // NOT IMPLEMENTED
-  //! Copy constructor
-  MemIo(const MemIo&) = delete;
-  //! Assignment operator
-  MemIo& operator=(const MemIo&) = delete;
-
  private:
   // Pimpl idiom
   class Impl;
@@ -665,28 +652,7 @@ class EXIV2API MemIo : public BasicIo {
 /*!
   @brief Provides binary IO for the data from stdin and data uri path.
  */
-#if EXV_XPATH_MEMIO
-class EXIV2API XPathIo : public MemIo {
- public:
-  //! @name Creators
-  //@{
-  //! Default constructor
-  XPathIo(const std::string& path);
-  //@}
- private:
-  /*!
-      @brief Read data from stdin and write the data to memory.
-      @throw Error if it can't convert stdin to binary.
-   */
-  void ReadStdin();
-  /*!
-      @brief Read the data from data uri path and write the data to memory.
-      @param path The data uri.
-      @throw Error if no base64 data in path.
-   */
-  void ReadDataUri(const std::string& path);
-};  // class XPathIo
-#else
+#if defined(EXV_ENABLE_FILESYSTEM)
 class EXIV2API XPathIo : public FileIo {
  public:
   /*!
@@ -708,9 +674,6 @@ class EXIV2API XPathIo : public FileIo {
   //! Destructor. Releases all managed memory and removes the temp file.
   ~XPathIo() override;
   //@}
-
-  XPathIo(const XPathIo&) = delete;
-  XPathIo& operator=(const XPathIo&) = delete;
 
   //! @name Manipulators
   //@{
@@ -751,9 +714,6 @@ class EXIV2API RemoteIo : public BasicIo {
   RemoteIo();
   ~RemoteIo() override;
   //@}
-
-  RemoteIo(const RemoteIo&) = delete;
-  RemoteIo& operator=(const RemoteIo&) = delete;
 
   //! @name Manipulators
   //@{
@@ -923,13 +883,7 @@ class EXIV2API HttpIo : public RemoteIo {
           on demand from the server, so it avoids copying the complete file.
    */
   explicit HttpIo(const std::string& url, size_t blockSize = 1024);
-
-  ~HttpIo() override = default;
-  // NOT IMPLEMENTED
-  //! Copy constructor
-  HttpIo(const HttpIo&) = delete;
-  //! Assignment operator
-  HttpIo& operator=(const HttpIo&) = delete;
+  ~HttpIo() override;
 
  private:
   // Pimpl idiom
@@ -968,13 +922,6 @@ class EXIV2API CurlIo : public RemoteIo {
           for the protocol. Otherwise, it throws the Error.
    */
   size_t write(BasicIo& src) override;
-
-  ~CurlIo() override = default;
-  // NOT IMPLEMENTED
-  //! Copy constructor
-  CurlIo(const CurlIo&) = delete;
-  //! Assignment operator
-  CurlIo& operator=(const CurlIo&) = delete;
 
  protected:
   // Pimpl idiom

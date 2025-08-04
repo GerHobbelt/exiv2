@@ -63,25 +63,16 @@ class EXIV2API TiffImage : public Image {
 
   //! @name Accessors
   //@{
-  std::string mimeType() const override;
-  uint32_t pixelWidth() const override;
-  uint32_t pixelHeight() const override;
-  //@}
-
-  ~TiffImage() override = default;
-  //! @name NOT Implemented
-  //@{
-  //! Copy constructor
-  TiffImage(const TiffImage&) = delete;
-  //! Assignment operator
-  TiffImage& operator=(const TiffImage&) = delete;
+  [[nodiscard]] std::string mimeType() const override;
+  [[nodiscard]] uint32_t pixelWidth() const override;
+  [[nodiscard]] uint32_t pixelHeight() const override;
   //@}
 
  private:
   //! @name Accessors
   //@{
   //! Return the group name of the group with the primary image.
-  std::string primaryGroup() const;
+  [[nodiscard]] std::string primaryGroup() const;
   //@}
 
   // DATA
@@ -146,8 +137,8 @@ class EXIV2API TiffParser {
 
     @return Write method used.
   */
-  static WriteMethod encode(BasicIo& io, const byte* pData, size_t size, ByteOrder byteOrder, const ExifData& exifData,
-                            const IptcData& iptcData, const XmpData& xmpData);
+  static WriteMethod encode(BasicIo& io, const byte* pData, size_t size, ByteOrder byteOrder, ExifData& exifData,
+                            IptcData& iptcData, XmpData& xmpData);
 
 };  // class TiffParser
 

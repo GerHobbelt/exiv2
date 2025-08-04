@@ -96,10 +96,11 @@ class EXIV2API Iptcdatum : public Metadatum {
    */
   [[nodiscard]] std::string key() const override;
   /*!
-     @brief Return the name of the record (deprecated)
+     @brief Return the name of the record
      @return record name
+     @deprecated This function is deprecated.
    */
-  [[nodiscard]] std::string recordName() const;
+  [[deprecated]] [[nodiscard]] std::string recordName() const;
   /*!
      @brief Return the record id
      @return record id
@@ -177,14 +178,14 @@ class EXIV2API IptcData {
     @return 0 if successful;<BR>
             6 if the dataset already exists and is not repeatable
    */
-  int add(const IptcKey& key, Value* value);
+  int add(const IptcKey& key, const Value* value);
   /*!
     @brief Add a copy of the Iptcdatum to the IPTC metadata. A check
            for non-repeatable datasets is performed.
     @return 0 if successful;<BR>
            6 if the dataset already exists and is not repeatable;<BR>
    */
-  int add(const Iptcdatum& iptcdatum);
+  int add(const Iptcdatum& iptcDatum);
   /*!
     @brief Delete the Iptcdatum at iterator position pos, return the
            position of the next Iptcdatum. Note that iterators into
@@ -244,7 +245,7 @@ class EXIV2API IptcData {
   [[nodiscard]] const_iterator findId(uint16_t dataset, uint16_t record = IptcDataSets::application2) const;
   //! Return true if there is no IPTC metadata
   [[nodiscard]] bool empty() const {
-    return count() == 0;
+    return iptcMetadata_.empty();
   }
 
   //! Get the number of metadata entries

@@ -39,9 +39,6 @@ static constexpr const char* testcases[] = {
 int main(void) {
   Exiv2::XmpParser::initialize();
   ::atexit(Exiv2::XmpParser::terminate);
-#ifdef EXV_ENABLE_BMFF
-  Exiv2::enableBMFF();
-#endif
 
   std::cout << std::setfill(' ');
 
@@ -50,7 +47,7 @@ int main(void) {
   std::cout << std::setw(12) << std::left << "float";
   std::cout << std::setw(12) << std::left << "Rational";
 
-  std::cout << std::endl;
+  std::cout << '\n';
 
   for (auto&& testcase : testcases) {
     try {
@@ -78,7 +75,7 @@ int main(void) {
       else
         std::cout << "nok";
 
-      std::cout << std::endl;
+      std::cout << '\n';
     } catch (Exiv2::Error& e) {
       std::cout << "Caught Exiv2 exception '" << e << "'\n";
       return EXIT_FAILURE;

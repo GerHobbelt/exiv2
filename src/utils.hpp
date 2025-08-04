@@ -6,8 +6,13 @@
 
 namespace Exiv2::Internal {
 
-constexpr bool startsWith(std::string_view s, std::string_view start) {
-  return s.find(start) == 0;
+template <typename T>
+constexpr bool contains(std::string_view s, T c) {
+#ifdef __cpp_lib_string_contains
+  return s.contains(c);
+#else
+  return s.find(c) != std::string_view::npos;
+#endif
 }
 
 /// @brief Returns the uppercase version of \b str

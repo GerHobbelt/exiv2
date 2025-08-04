@@ -23,10 +23,10 @@ using PreviewId = int;
 struct EXIV2API PreviewProperties {
   std::string mimeType_;   //!< Preview image mime type.
   std::string extension_;  //!< Preview image extension.
-  size_t size_;            //!< Preview image size in bytes.
-  size_t width_;           //!< Preview image width in pixels or 0 for unknown width.
-  size_t height_;          //!< Preview image height in pixels or 0 for unknown height.
-  PreviewId id_;           //!< Identifies type of preview image.
+  size_t size_{};          //!< Preview image size in bytes.
+  size_t width_{};         //!< Preview image width in pixels or 0 for unknown width.
+  size_t height_{};        //!< Preview image height in pixels or 0 for unknown height.
+  PreviewId id_{};         //!< Identifies type of preview image.
 };
 
 //! Container type to hold all preview images metadata.
@@ -68,6 +68,7 @@ class EXIV2API PreviewImage {
     @brief Return the size of the preview image in bytes.
    */
   [[nodiscard]] uint32_t size() const;
+#ifdef EXV_ENABLE_FILESYSTEM
   /*!
     @brief Write the thumbnail image to a file.
 
@@ -79,6 +80,7 @@ class EXIV2API PreviewImage {
     @return The number of bytes written.
   */
   [[nodiscard]] size_t writeFile(const std::string& path) const;
+#endif
   /*!
     @brief Return the MIME type of the preview image, usually either
            \c "image/tiff" or \c "image/jpeg".

@@ -5,13 +5,19 @@
 
 // *****************************************************************************
 // included header files
-#include "tags.hpp"
-#include "tags_int.hpp"
 #include "types.hpp"
+#include "value.hpp"
+
+#include "tags_int.hpp"
 
 // *****************************************************************************
 // namespace extensions
-namespace Exiv2::Internal {
+namespace Exiv2 {
+class ExifData;
+struct TagInfo;
+
+namespace Internal {
+struct TagDetails;
 // *****************************************************************************
 // class definitions
 
@@ -55,8 +61,9 @@ class PentaxMakerNote {
   @brief Print function to translate Pentax "combi-values" to a description
          by looking up a reference table.
  */
-template <int N, const TagDetails (&array)[N], int count, int ignoredcount, int ignoredcountmax>
+template <size_t N, const TagDetails (&array)[N], int count, int ignoredcount, int ignoredcountmax>
 std::ostream& printCombiTag(std::ostream& os, const Value& value, const ExifData* metadata) {
+  static_assert(N > 0, "Passed zero length printCombiTag");
   std::ios::fmtflags f(os.flags());
   if ((value.count() != count &&
        (value.count() < (count + ignoredcount) || value.count() > (count + ignoredcountmax))) ||
@@ -70,8 +77,7 @@ std::ostream& printCombiTag(std::ostream& os, const Value& value, const ExifData
     }
     l += (value.toUint32(c) << ((count - c - 1) * 8));
   }
-  const TagDetails* td = find(array, l);
-  if (td) {
+  if (auto td = Exiv2::find(array, l)) {
     os << exvGettext(td->label_);
   } else {
     os << exvGettext("Unknown") << " (0x" << std::setw(2 * count) << std::setfill('0') << std::hex << l << std::dec
@@ -89,6 +95,7 @@ std::ostream& printCombiTag(std::ostream& os, const Value& value, const ExifData
 #define EXV_PRINT_COMBITAG_MULTI(array, count, ignoredcount, ignoredcountmax) \
   printCombiTag<std::size(array), array, count, ignoredcount, ignoredcountmax>
 
-}  // namespace Exiv2::Internal
+}  // namespace Internal
+}  // namespace Exiv2
 
 #endif  // #ifndef PENTAXMN_INT_HPP_

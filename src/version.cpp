@@ -16,9 +16,7 @@
 #endif
 
 // + standard includes
-#include <array>
 #include <fstream>
-#include <regex>
 #include <set>
 
 // #1147
@@ -34,8 +32,11 @@
 // platform specific support for getLoadedLibraries
 #if defined(_WIN32) || defined(__CYGWIN__)
 // clang-format off
+#include <winapifamily.h>
 #include <windows.h>
-#include <psapi.h>
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_APP)
+  #include <psapi.h>
+#endif
 // clang-format on
 #if __LP64__
 #ifdef _WIN64
@@ -43,15 +44,20 @@
 #endif
 #define _WIN64 1
 #endif
+#ifdef _MSC_VER
+#include <array>
+#endif
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>
 #elif defined(__FreeBSD__)
-#include <libprocstat.h>
+// clang-format off
 #include <sys/param.h>
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <unistd.h>
+#include <libprocstat.h>
+// clang-format on
 #elif defined(__sun__)
 #include <dlfcn.h>
 #include <link.h>
@@ -96,7 +102,7 @@ static bool shouldOutput(const std::vector<std::regex>& greps, const char* key, 
 
 static void output(std::ostream& os, const std::vector<std::regex>& greps, const char* name, const std::string& value) {
   if (shouldOutput(greps, name, value))
-    os << name << "=" << value << std::endl;
+    os << name << "=" << value << '\n';
 }
 
 static void output(std::ostream& os, const std::vector<std::regex>& greps, const char* name, int value) {
@@ -106,7 +112,7 @@ static void output(std::ostream& os, const std::vector<std::regex>& greps, const
 }
 
 static bool pushPath(const std::string& path, std::vector<std::string>& libs, std::set<std::string>& paths) {
-  bool result = Exiv2::fileExists(path) && paths.find(path) == paths.end() && path != "/";
+  bool result = Exiv2::fileExists(path) && !paths.contains(path) && path != "/";
   if (result) {
     paths.insert(path);
     libs.push_back(path);
@@ -120,17 +126,18 @@ static std::vector<std::string> getLoadedLibraries() {
   std::string path;
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-  // enumerate loaded libraries and determine path to executable
+// enumerate loaded libraries and determine path to executable (unsupported on UWP)
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_APP)
   HMODULE handles[200];
   DWORD cbNeeded;
   if (EnumProcessModules(GetCurrentProcess(), handles, static_cast<DWORD>(std::size(handles)), &cbNeeded)) {
     char szFilename[_MAX_PATH];
     for (DWORD h = 0; h < cbNeeded / sizeof(handles[0]); h++) {
       GetModuleFileNameA(handles[h], szFilename, static_cast<DWORD>(std::size(szFilename)));
-      std::string path(szFilename);
-      pushPath(path, libs, paths);
+      pushPath(szFilename, libs, paths);
     }
   }
+#endif
 #elif defined(__APPLE__)
   // man 3 dyld
   uint32_t count = _dyld_image_count();
@@ -139,8 +146,7 @@ static std::vector<std::string> getLoadedLibraries() {
     pushPath(path, libs, paths);
   }
 #elif defined(__FreeBSD__)
-  // this code seg-faults when called from an SSH script! (security?)
-  if (isatty(STDIN_FILENO)) {
+  {
     unsigned int n;
     struct procstat* procstat = procstat_open_sysctl();
     struct kinfo_proc* procs = procstat ? procstat_getprocs(procstat, KERN_PROC_PID, getpid(), &n) : nullptr;
@@ -148,8 +154,10 @@ static std::vector<std::string> getLoadedLibraries() {
     if (files) {
       filestat* entry;
       STAILQ_FOREACH(entry, files, next) {
-        std::string path(entry->fs_path);
-        pushPath(path, libs, paths);
+        if (entry && PS_FST_TYPE_VNODE == entry->fs_type && entry->fs_path) {
+          std::string path(entry->fs_path);
+          pushPath(path, libs, paths);
+        }
       }
     }
     // free resources
@@ -165,8 +173,7 @@ static std::vector<std::string> getLoadedLibraries() {
   char procsz[100];
   char pathsz[500];
   snprintf(procsz, sizeof(procsz), "/proc/%d/path/a.out", getpid());
-  int l = readlink(procsz, pathsz, sizeof(pathsz));
-  if (l > 0) {
+  if (auto l = readlink(procsz, pathsz, sizeof(pathsz) - 1); l > 0) {
     pathsz[l] = '\0';
     path.assign(pathsz);
     libs.push_back(path);
@@ -174,7 +181,7 @@ static std::vector<std::string> getLoadedLibraries() {
 
   // read file /proc/self/maps which has a list of files in memory
   // (this doesn't yield anything on __sun__)
-  std::ifstream maps("/proc/self/maps", std::ifstream::in);
+  std::ifstream maps("/proc/self/maps");
   std::string string;
   while (std::getline(maps, string)) {
     std::size_t pos = string.find_last_of(' ');
@@ -312,7 +319,7 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
   int enable_video = 0;
   int use_curl = 0;
 
-#ifdef EXV_HAVE_INTTYPES_H
+#if __has_include(<inttypes.h>)
   have_inttypes = 1;
 #endif
 
@@ -324,21 +331,23 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
   have_iconv = 1;
 #endif
 
-#ifdef EXV_HAVE_LIBINTL_H
+#if __has_include(<libintl.h>)
   have_libintl = 1;
 #endif
 
-#ifdef EXV_HAVE_MEMORY_H
+#if __has_include(<memory.h>)
   have_memory = 1;
 #endif
 
-#ifdef EXV_HAVE_STDBOOL_H
+#if __has_include(<stdbool.h>)
   have_stdbool = 1;
 #endif
 
+#if __has_include(<stdint.h>)
   have_stdint = 1;
+#endif
 
-#ifdef EXV_HAVE_STDLIB_H
+#if __has_include(<stdlib.h>)
   have_stdlib = 1;
 #endif
 
@@ -346,31 +355,31 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
   have_strerror_r = 1;
 #endif
 
-#ifdef EXV_HAVE_STRINGS_H
+#if __has_include(<strings.h>)
   have_strings = 1;
 #endif
 
-#ifdef EXV_HAVE_MMAP
+#if __has_include(<sys/mman.h>)
   have_mmap = 1;
 #endif
 
-#ifdef EXV_HAVE_MUNMAP
+#if __has_include(<sys/mman.h>)
   have_munmap = 1;
 #endif
 
-#ifdef EXV_HAVE_SYS_STAT_H
+#if __has_include(<sys/stat.h>)
   have_sys_stat = 1;
 #endif
 
-#ifdef EXV_HAVE_SYS_TYPES_H
+#if __has_include(<sys/types.h>)
   have_sys_types = 1;
 #endif
 
-#ifdef EXV_HAVE_UNISTD_H
+#if __has_include(<unistd.h>)
   have_unistd = 1;
 #endif
 
-#ifdef EXV_HAVE_SYS_MMAN_H
+#if __has_include(<sys/mman.h>)
   have_sys_mman = 1;
 #endif
 
@@ -388,22 +397,6 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
 
 #ifdef EXV_ADOBE_XMPSDK
   adobe_xmpsdk = EXV_ADOBE_XMPSDK;
-#endif
-
-#ifdef EXV_HAVE_BOOL
-  have_bool = 1;
-#endif
-
-#ifdef EXV_HAVE_STRINGS
-  have_strings = 1;
-#endif
-
-#ifdef EXV_SYS_TYPES
-  have_sys_types = 1;
-#endif
-
-#ifdef EXV_HAVE_UNISTD
-  have_unistd = 1;
 #endif
 
 #ifdef EXV_ENABLE_BMFF
@@ -446,7 +439,7 @@ void Exiv2::dumpLibraryInfo(std::ostream& os, const std::vector<std::regex>& key
 
 #ifdef EXV_USE_CURL
   std::string curl_protocols;
-  curl_version_info_data* vinfo = curl_version_info(CURLVERSION_NOW);
+  auto vinfo = curl_version_info(CURLVERSION_NOW);
   for (int i = 0; vinfo->protocols[i]; i++) {
     curl_protocols += vinfo->protocols[i];
     curl_protocols += " ";

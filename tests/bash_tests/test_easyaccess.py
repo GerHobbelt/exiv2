@@ -98,7 +98,7 @@ Max aperture value    (Exif.Photo.MaxApertureValue        ) : F3.5
 Subject distance      (Exif.CanonSi.SubjectDistance       ) : Infinite
 Light source          (                                   ) : 
 Flash                 (Exif.Photo.Flash                   ) : No flash
-Camera serial number  (Exif.Canon.SerialNumber            ) : 21f938089
+Camera serial number  (Exif.Canon.SerialNumber            ) : 570004681
 Focal length          (Exif.Photo.FocalLength             ) : 18.0 mm
 Subject location/area (                                   ) : 
 Flash energy          (                                   ) : 
@@ -455,7 +455,7 @@ ISO speed             (Exif.Photo.ISOSpeedRatings         ) : 12800
 Date & time original  (Exif.Photo.DateTimeOriginal        ) : 2020:12:11 19:05:49
 Flash bias            (                                   ) : 
 Exposure mode         (Exif.Photo.ExposureProgram         ) : Aperture priority
-Scene mode            (Exif.Photo.SceneCaptureType        ) : Standard
+Scene mode            (                                   ) : 
 Macro mode            (                                   ) : 
 Image quality         (Exif.Nikon3.Quality                ) : RAW    
 White balance         (Exif.Nikon3.WhiteBalance           ) : AUTO1       
@@ -473,7 +473,7 @@ Shutter speed value   (                                   ) :
 Aperture value        (                                   ) : 
 Brightness value      (                                   ) : 
 Exposure bias         (Exif.Photo.ExposureBiasValue       ) : 0 EV
-Max aperture value    (Exif.NikonLd4.MaxAperture          ) : F0.5
+Max aperture value    (Exif.NikonLd4.MaxAperture          ) : n/a
 Subject distance      (Exif.NikonLd4.FocusDistance        ) : 2.66 m
 Light source          (Exif.Photo.LightSource             ) : Unknown
 Flash                 (Exif.Photo.Flash                   ) : No flash
@@ -514,6 +514,59 @@ Del Exif.Photo.Saturation
 Del Exif.Photo.BodySerialNumber
 """,
 	"""Camera serial number  (Exif.Nikon3.SerialNumber           ) : 6078248
+"""
+    ]
+    stderr = [""] * len(commands)
+    retval = [0] * len(commands)
+
+###########################################################
+# NIKON Z 6: NikonLd4.FocalLength2
+###########################################################
+@CopyTmpFiles("$data_path/NikonZ6.exv")
+class NikonLd4FocalLength2(metaclass=CaseMeta):
+
+    filename = path("$tmp_path/NikonZ6.exv")
+
+    commands = [
+        "$easyaccess_test $filename FocalLength",
+		"""$exiv2 -u -v -M"del Exif.Photo.FocalLength" $filename""",
+        "$easyaccess_test $filename FocalLength",
+        "$easyaccess_test $filename SubjectDistance",
+    ]
+    stdout = [
+	"""Focal length          (Exif.Photo.FocalLength             ) : 35.0 mm
+""",
+    """File 1/1: $filename
+Del Exif.Photo.FocalLength
+""",
+	"""Focal length          (Exif.NikonLd4.FocalLength2         ) : 35 mm
+""",
+	"""Subject distance      (Exif.NikonLd4.FocusDistance2       ) : 9.92 m
+"""
+    ]
+    stderr = [""] * len(commands)
+    retval = [0] * len(commands)
+
+###########################################################
+# Nikon D70; Nikon3.Saturation2
+###########################################################
+@CopyTmpFiles("$data_path/exiv2-nikon-d70.jpg")
+class Nikon3Saturation2(metaclass=CaseMeta):
+
+    filename = path("$tmp_path/exiv2-nikon-d70.jpg")
+
+    commands = [
+        "$easyaccess_test $filename Saturation",
+		"""$exiv2 -u -v -M"del Exif.Photo.Saturation" $filename""",
+        "$easyaccess_test $filename Saturation"
+    ]
+    stdout = [
+	"""Saturation            (Exif.Photo.Saturation              ) : Normal
+""",
+    """File 1/1: $filename
+Del Exif.Photo.Saturation
+""",
+	"""Saturation            (Exif.Nikon3.Saturation2            ) : NORMAL         
 """
     ]
     stderr = [""] * len(commands)

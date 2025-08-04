@@ -16,36 +16,26 @@ name: On PUSH - Basic CI for main platforms
 
 jobs:
   windows:
-    name: 'Win10 Arch:x64 BuildType:Release - SHARED'
+    name: 'Windows 10 - MSVC - Arch:X64 BuildType:Release - SHARED'
     runs-on: windows-2022
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Ninja
-        uses: ashutoshvarma/setup-ninja@master
-        with:
-          version: 1.10.0
+      - uses: actions/checkout@v4
 
       - name: Set up Visual Studio shell
-        uses: egor-tensin/vs-shell@v2
+        uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Restore Conan cache
+        uses: actions/cache@v4
         with:
-          python-version: 3.7
-
-      - name: Restore conan cache
-        uses: actions/cache@v2
-        with:
-            path: ${{github.workspace}}/conanCache
-            key: ${{runner.os}}-push-win-${{ hashFiles('conanfile.py') }}
+          path: ${{github.workspace}}/conanCache
+          key: ${{runner.os}}-push-win-${{ hashFiles('conanfile.py') }}
 
       - name: Install Conan & Common config
         run: |
-          pip.exe install "conan==1.54.0"
+          python -m pip install conan==1.* lxml
           conan profile new --detect default
           conan profile show default
           conan profile update settings.compiler="Visual Studio" default
@@ -54,26 +44,24 @@ jobs:
 
       - name: Build
         run: |
-          cmake --preset win-release -S . -B build  -DEXIV2_ENABLE_VIDEO=ON
+          cmake --preset win-release -S . -B build
           cmake --build build --parallel
-
 
       - name: Test
         run: |
-          cd build
-          ctest --output-on-failure
+          ctest --test-dir build --output-on-failure
 
   Linux:
-    name: 'Ubuntu 22.04 - GCC - Arch:x64 BuildType:Release - SHARED'
+    name: 'Ubuntu 22.04 - GCC - Arch:X64 BuildType:Release - SHARED'
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: install dependencies
+      - name: Install dependencies
         run: |
-          sudo apt-get install ninja-build
-          pip3 install conan==1.54.0
+          sudo eatmydata apt-get -y install ninja-build
+          python3 -m pip install conan==1.* lxml
 
       - name: Conan
         run: |
@@ -83,42 +71,41 @@ jobs:
           conan profile show default
           conan install .. -o webready=True --build missing
 
-      - name: build and compile
+      - name: Build
         run: |
-          cmake --preset linux-release-NoConan -S . -B build  -DEXIV2_ENABLE_VIDEO=ON
+          cmake --preset linux-release -S . -B build
           cmake --build build --parallel
 
       - name: Test
         run: |
-          cd build
-          ctest --output-on-failure
+          ctest --test-dir build --output-on-failure
 
   MacOS:
-    name: 'MacOS - clang - Arch:x64 BuildType:Release - SHARED'
-    runs-on: macos-latest
+    name: 'macOS - XCode - Arch:${{ matrix.runner.arch }} BuildType:Release - SHARED'
+    runs-on: ${{ matrix.runner.os }}
+    strategy:
+      matrix:
+        runner:
+          - { os: macos-13,     arch: X64   }
+          - { os: macos-latest, arch: ARM64 }
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: install dependencies
+      - name: Install dependencies
         run: |
-          brew install ninja
-          brew install inih
-          pushd /tmp
-          curl -LO https://github.com/google/googletest/archive/release-1.8.0.tar.gz
-          tar xzf   release-1.8.0.tar.gz
-          mkdir -p  googletest-release-1.8.0/build
-          pushd     googletest-release-1.8.0/build
-          cmake .. ; make ; make install
-          popd
-          popd
+          brew install ninja inih googletest
 
-      - name: build and compile
+      - name: Install fmt on macOS 13
+        if: ${{ matrix.runner.os == 'macos-13' }}
         run: |
-          cmake --preset base_mac -S . -B build -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations" -DEXIV2_ENABLE_VIDEO=ON
+          brew install fmt
+
+      - name: Build
+        run: |
+          cmake --preset base_mac -S . -B build
           cmake --build build --parallel
 
       - name: Test
         run: |
-          cd build
-          ctest --output-on-failure
+          ctest --test-dir build --output-on-failure

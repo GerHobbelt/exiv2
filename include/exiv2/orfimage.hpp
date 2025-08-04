@@ -21,15 +21,6 @@ namespace Exiv2 {
  */
 class EXIV2API OrfImage : public TiffImage {
  public:
-  ~OrfImage() override = default;
-  //! @name NOT Implemented
-  //@{
-  //! Copy constructor
-  OrfImage(const OrfImage&) = delete;
-  //! Assignment operator
-  OrfImage& operator=(const OrfImage&) = delete;
-  //@}
-
   //! @name Creators
   //@{
   /*!
@@ -64,9 +55,9 @@ class EXIV2API OrfImage : public TiffImage {
 
   //! @name Accessors
   //@{
-  std::string mimeType() const override;
-  uint32_t pixelWidth() const override;
-  uint32_t pixelHeight() const override;
+  [[nodiscard]] std::string mimeType() const override;
+  [[nodiscard]] uint32_t pixelWidth() const override;
+  [[nodiscard]] uint32_t pixelHeight() const override;
   //@}
 };  // class OrfImage
 
@@ -87,8 +78,8 @@ class EXIV2API OrfParser {
     @brief Encode metadata from the provided metadata to ORF format.
            See TiffParser::encode().
   */
-  static WriteMethod encode(BasicIo& io, const byte* pData, size_t size, ByteOrder byteOrder, const ExifData& exifData,
-                            const IptcData& iptcData, const XmpData& xmpData);
+  static WriteMethod encode(BasicIo& io, const byte* pData, size_t size, ByteOrder byteOrder, ExifData& exifData,
+                            IptcData& iptcData, XmpData& xmpData);
 };  // class OrfParser
 
 // *****************************************************************************

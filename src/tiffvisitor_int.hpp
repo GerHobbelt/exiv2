@@ -6,8 +6,7 @@
 // *****************************************************************************
 // included header files
 #include "exif.hpp"
-#include "tifffwd_int.hpp"
-#include "types.hpp"
+#include "tiffcomposite_int.hpp"  // Do not change the order of these 2 includes,
 
 #include <array>
 
@@ -130,7 +129,7 @@ class TiffFinder : public TiffVisitor {
   //! @name Creators
   //@{
   //! Constructor, taking \em tag and \em group of the component to find.
-  TiffFinder(uint16_t tag, IfdId group) : tag_(tag), group_(group) {
+  constexpr TiffFinder(uint16_t tag, IfdId group) : tag_(tag), group_(group) {
   }
   TiffFinder(const TiffFinder&) = delete;
   TiffFinder& operator=(const TiffFinder&) = delete;
@@ -197,11 +196,11 @@ class TiffCopier : public TiffVisitor {
     @brief Constructor
 
     @param pRoot Pointer to the root element of the (empty) target tree.
-    @param root
+    @param root Actual root element
     @param pHeader Pointer to the TIFF header of the source image.
     @param pPrimaryGroups Pointer to the list of primary groups.
    */
-  TiffCopier(TiffComponent* pRoot, uint32_t root, const TiffHeaderBase* pHeader, const PrimaryGroups* pPrimaryGroups);
+  TiffCopier(TiffComponent* pRoot, uint32_t root, const TiffHeaderBase* pHeader, PrimaryGroups pPrimaryGroups);
   TiffCopier(const TiffCopier&) = delete;
   TiffCopier& operator=(const TiffCopier&) = delete;
   //! Virtual destructor
@@ -239,7 +238,7 @@ class TiffCopier : public TiffVisitor {
   TiffComponent* pRoot_;
   uint32_t root_;
   const TiffHeaderBase* pHeader_;
-  const PrimaryGroups* pPrimaryGroups_;
+  PrimaryGroups pPrimaryGroups_;
 };  // class TiffCopier
 
 /*!
@@ -349,9 +348,8 @@ class TiffEncoder : public TiffVisitor {
            to, the image with the metadata to encode and a function to
            find special encoders.
    */
-  TiffEncoder(ExifData exifData, const IptcData& iptcData, const XmpData& xmpData, TiffComponent* pRoot,
-              bool isNewImage, const PrimaryGroups* pPrimaryGroups, const TiffHeaderBase* pHeader,
-              FindEncoderFct findEncoderFct);
+  TiffEncoder(ExifData& exifData, IptcData& iptcData, XmpData& xmpData, TiffComponent* pRoot, bool isNewImage,
+              PrimaryGroups pPrimaryGroups, const TiffHeaderBase* pHeader, FindEncoderFct findEncoderFct);
   TiffEncoder(const TiffEncoder&) = delete;
   TiffEncoder& operator=(const TiffEncoder&) = delete;
   //! Virtual destructor
@@ -516,7 +514,7 @@ class TiffEncoder : public TiffVisitor {
   const TiffHeaderBase* pHeader_;            //!< TIFF image header
   TiffComponent* pRoot_;                     //!< Root element of the composite
   bool isNewImage_;                          //!< True if the TIFF image is created from scratch
-  const PrimaryGroups* pPrimaryGroups_;      //!< List of primary image groups
+  PrimaryGroups pPrimaryGroups_;             //!< List of primary image groups
   TiffComponent* pSourceTree_{nullptr};      //!< Parsed source tree for reference
   ByteOrder byteOrder_;                      //!< Byteorder for encoding
   ByteOrder origByteOrder_;                  //!< Byteorder as set in the c'tor
@@ -538,7 +536,7 @@ class TiffRwState {
   //! @name Creators
   //@{
   //! Constructor.
-  TiffRwState(ByteOrder byteOrder, size_t baseOffset) : byteOrder_(byteOrder), baseOffset_(baseOffset) {
+  constexpr TiffRwState(ByteOrder byteOrder, size_t baseOffset) : byteOrder_(byteOrder), baseOffset_(baseOffset) {
   }
   //@}
 
@@ -668,7 +666,7 @@ class TiffReader : public TiffVisitor {
 
   // DATA
   const byte* pData_;      //!< Pointer to the memory buffer
-  const size_t size_;      //!< Size of the buffer
+  size_t size_;            //!< Size of the buffer
   const byte* pLast_;      //!< Pointer to the last byte
   TiffComponent* pRoot_;   //!< Root element of the composite
   TiffRwState* pState_;    //!< Pointer to the state in effect (origState_ or mnState_)
@@ -678,7 +676,7 @@ class TiffReader : public TiffVisitor {
   IdxSeq idxSeq_;          //!< Sequences for group, used for the entry's idx
   PostList postList_;      //!< List of components with deferred reading
   bool postProc_{false};   //!< True in postProcessList()
-};                         // class TiffReader
+};
 
 }  // namespace Internal
 }  // namespace Exiv2

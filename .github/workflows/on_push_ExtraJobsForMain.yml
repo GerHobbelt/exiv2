@@ -20,13 +20,12 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: install dependencies
+      - name: Install dependencies
         run: |
-          sudo apt-get install ninja-build
-          pip3 install conan==1.54.0
-          pip3 install gcovr
+          sudo eatmydata apt-get -y install ninja-build gcovr
+          python3 -m pip install conan==1.* lxml
 
       - name: Conan common config
         run: |
@@ -42,7 +41,7 @@ jobs:
 
       - name: Build
         run: |
-          cmake --preset linux-coverage -S . -B build -DEXIV2_ENABLE_VIDEO=ON
+          cmake --preset linux-coverage -S . -B build
           cmake --build build
 
       - name: Tests + Upload coverage

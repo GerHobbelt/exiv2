@@ -8,8 +8,8 @@
 debian_build_gtest() {
     [ -d gtest_build ] || mkdir gtest_build
     cd gtest_build
-    cmake -DBUILD_SHARED_LIBS=1 /usr/src/googletest/googletest
-    make
+    cmake -GNinja -DBUILD_SHARED_LIBS=1 /usr/src/googletest/googletest
+    cmake --build .
     if [ -f "lib/libgtest.so" ]; then
         # Ubuntu 20.04 with gtest 1.10
         cp lib/libgtest* /usr/lib/
@@ -24,7 +24,7 @@ debian_build_gtest() {
 centos_build_inih() {
     [-d inih_build ] || git clone https://github.com/benhoyt/inih.git inih_build
     cd inih_build
-    git checkout r56
+    git checkout r58
     meson --buildtype=plain builddir
     meson compile -C builddir
     meson install -C builddir
@@ -41,54 +41,46 @@ distro_id=$(grep '^ID=' /etc/os-release|awk -F = '{print $2}'|sed 's/\"//g')
 
 case "$distro_id" in
     'fedora')
-        dnf -y --refresh install gcc-c++ clang cmake make expat-devel zlib-devel brotli-devel libssh-devel libcurl-devel gtest-devel which dos2unix glibc-langpack-en diffutils inih-devel
+        dnf -y --refresh install gcc-c++ clang cmake ninja-build expat-devel zlib-devel brotli-devel libssh-devel libcurl-devel gmock-devel glibc-langpack-en inih-devel fmt-devel
         ;;
 
     'debian')
         apt-get update
-        apt-get install -y cmake g++ clang make libexpat1-dev zlib1g-dev libbrotli-dev libssh-dev libcurl4-openssl-dev libgtest-dev libxml2-utils libinih-dev
-        debian_build_gtest
+        apt-get install -y cmake ninja-build g++ clang libexpat1-dev zlib1g-dev libbrotli-dev libssh-dev libcurl4-openssl-dev libgmock-dev libxml2-utils libinih-dev libfmt-dev
+        # debian_build_gtest
         ;;
 
     'arch')
         pacman --noconfirm -Syu
-        pacman --noconfirm --needed -S gcc clang cmake make expat zlib brotli libssh curl gtest dos2unix which diffutils libinih
+        pacman --noconfirm --needed -S gcc clang cmake ninja expat zlib brotli libssh curl gtest libinih fmt
         ;;
 
     'ubuntu')
         apt-get update
-        apt-get install -y cmake g++ clang make libexpat1-dev zlib1g-dev libbrotli-dev libssh-dev libcurl4-openssl-dev libgtest-dev google-mock libxml2-utils libinih-dev
-        debian_build_gtest
+        apt-get install -y cmake ninja-build g++ clang libexpat1-dev zlib1g-dev libbrotli-dev libssh-dev libcurl4-openssl-dev libgmock-dev libxml2-utils libinih-dev libfmt-dev
+        # debian_build_gtest
         ;;
 
     'alpine')
         apk update
-        apk add gcc g++ clang cmake make expat-dev zlib-dev brotli-dev libssh-dev curl-dev gtest gtest-dev gmock libintl gettext-dev which dos2unix bash libxml2-utils diffutils inih-dev inih-inireader-dev
+        apk add gcc g++ clang cmake samurai expat-dev zlib-dev brotli-dev libssh-dev curl-dev gtest gtest-dev gmock libintl gettext-dev libxml2-utils inih-dev inih-inireader-dev fmt-dev
         ;;
 
     'rhel')
         dnf clean all
-        dnf -y install gcc-c++ clang cmake make expat-devel zlib-devel brotli-devel libssh-devel libcurl-devel which dos2unix inih-devel
+        dnf -y install gcc-c++ clang cmake ninja-build expat-devel zlib-devel brotli-devel libssh-devel libcurl-devel inih-devel fmt-devel
         ;;
 
     'centos')
         dnf clean all
-        dnf -y install gcc-c++ clang cmake make expat-devel zlib-devel brotli-devel libssh-devel libcurl-devel which dos2unix git
-        dnf -y --enablerepo=crb install meson
+        dnf -y install gcc-c++ clang cmake expat-devel zlib-devel brotli-devel libssh-devel libcurl-devel git fmt-devel
+        dnf -y --enablerepo=crb install ninja-build meson
         centos_build_inih
         ;;
 
     'opensuse-tumbleweed')
         zypper --non-interactive refresh
-        zypper --non-interactive install gcc-c++ clang cmake make libexpat-devel zlib-devel libbrotli-devel libssh-devel curl libcurl-devel git which dos2unix libxml2-tools libinih-devel
-        pushd /tmp
-          curl -LO https://github.com/google/googletest/archive/release-1.8.0.tar.gz
-          tar xzf   release-1.8.0.tar.gz
-          mkdir -p  googletest-release-1.8.0/build
-          pushd     googletest-release-1.8.0/build
-            cmake .. ; make ; make install
-          popd
-        popd
+        zypper --non-interactive install gcc-c++ clang cmake ninja libexpat-devel zlib-devel libbrotli-devel libssh-devel libcurl-devel gmock libxml2-tools libinih-devel libfmt-devel
         ;;
     *)
         echo "Sorry, no predefined dependencies for your distribution $distro_id exist yet"

@@ -28,7 +28,7 @@
 // local declarations
 namespace {
 // Print version string from an intermediate string
-std::ostream& printVersion(std::ostream& os, const std::string& str) {
+std::ostream& printVersion(std::ostream& os, std::string_view str) {
   if (str.size() != 4) {
     return os << "(" << str << ")";
   }
@@ -166,20 +166,27 @@ constexpr GroupInfo groupInfo[] = {
     {IfdId::sonyMisc3cId, "Makernote", "SonyMisc3c", SonyMakerNote::tagListSonyMisc3c},
     {IfdId::sonySInfo1Id, "Makernote", "SonySInfo1", SonyMakerNote::tagListSonySInfo1},
     {IfdId::sony2010eId, "Makernote", "Sony2010e", SonyMakerNote::tagList2010e},
-    {IfdId::lastId, "(Last IFD info)", "(Last IFD item)", nullptr}};
+    {IfdId::lastId, "(Last IFD info)", "(Last IFD item)", nullptr},
+};
 
 //! Units for measuring X and Y resolution, tags 0x0128, 0xa210
-constexpr TagDetails exifUnit[] = {{1, N_("none")}, {2, N_("inch")}, {3, N_("cm")}};
+constexpr TagDetails exifUnit[] = {
+    {1, N_("none")},
+    {2, N_("inch")},
+    {3, N_("cm")},
+};
 
 //! Orientation, tag 0x0112
 constexpr TagDetails exifOrientation[] = {
-    {1, N_("top, left")},     {2, N_("top, right")},   {3, N_("bottom, right")},
-    {4, N_("bottom, left")},  {5, N_("left, top")},    {6, N_("right, top")},
-    {7, N_("right, bottom")}, {8, N_("left, bottom")}, {8, N_("left, bottom")}  // To silence compiler warning
+    {1, N_("top, left")}, {2, N_("top, right")}, {3, N_("bottom, right")}, {4, N_("bottom, left")},
+    {5, N_("left, top")}, {6, N_("right, top")}, {7, N_("right, bottom")}, {8, N_("left, bottom")},
 };
 
 //! PlanarConfiguration, tag 0x011c
-constexpr TagDetails exifPlanarConfiguration[] = {{1, N_("Chunky")}, {2, N_("Planar")}};
+constexpr TagDetails exifPlanarConfiguration[] = {
+    {1, N_("Chunky")},
+    {2, N_("Planar")},
+};
 
 //! Predictor, tag 0x013d
 constexpr TagDetails exifPredictor[] = {
@@ -193,7 +200,10 @@ constexpr TagDetails exifPredictor[] = {
 };
 
 //! InkSet, tag 0x014c
-constexpr TagDetails exifInkSet[] = {{1, N_("CMYK")}, {2, N_("not CMYK")}};
+constexpr TagDetails exifInkSet[] = {
+    {1, N_("CMYK")},
+    {2, N_("not CMYK")},
+};
 
 //! NewSubfileType, TIFF tag 0x00fe - this is actually a bitmask
 constexpr TagDetails exifNewSubfileType[] = {
@@ -213,44 +223,49 @@ constexpr TagDetails exifNewSubfileType[] = {
 };
 
 //! SubfileType, TIFF tag 0x00ff
-constexpr TagDetails exifSubfileType[] = {{1, N_("Full-resolution image data")},
-                                          {2, N_("Reduced-resolution image data")},
-                                          {3, N_("A single page of a multi-page image")}};
+constexpr TagDetails exifSubfileType[] = {
+    {1, N_("Full-resolution image data")},
+    {2, N_("Reduced-resolution image data")},
+    {3, N_("A single page of a multi-page image")},
+};
 
 //! Compression, tag 0x0103
-constexpr TagDetails exifCompression[] = {{1, N_("Uncompressed")},
-                                          {2, N_("CCITT RLE")},
-                                          {3, N_("T4/Group 3 Fax")},
-                                          {4, N_("T6/Group 4 Fax")},
-                                          {5, N_("LZW")},
-                                          {6, N_("JPEG (old-style)")},
-                                          {7, N_("JPEG")},
-                                          {8, N_("Adobe Deflate")},
-                                          {9, N_("JBIG B&W")},
-                                          {10, N_("JBIG Color")},
-                                          {32766, N_("Next 2-bits RLE")},
-                                          {32767, N_("Sony ARW Compressed")},
-                                          {32769, N_("Epson ERF Compressed")},
-                                          {32770, N_("Samsung SRW Compressed")},
-                                          {32771, N_("CCITT RLE 1-word")},
-                                          {32773, N_("PackBits (Macintosh RLE)")},
-                                          {32809, N_("Thunderscan RLE")},
-                                          {32895, N_("IT8 CT Padding")},
-                                          {32896, N_("IT8 Linework RLE")},
-                                          {32897, N_("IT8 Monochrome Picture")},
-                                          {32898, N_("IT8 Binary Lineart")},
-                                          {32908, N_("Pixar Film (10-bits LZW)")},
-                                          {32909, N_("Pixar Log (11-bits ZIP)")},
-                                          {32946, N_("Pixar Deflate")},
-                                          {32947, N_("Kodak DCS Encoding")},
-                                          {34661, N_("ISO JBIG")},
-                                          {34676, N_("SGI Log Luminance RLE")},
-                                          {34677, N_("SGI Log 24-bits packed")},
-                                          {34712, N_("Leadtools JPEG 2000")},
-                                          {34713, N_("Nikon NEF Compressed")},
-                                          {34892, N_("JPEG (lossy)")},  // DNG 1.4
-                                          {65000, N_("Kodak DCR Compressed")},
-                                          {65535, N_("Pentax PEF Compressed")}};
+constexpr TagDetails exifCompression[] = {
+    {1, N_("Uncompressed")},
+    {2, N_("CCITT RLE")},
+    {3, N_("T4/Group 3 Fax")},
+    {4, N_("T6/Group 4 Fax")},
+    {5, N_("LZW")},
+    {6, N_("JPEG (old-style)")},
+    {7, N_("JPEG")},
+    {8, N_("Adobe Deflate")},
+    {9, N_("JBIG B&W")},
+    {10, N_("JBIG Color")},
+    {32766, N_("Next 2-bits RLE")},
+    {32767, N_("Sony ARW Compressed")},
+    {32769, N_("Epson ERF Compressed")},
+    {32770, N_("Samsung SRW Compressed")},
+    {32771, N_("CCITT RLE 1-word")},
+    {32773, N_("PackBits (Macintosh RLE)")},
+    {32809, N_("Thunderscan RLE")},
+    {32895, N_("IT8 CT Padding")},
+    {32896, N_("IT8 Linework RLE")},
+    {32897, N_("IT8 Monochrome Picture")},
+    {32898, N_("IT8 Binary Lineart")},
+    {32908, N_("Pixar Film (10-bits LZW)")},
+    {32909, N_("Pixar Log (11-bits ZIP)")},
+    {32946, N_("Pixar Deflate")},
+    {32947, N_("Kodak DCS Encoding")},
+    {34661, N_("ISO JBIG")},
+    {34676, N_("SGI Log Luminance RLE")},
+    {34677, N_("SGI Log 24-bits packed")},
+    {34712, N_("Leadtools JPEG 2000")},
+    {34713, N_("Nikon NEF Compressed")},
+    {34892, N_("JPEG (lossy)")},  // DNG 1.4
+    {52546, N_("JPEG XL")},       // DNG 1.7
+    {65000, N_("Kodak DCR Compressed")},
+    {65535, N_("Pentax PEF Compressed")},
+};
 
 //! PhotometricInterpretation, tag 0x0106
 constexpr TagDetails exifPhotometricInterpretation[] = {
@@ -268,14 +283,16 @@ constexpr TagDetails exifPhotometricInterpretation[] = {
     {32844, N_("Pixar LogL")},
     {32845, N_("Pixar LogLuv")},
     {34892, N_("Linear Raw")},
-    {51177, N_("Depth Map")},     // DNG 1.5
-    {52527, N_("Semantic Mask")}  // DNG 1.6
+    {51177, N_("Depth Map")},         // DNG 1.5
+    {52527, N_("Photometric Mask")},  // DNG 1.6
 };
 
 //! Thresholding, tag 0x0107
-constexpr TagDetails exifThresholding[] = {{1, N_("No dithering or halftoning")},
-                                           {2, N_("Ordered dither or halftone technique")},
-                                           {3, N_("Randomized process")}};
+constexpr TagDetails exifThresholding[] = {
+    {1, N_("No dithering or halftoning")},
+    {2, N_("Ordered dither or halftone technique")},
+    {3, N_("Randomized process")},
+};
 
 //! SampleFormat, tag 0x0153
 constexpr TagDetails exifSampleFormat[] = {
@@ -283,78 +300,87 @@ constexpr TagDetails exifSampleFormat[] = {
     {2, N_("Two's complement signed integer data")},
     {3, N_("IEEE floating point data")},
     {4, N_("Undefined data format")},
-    {4, N_("Undefined data format")}  // To silence compiler warning
 };
 
 //! Indexed, tag 0x015a
-constexpr TagDetails exifIndexed[] = {{0, N_("Not indexed")}, {1, N_("Indexed")}};
+constexpr TagDetails exifIndexed[] = {
+    {0, N_("Not indexed")},
+    {1, N_("Indexed")},
+};
 
 //! exifJpegLosslessPredictor, tag 0x0205
-constexpr TagDetails exifJpegLosslessPredictor[] = {{1, N_("A")},      {2, N_("B")},           {3, N_("C")},
-                                                    {4, N_("A+B-C")},  {5, N_("A+((B-C)/2)")}, {6, N_("B+((A-C)/2)")},
-                                                    {7, N_("(A+B)/2")}};
+constexpr TagDetails exifJpegLosslessPredictor[] = {
+    {1, N_("A")},           {2, N_("B")},           {3, N_("C")},       {4, N_("A+B-C")},
+    {5, N_("A+((B-C)/2)")}, {6, N_("B+((A-C)/2)")}, {7, N_("(A+B)/2")},
+};
 
 //! LightSource, tag 0x9208
-constexpr TagDetails exifLightSource[] = {{0, N_("Unknown")},
-                                          {1, N_("Daylight")},
-                                          {2, N_("Fluorescent")},
-                                          {3, N_("Tungsten (incandescent light)")},
-                                          {4, N_("Flash")},
-                                          {9, N_("Fine weather")},
-                                          {10, N_("Cloudy weather")},
-                                          {11, N_("Shade")},
-                                          {12, N_("Daylight fluorescent (D 5700 - 7100K)")},
-                                          {13, N_("Day white fluorescent (N 4600 - 5400K)")},
-                                          {14, N_("Cool white fluorescent (W 3900 - 4500K)")},
-                                          {15, N_("White fluorescent (WW 3200 - 3700K)")},
-                                          {17, N_("Standard light A")},
-                                          {18, N_("Standard light B")},
-                                          {19, N_("Standard light C")},
-                                          {20, N_("D55")},
-                                          {21, N_("D65")},
-                                          {22, N_("D75")},
-                                          {23, N_("D50")},
-                                          {24, N_("ISO studio tungsten")},
-                                          {255, N_("Other light source")}};
+constexpr TagDetails exifLightSource[] = {
+    {0, N_("Unknown")},
+    {1, N_("Daylight")},
+    {2, N_("Fluorescent")},
+    {3, N_("Tungsten (incandescent light)")},
+    {4, N_("Flash")},
+    {9, N_("Fine weather")},
+    {10, N_("Cloudy weather")},
+    {11, N_("Shade")},
+    {12, N_("Daylight fluorescent (D 5700 - 7100K)")},
+    {13, N_("Day white fluorescent (N 4600 - 5400K)")},
+    {14, N_("Cool white fluorescent (W 3900 - 4500K)")},
+    {15, N_("White fluorescent (WW 3200 - 3700K)")},
+    {17, N_("Standard light A")},
+    {18, N_("Standard light B")},
+    {19, N_("Standard light C")},
+    {20, N_("D55")},
+    {21, N_("D65")},
+    {22, N_("D75")},
+    {23, N_("D50")},
+    {24, N_("ISO studio tungsten")},
+    {255, N_("Other light source")},
+};
 
 //! Flash, Exif tag 0x9209
-constexpr TagDetails exifFlash[] = {{0x00, N_("No flash")},
-                                    {0x01, N_("Fired")},
-                                    {0x05, N_("Fired, return light not detected")},
-                                    {0x07, N_("Fired, return light detected")},
-                                    {0x08, N_("Yes, did not fire")},
-                                    {0x09, N_("Yes, compulsory")},
-                                    {0x0d, N_("Yes, compulsory, return light not detected")},
-                                    {0x0f, N_("Yes, compulsory, return light detected")},
-                                    {0x10, N_("No, compulsory")},
-                                    {0x14, N_("No, did not fire, return light not detected")},
-                                    {0x18, N_("No, auto")},
-                                    {0x19, N_("Yes, auto")},
-                                    {0x1d, N_("Yes, auto, return light not detected")},
-                                    {0x1f, N_("Yes, auto, return light detected")},
-                                    {0x20, N_("No flash function")},
-                                    {0x20, N_("No, no flash function")},
-                                    {0x41, N_("Yes, red-eye reduction")},
-                                    {0x45, N_("Yes, red-eye reduction, return light not detected")},
-                                    {0x47, N_("Yes, red-eye reduction, return light detected")},
-                                    {0x49, N_("Yes, compulsory, red-eye reduction")},
-                                    {0x4d, N_("Yes, compulsory, red-eye reduction, return light not detected")},
-                                    {0x4f, N_("Yes, compulsory, red-eye reduction, return light detected")},
-                                    {0x50, N_("No, red-eye reduction")},
-                                    {0x58, N_("No, auto, red-eye reduction")},
-                                    {0x59, N_("Yes, auto, red-eye reduction")},
-                                    {0x5d, N_("Yes, auto, red-eye reduction, return light not detected")},
-                                    {0x5f, N_("Yes, auto, red-eye reduction, return light detected")}};
+constexpr TagDetails exifFlash[] = {
+    {0x00, N_("No flash")},
+    {0x01, N_("Fired")},
+    {0x05, N_("Fired, return light not detected")},
+    {0x07, N_("Fired, return light detected")},
+    {0x08, N_("Yes, did not fire")},
+    {0x09, N_("Yes, compulsory")},
+    {0x0d, N_("Yes, compulsory, return light not detected")},
+    {0x0f, N_("Yes, compulsory, return light detected")},
+    {0x10, N_("No, compulsory")},
+    {0x14, N_("No, did not fire, return light not detected")},
+    {0x18, N_("No, auto")},
+    {0x19, N_("Yes, auto")},
+    {0x1d, N_("Yes, auto, return light not detected")},
+    {0x1f, N_("Yes, auto, return light detected")},
+    {0x20, N_("No flash function")},
+    {0x20, N_("No, no flash function")},
+    {0x41, N_("Yes, red-eye reduction")},
+    {0x45, N_("Yes, red-eye reduction, return light not detected")},
+    {0x47, N_("Yes, red-eye reduction, return light detected")},
+    {0x49, N_("Yes, compulsory, red-eye reduction")},
+    {0x4d, N_("Yes, compulsory, red-eye reduction, return light not detected")},
+    {0x4f, N_("Yes, compulsory, red-eye reduction, return light detected")},
+    {0x50, N_("No, red-eye reduction")},
+    {0x58, N_("No, auto, red-eye reduction")},
+    {0x59, N_("Yes, auto, red-eye reduction")},
+    {0x5d, N_("Yes, auto, red-eye reduction, return light not detected")},
+    {0x5f, N_("Yes, auto, red-eye reduction, return light detected")},
+};
 
 //! FocalPlaneResolutionUnit, TIFF/EP tag 0x9210
 constexpr TagDetails tiffFocalPlaneResolutionUnit[] = {
-    {1, N_("inch")}, {2, N_("meter")}, {3, N_("centimeter")}, {4, N_("millimeter")}, {5, N_("micrometer")}};
+    {1, N_("inch")}, {2, N_("meter")}, {3, N_("centimeter")}, {4, N_("millimeter")}, {5, N_("micrometer")},
+};
 
 //! SensingMethod, TIFF/EP tag 0x9217
 constexpr TagDetails tiffSensingMethod[] = {
     {0, N_("Undefined")},           {1, N_("Monochrome area")},       {2, N_("One-chip color area")},
     {3, N_("Two-chip color area")}, {4, N_("Three-chip color area")}, {5, N_("Color sequential area")},
-    {6, N_("Monochrome linear")},   {7, N_("Trilinear sensor")},      {8, N_("Color sequential linear")}};
+    {6, N_("Monochrome linear")},   {7, N_("Trilinear sensor")},      {8, N_("Color sequential linear")},
+};
 
 //! CFALayout, DNG tag 0xc617
 constexpr TagDetails dngCfaLayout[] = {
@@ -363,42 +389,71 @@ constexpr TagDetails dngCfaLayout[] = {
     {3, N_("Staggered layout B: even columns are offset up by 1/2 row")},
     {4, N_("Staggered layout C: even rows are offset right by 1/2 column")},
     {5, N_("Staggered layout D: even rows are offset left by 1/2 column")},
-    {6, N_("Staggered layout E: even rows are offset up by 1/2, even columns left by 1/2")},    // DNG 1.3
-    {7, N_("Staggered layout F: even rows are offset up by 1/2, even columns right by 1/2")},   // DNG 1.3
-    {8, N_("Staggered layout G: even rows are offset down by 1/2, even columns left by 1/2")},  // DNG 1.3
-    {9, N_("Staggered layout H: even rows are offset down by 1/2, even columns right by 1/2")}  // DNG 1.3
+    {6, N_("Staggered layout E: even rows are offset up by 1/2, even columns left by 1/2")},     // DNG 1.3
+    {7, N_("Staggered layout F: even rows are offset up by 1/2, even columns right by 1/2")},    // DNG 1.3
+    {8, N_("Staggered layout G: even rows are offset down by 1/2, even columns left by 1/2")},   // DNG 1.3
+    {9, N_("Staggered layout H: even rows are offset down by 1/2, even columns right by 1/2")},  // DNG 1.3
 };
 
 //! MakerNoteSafety, DNG tag 0xc635
-constexpr TagDetails dngMakerNoteSafety[] = {{0, N_("Unsafe")}, {1, N_("Safe")}};
+constexpr TagDetails dngMakerNoteSafety[] = {
+    {0, N_("Unsafe")},
+    {1, N_("Safe")},
+};
 
 //! ColorimetricReference, DNG 1.2 tag 0xc6bf
-constexpr TagDetails dngColorimetricReference[] = {{0, N_("XYZ values are scene-referred")},
-                                                   {1, N_("XYZ values are output-referred")}};
+constexpr TagDetails dngColorimetricReference[] = {
+    {0, N_("XYZ values are scene-referred")},
+    {1, N_("XYZ values are output-referred")},
+    {2, N_("XYZ values are output-referred and may be HDR")},  // DNG 1.7
+};
 
 //! ProfileEmbedPolicy, DNG 1.2 tag 0xc6fd
 constexpr TagDetails dngProfileEmbedPolicy[] = {
-    {0, N_("Allow copying")}, {1, N_("Embed if used")}, {2, N_("Embed never")}, {3, N_("No restrictions")}};
+    {0, N_("Allow copying")},
+    {1, N_("Embed if used")},
+    {2, N_("Embed never")},
+    {3, N_("No restrictions")},
+};
 
 //! PreviewColorSpace, DNG 1.2 tag 0xc71a
 constexpr TagDetails dngPreviewColorSpace[] = {
-    {0, N_("Unknown")}, {1, N_("Gray Gamma 2.2")}, {2, N_("sRGB")}, {2, N_("Adobe RGB")}, {4, N_("ProPhoto RGB")}};
+    {0, N_("Unknown")}, {1, N_("Gray Gamma 2.2")}, {2, N_("sRGB")}, {2, N_("Adobe RGB")}, {4, N_("ProPhoto RGB")},
+};
 
 //! ProfileEncoding, DNG 1.4 tags 0xc7a3, 0xc7a4
-constexpr TagDetails dngProfileEncoding[] = {{0, N_("Linear")}, {1, N_("sRGB")}};
+constexpr TagDetails dngProfileEncoding[] = {
+    {0, N_("Linear")},
+    {1, N_("sRGB")},
+};
 
 //! DefaultBlackRender, DNG 1.4 tag 0xc7a6
-constexpr TagDetails dngDefaultBlackRender[] = {{0, N_("Auto")}, {1, N_("None")}};
+constexpr TagDetails dngDefaultBlackRender[] = {
+    {0, N_("Auto")},
+    {1, N_("None")},
+};
 
 //! DepthFormat, DNG 1.5 tag 0xc7e9
-constexpr TagDetails dngDepthFormat[] = {{0, N_("Unknown")}, {1, N_("Linear")}, {2, N_("Inverse")}};
+constexpr TagDetails dngDepthFormat[] = {
+    {0, N_("Unknown")},
+    {1, N_("Linear")},
+    {2, N_("Inverse")},
+};
 
 //! DepthUnits, DNG 1.5 tag 0xc7ec
-constexpr TagDetails dngDepthUnits[] = {{0, N_("Unknown")}, {1, N_("meters")}};
+constexpr TagDetails dngDepthUnits[] = {
+    {0, N_("Unknown")},
+    {1, N_("meters")},
+};
 
 //! DepthMeasureType, DNG 1.5 tag 0xc7ed
-constexpr TagDetails dngDepthMeasureType[] = {{0, N_("Unknown")}, {1, N_("Optical axis")}, {2, N_("Optical ray")}};
+constexpr TagDetails dngDepthMeasureType[] = {
+    {0, N_("Unknown")},
+    {1, N_("Optical axis")},
+    {2, N_("Optical ray")},
+};
 
+// clang-format off
 //! Base IFD Tags (IFD0 and IFD1)
 constexpr TagInfo ifdTagInfo[] = {
     {0x000b, "ProcessingSoftware", N_("Processing Software"),
@@ -1647,7 +1702,7 @@ constexpr TagInfo ifdTagInfo[] = {
         "used if ColorPlanes is greater than 3. The matrix is stored in row "
         "scan order."),
      IfdId::ifd0Id, SectionId::dngTags, signedRational, -1, printValue},  // DNG 1.6 tag
-    {0xcd3b, "RGBTables", N_("RGB Tables"),
+    {0xcd3f, "RGBTables", N_("RGB Tables"),
      N_("This tag specifies color transforms that can be applied to masked image "
         "regions. Color transforms are specified using RGB-to-RGB color lookup tables. "
         "These tables are associated with Semantic Masks to limit the color transform "
@@ -1655,12 +1710,57 @@ constexpr TagInfo ifdTagInfo[] = {
         "combination of the color tables, weighted by their corresponding Semantic "
         "Masks."),
      IfdId::ifd0Id, SectionId::dngTags, undefined, -1, printValue},  // DNG 1.6 tag
+    {0xcd40, "ProfileGainTableMap2", N_("Profile Gain Table Map 2"),
+     N_("This tag is an extended version of ProfileGainTableMap."),
+     IfdId::ifd0Id, SectionId::dngTags, undefined, -1, printValue},  // DNG 1.7 tag
+    {0xcd43, "ColumnInterleaveFactor", N_("Column Interleave Factor"),
+     N_("This tag specifies that columns of the image are stored in interleaved "
+        "order. The value of the tag specifies the number of interleaved fields. "
+        "The use of a non-default value for this tag requires setting the "
+        "DNGBackwardVersion tag to at least 1.7.1.0."),
+     IfdId::ifd0Id, SectionId::dngTags, unsignedLong, 1, printValue},  // DNG 1.7 tag
+    {0xcd44, "ImageSequenceInfo", N_("Image Sequence Info"),
+     N_("This is an informative tag that describes how the image file relates "
+        "to other image files captured in a sequence. Applications include focus "
+        "stacking, merging multiple frames to reduce noise, time lapses, exposure "
+        "brackets, stitched images for super resolution, and so on."),
+     IfdId::ifd0Id, SectionId::dngTags, undefined, -1, printValue},  // DNG 1.7 tag
+    {0xcd46, "ImageStats", N_("Image Stats"),
+     N_("This is an informative tag that provides basic statistical information "
+        "about the pixel values of the image in this IFD. Possible applications "
+        "include normalizing brightness of images when multiple images are displayed "
+        "together (especially when mixing Standard Dynamic Range and High Dynamic "
+        "Range images), identifying underexposed or overexposed images, and so on."),
+     IfdId::ifd0Id, SectionId::dngTags, undefined, -1, printValue},  // DNG 1.7 tag
+    {0xcd47, "ProfileDynamicRange", N_("Profile Dynamic Range"),
+     N_("This tag describes the intended rendering output dynamic range for a given "
+        "camera profile."),
+     IfdId::ifd0Id, SectionId::dngTags, undefined, 8, printValue},  // DNG 1.7 tag
+    {0xcd48, "ProfileGroupName", N_("Profile Group Name"),
+     N_("A UTF-8 encoded string containing the 'group name' of the camera profile. "
+        "The purpose of this tag is to associate two or more related camera profiles "
+        "into a common group."),
+     IfdId::ifd0Id, SectionId::dngTags, asciiString, -1, printValue},  // DNG 1.7 tag
+    {0xcd49, "JXLDistance", N_("JXL Distance"),
+     N_("This optional tag specifies the distance parameter used to encode the JPEG "
+        "XL data in this IFD. A value of 0.0 means lossless compression, while values "
+        "greater than 0.0 means lossy compression."),
+     IfdId::ifd0Id, SectionId::dngTags, tiffFloat, -1, printValue},  // DNG 1.7 tag
+    {0xcd4a, "JXLEffort", N_("JXL Effort"),
+     N_("This optional tag specifies the effort parameter used to encode the JPEG XL "
+        "data in this IFD. Values range from 1 (low) to 9 (high)."),
+     IfdId::ifd0Id, SectionId::dngTags, unsignedLong, -1, printValue},  // DNG 1.7 tag
+    {0xcd4b, "JXLDecodeSpeed", N_("JXL Decode Speed"),
+     N_("This optional tag specifies the decode speed parameter used to encode the "
+        "JPEG XL data in this IFD. Values range from 1 (slow) to 4 (fast)."),
+     IfdId::ifd0Id, SectionId::dngTags, unsignedLong, -1, printValue},  // DNG 1.7 tag
 
     ////////////////////////////////////////
     // End of list marker
     {0xffff, "(UnknownIfdTag)", N_("Unknown IFD tag"), N_("Unknown IFD tag"), IfdId::ifd0Id, SectionId::sectionIdNotSet,
      asciiString, -1, printValue},
 };
+// clang-format on
 
 const TagInfo* ifdTagList() {
   return ifdTagInfo;
@@ -1668,7 +1768,11 @@ const TagInfo* ifdTagList() {
 
 //! CompositeImage, tag 0xa460
 constexpr TagDetails exifCompositeImage[] = {
-    {0, N_("Unknown")}, {1, N_("NonComposite")}, {2, N_("GeneralComposite")}, {3, N_("CompositeCapturedWhenShooting")}};
+    {0, N_("Unknown")},
+    {1, N_("NonComposite")},
+    {2, N_("GeneralComposite")},
+    {3, N_("CompositeCapturedWhenShooting")},
+};
 
 // Exif IFD Tags
 constexpr TagInfo exifTagInfo[] = {
@@ -2004,8 +2108,8 @@ constexpr TagInfo exifTagInfo[] = {
         "for the lens that was used in photography. When the minimum F "
         "number is unknown, the notation is 0/0"),
      IfdId::exifId, SectionId::otherTags, unsignedRational, 4, printLensSpecification},
-    {0xa433, "LensMake", N_("Lens Make"), N_("This tag records the lens manufactor as an ASCII string."), IfdId::exifId,
-     SectionId::otherTags, asciiString, 0, printValue},
+    {0xa433, "LensMake", N_("Lens Make"), N_("This tag records the lens manufacturer as an ASCII string."),
+     IfdId::exifId, SectionId::otherTags, asciiString, 0, printValue},
     {0xa434, "LensModel", N_("Lens Model"),
      N_("This tag records the lens's model name and model number as an "
         "ASCII string."),
@@ -2014,6 +2118,28 @@ constexpr TagInfo exifTagInfo[] = {
      N_("This tag records the serial number of the interchangeable lens "
         "that was used in photography as an ASCII string."),
      IfdId::exifId, SectionId::otherTags, asciiString, 0, printValue},
+    {0xa436, "ImageTitle", N_("Image Title"), N_("This tag records the title of the image."), IfdId::exifId,
+     SectionId::otherTags, asciiString, 0, printValue},  // Exif 3.0
+    {0xa437, "Photographer", N_("Photographer"), N_("This tag records the name of the photographer."), IfdId::exifId,
+     SectionId::otherTags, asciiString, 0, printValue},  // Exif 3.0
+    {0xa438, "ImageEditor", N_("Image Editor"),
+     N_("This tag records the name of the main person who edited the image. Preferably, a single name is written "
+        "(individual name, group/organization name, etc.), but multiple main editors may be entered."),
+     IfdId::exifId, SectionId::otherTags, asciiString, 0, printValue},  // Exif 3.0
+    {0xa439, "CameraFirmware", N_("Camera Firmware"),
+     N_("This tag records the name and version of the software or firmware of the camera used to generate the image."),
+     IfdId::exifId, SectionId::otherTags, asciiString, 0, printValue},  // Exif 3.0
+    {0xa43a, "RAWDevelopingSoftware", N_("RAW Developing Software"),
+     N_("This tag records the name and version of the software used to develop the RAW image."), IfdId::exifId,
+     SectionId::otherTags, asciiString, 0, printValue},  // Exif 3.0
+    {0xa43b, "ImageEditingSoftware", N_("Image Editing Software"),
+     N_("This tag records the name and version of the main software used for processing and editing the image. "
+        "Preferably, a single software is written, but multiple main software may be entered."),
+     IfdId::exifId, SectionId::otherTags, asciiString, 0, printValue},  // Exif 3.0
+    {0xa43c, "MetadataEditingSoftware", N_("Metadata Editing Software"),
+     N_("This tag records the name and version of one software used to edit the metadata of the image without "
+        "processing or editing of the image data itself."),
+     IfdId::exifId, SectionId::otherTags, asciiString, 0, printValue},  // Exif 3.0
     {0xa460, "CompositeImage", N_("Composite Image"),
      N_("Indicates whether the recorded image is a composite image or not."), IfdId::exifId, SectionId::captureCond,
      unsignedShort, 1, EXV_PRINT_TAG(exifCompositeImage)},  // Exif 2.32
@@ -2040,32 +2166,60 @@ const TagInfo* exifTagList() {
 }
 
 //! GPS latitude reference, tag 0x0001; also GPSDestLatitudeRef, tag 0x0013
-constexpr TagDetails exifGPSLatitudeRef[] = {{78, N_("North")}, {83, N_("South")}};
+constexpr TagDetails exifGPSLatitudeRef[] = {
+    {78, N_("North")},
+    {83, N_("South")},
+};
 
 //! GPS longitude reference, tag 0x0003; also GPSDestLongitudeRef, tag 0x0015
-constexpr TagDetails exifGPSLongitudeRef[] = {{69, N_("East")}, {87, N_("West")}};
+constexpr TagDetails exifGPSLongitudeRef[] = {
+    {69, N_("East")},
+    {87, N_("West")},
+};
 
 //! GPS altitude reference, tag 0x0005
-constexpr TagDetails exifGPSAltitudeRef[] = {{0, N_("Above sea level")}, {1, N_("Below sea level")}};
+constexpr TagDetails exifGPSAltitudeRef[] = {
+    {0, N_("Above sea level")},
+    {1, N_("Below sea level")},
+};
 
 //! GPS status, tag 0x0009
-constexpr TagDetails exifGPSStatus[] = {{'A', N_("Measurement in progress")}, {'V', N_("Measurement interrupted")}};
+constexpr TagDetails exifGPSStatus[] = {
+    {'A', N_("Measurement in progress")},
+    {'V', N_("Measurement interrupted")},
+};
 
 //! GPS measurement mode, tag 0x000a
-constexpr TagDetails exifGPSMeasureMode[] = {{'2', N_("2-dimensional measurement")},
-                                             {'3', N_("3-dimensional measurement")}};
+constexpr TagDetails exifGPSMeasureMode[] = {
+    {'2', N_("2-dimensional measurement")},
+    {'3', N_("3-dimensional measurement")},
+};
 
 //! GPS speed reference, tag 0x000c
-constexpr TagDetails exifGPSSpeedRef[] = {{'K', N_("km/h")}, {'M', N_("mph")}, {'N', N_("knots")}};
+constexpr TagDetails exifGPSSpeedRef[] = {
+    {'K', N_("km/h")},
+    {'M', N_("mph")},
+    {'N', N_("knots")},
+};
 
 //! GPS direction reference, tags 0x000e, 0x0010, 0x0017
-constexpr TagDetails exifGPSDirRef[] = {{'T', N_("True direction")}, {'M', N_("Magnetic direction")}};
+constexpr TagDetails exifGPSDirRef[] = {
+    {'T', N_("True direction")},
+    {'M', N_("Magnetic direction")},
+};
 
 //! GPS destination distance reference, tag 0x0019
-constexpr TagDetails exifGPSDestDistanceRef[] = {{'K', N_("km")}, {'M', N_("miles")}, {'N', N_("nautical miles")}};
+constexpr TagDetails exifGPSDestDistanceRef[] = {
+    {'K', N_("km")},
+    {'M', N_("miles")},
+    {'N', N_("nautical miles")},
+};
 
 //! GPS differential correction, tag 0x001e
-constexpr TagDetails exifGPSDifferential[] = {{0, N_("Without correction")}, {1, N_("Correction applied")}};
+constexpr TagDetails exifGPSDifferential[] = {
+    {0, N_("Without correction")},
+    {1, N_("Correction applied")},
+};
 
 // GPS Info Tags
 constexpr TagInfo gpsTagInfo[] = {
@@ -2243,7 +2397,7 @@ constexpr TagInfo mpfTagInfo[] = {
      unsignedLong, 1, printValue},
     {0xb201, "MPFPanOrientation", N_("MPFPanOrientation"), N_("MPFPanOrientation"), IfdId::mpfId, SectionId::mpfTags,
      unsignedLong, 1, printValue},
-    {0xb202, "MPFPanOverlapH", N_("MPFPanOverlapH"), N_("MPF Pan Overlap Horizonal"), IfdId::mpfId, SectionId::mpfTags,
+    {0xb202, "MPFPanOverlapH", N_("MPFPanOverlapH"), N_("MPF Pan Overlap Horizontal"), IfdId::mpfId, SectionId::mpfTags,
      unsignedLong, 1, printValue},
     {0xb203, "MPFPanOverlapV", N_("MPFPanOverlapV"), N_("MPF Pan Overlap Vertical"), IfdId::mpfId, SectionId::mpfTags,
      unsignedLong, 1, printValue},
@@ -2319,12 +2473,8 @@ const TagInfo* mnTagList() {
 }
 
 bool isMakerIfd(IfdId ifdId) {
-  bool rc = false;
-  const GroupInfo* ii = find(groupInfo, ifdId);
-  if (ii && 0 == strcmp(ii->ifdName_, "Makernote")) {
-    rc = true;
-  }
-  return rc;
+  auto ii = Exiv2::find(groupInfo, ifdId);
+  return ii && strcmp(ii->ifdName_, "Makernote") == 0;
 }
 
 bool isExifIfd(IfdId ifdId) {
@@ -2355,8 +2505,7 @@ bool isExifIfd(IfdId ifdId) {
 }
 
 void taglist(std::ostream& os, IfdId ifdId) {
-  const TagInfo* ti = Internal::tagList(ifdId);
-  if (ti) {
+  if (auto ti = tagList(ifdId)) {
     for (int k = 0; ti[k].tag_ != 0xffff; ++k) {
       os << ti[k] << "\n";
     }
@@ -2364,59 +2513,53 @@ void taglist(std::ostream& os, IfdId ifdId) {
 }  // taglist
 
 const TagInfo* tagList(IfdId ifdId) {
-  const GroupInfo* ii = find(groupInfo, ifdId);
-  if (!ii || !ii->tagList_)
-    return nullptr;
-  return ii->tagList_();
+  if (auto ii = Exiv2::find(groupInfo, ifdId))
+    if (ii->tagList_)
+      return ii->tagList_();
+  return nullptr;
 }  // tagList
 
 const TagInfo* tagInfo(uint16_t tag, IfdId ifdId) {
-  const TagInfo* ti = tagList(ifdId);
-  if (!ti)
-    return nullptr;
-  int idx = 0;
-  for (idx = 0; ti[idx].tag_ != 0xffff; ++idx) {
-    if (ti[idx].tag_ == tag)
-      break;
+  if (auto ti = tagList(ifdId)) {
+    int idx = 0;
+    for (idx = 0; ti[idx].tag_ != 0xffff; ++idx) {
+      if (ti[idx].tag_ == tag)
+        break;
+    }
+    return ti + idx;
   }
-  return &ti[idx];
+  return nullptr;
 }  // tagInfo
 
 const TagInfo* tagInfo(const std::string& tagName, IfdId ifdId) {
-  const TagInfo* ti = tagList(ifdId);
-  if (!ti)
-    return nullptr;
   if (tagName.empty())
     return nullptr;
-  const char* tn = tagName.c_str();
-  for (int idx = 0; ti[idx].tag_ != 0xffff; ++idx) {
-    if (0 == strcmp(ti[idx].name_, tn)) {
-      return &ti[idx];
+  if (auto ti = tagList(ifdId)) {
+    for (int idx = 0; ti[idx].tag_ != 0xffff; ++idx) {
+      if (tagName == ti[idx].name_) {
+        return ti + idx;
+      }
     }
   }
   return nullptr;
 }  // tagInfo
 
 IfdId groupId(const std::string& groupName) {
-  IfdId ifdId = IfdId::ifdIdNotSet;
-  const GroupInfo* ii = find(groupInfo, GroupInfo::GroupName(groupName));
-  if (ii)
-    ifdId = static_cast<IfdId>(ii->ifdId_);
-  return ifdId;
+  if (auto ii = Exiv2::find(groupInfo, groupName))
+    return IfdId{ii->ifdId_};
+  return IfdId::ifdIdNotSet;
 }
 
 const char* ifdName(IfdId ifdId) {
-  const GroupInfo* ii = find(groupInfo, ifdId);
-  if (!ii)
-    return groupInfo[0].ifdName_;
-  return ii->ifdName_;
+  if (auto ii = Exiv2::find(groupInfo, ifdId))
+    return ii->ifdName_;
+  return groupInfo[0].ifdName_;
 }
 
 const char* groupName(IfdId ifdId) {
-  const GroupInfo* ii = find(groupInfo, ifdId);
-  if (!ii)
-    return groupInfo[0].groupName_;
-  return ii->groupName_;
+  if (auto ii = Exiv2::find(groupInfo, ifdId))
+    return ii->groupName_;
+  return groupInfo[0].groupName_;
 }
 
 std::ostream& printValue(std::ostream& os, const Value& value, const ExifData*) {
@@ -2449,7 +2592,7 @@ std::ostream& printBitmask(std::ostream& os, const Value& value, const ExifData*
 }
 
 float fnumber(float apertureValue) {
-  float result = std::exp(std::log(2.0F) * apertureValue / 2.F);
+  float result = std::exp2(apertureValue / 2.F);
   if (std::abs(result - 3.5) < 0.1) {
     result = 3.5;
   }
@@ -2458,7 +2601,7 @@ float fnumber(float apertureValue) {
 
 URational exposureTime(float shutterSpeedValue) {
   URational ur(1, 1);
-  const double tmp = std::exp(std::log(2.0) * static_cast<double>(shutterSpeedValue));
+  const double tmp = std::exp2(shutterSpeedValue);
   if (tmp > 1) {
     const double x = std::round(tmp);
     // Check that x is within the range of a uint32_t before casting.
@@ -2481,10 +2624,7 @@ uint16_t tagNumber(const std::string& tagName, IfdId ifdId) {
     return ti->tag_;
   if (!isHex(tagName, 4, "0x"))
     throw Error(ErrorCode::kerInvalidTag, tagName, ifdId);
-  std::istringstream is(tagName);
-  uint16_t tag = 0;
-  is >> std::hex >> tag;
-  return tag;
+  return static_cast<uint16_t>(std::stoi(tagName, nullptr, 16));
 }  // tagNumber
 
 std::ostream& printInt64(std::ostream& os, const Value& value, const ExifData*) {
@@ -2582,39 +2722,39 @@ std::ostream& printLensSpecification(std::ostream& os, const Value& value, const
     return os;
   }
   // values numerically are ok, so they can be converted
-  // here first and second can be zero, so initialise float with 0.0
-  float focalLength1 = 0.0;
+  // here first and second can be zero, so initialise float with 0.0f
+  float focalLength1 = 0.0f;
   if (value.toRational(0).first != 0)
     focalLength1 = value.toFloat(0);
-  float focalLength2 = 0.0;
+  float focalLength2 = 0.0f;
   if (value.toRational(1).first != 0)
     focalLength2 = value.toFloat(1);
-  float fNumber1 = 0.0;
+  float fNumber1 = 0.0f;
   if (value.toRational(2).first != 0)
     fNumber1 = value.toFloat(2);
-  float fNumber2 = 0.0;
+  float fNumber2 = 0.0f;
   if (value.toRational(3).first != 0)
     fNumber2 = value.toFloat(3);
 
   // first value must not be bigger than second
-  if ((focalLength1 > focalLength2 && focalLength2 > 0.0) || (fNumber1 > fNumber2 && fNumber2 > 0.0)) {
+  if ((focalLength1 > focalLength2 && focalLength2 > 0.0f) || (fNumber1 > fNumber2 && fNumber2 > 0.0f)) {
     os << "(" << value << ")";
     return os;
   }
 
   // no lens specification available
-  if (focalLength1 == 0.0 && focalLength2 == 0.0 && fNumber1 == 0.0 && fNumber2 == 0.0) {
+  if (focalLength1 == 0.0f && focalLength2 == 0.0f && fNumber1 == 0.0f && fNumber2 == 0.0f) {
     os << "n/a";
     return os;
   }
 
   // lens specification available - at least parts
-  if (focalLength1 == 0.0)
+  if (focalLength1 == 0.0f)
     os << "n/a";
   else
     os << std::setprecision(5) << focalLength1;
   if (focalLength1 != focalLength2) {
-    if (focalLength2 == 0.0)
+    if (focalLength2 == 0.0f)
       os << "-n/a ";
     else
       os << "-" << std::setprecision(5) << focalLength2;
@@ -2623,14 +2763,14 @@ std::ostream& printLensSpecification(std::ostream& os, const Value& value, const
   std::ostringstream oss;
   oss.copyfmt(os);
 
-  if (fNumber1 > 0.0 || fNumber2 > 0.0) {
+  if (fNumber1 > 0.0f || fNumber2 > 0.0f) {
     os << " F";
-    if (fNumber1 == 0.0)
+    if (fNumber1 == 0.0f)
       os << " n/a";
     else
       os << std::setprecision(2) << fNumber1;
     if (fNumber1 != fNumber2) {
-      if (fNumber2 == 0.0)
+      if (fNumber2 == 0.0f)
         os << "-n/a";
       else
         os << "-" << std::setprecision(2) << fNumber2;
@@ -2684,7 +2824,7 @@ std::ostream& print0x0007(std::ostream& os, const Value& value, const ExifData*)
     }
     std::ostringstream oss;
     oss.copyfmt(os);
-    const double t = 3600 * value.toFloat(0) + 60 * value.toFloat(1) + value.toFloat(2);
+    const double t = (3600.0 * value.toInt64(0)) + (60.0 * value.toInt64(1)) + value.toFloat(2);
     enforce<std::overflow_error>(std::isfinite(t), "Non-finite time value");
     int p = 0;
     const double fraction = std::fmod(t, 1);
@@ -2697,7 +2837,7 @@ std::ostream& print0x0007(std::ostream& os, const Value& value, const ExifData*)
     const auto hh = static_cast<int>(std::fmod(hours, 24));
 
     os << std::setw(2) << std::setfill('0') << std::right << hh << ":" << std::setw(2) << std::setfill('0')
-       << std::right << mm << ":" << std::setw(2 + p * 2) << std::setfill('0') << std::right << std::fixed
+       << std::right << mm << ":" << std::setw(2 + (p * 2)) << std::setfill('0') << std::right << std::fixed
        << std::setprecision(p) << ss;
 
     os.copyfmt(oss);
@@ -2734,7 +2874,10 @@ std::ostream& print0x0112(std::ostream& os, const Value& value, const ExifData* 
 }
 
 //! YCbCrPositioning, tag 0x0213
-constexpr TagDetails exifYCbCrPositioning[] = {{1, N_("Centered")}, {2, N_("Co-sited")}};
+constexpr TagDetails exifYCbCrPositioning[] = {
+    {1, N_("Centered")},
+    {2, N_("Co-sited")},
+};
 std::ostream& print0x0213(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifYCbCrPositioning)(os, value, metadata);
 }
@@ -2799,7 +2942,8 @@ std::ostream& print0x829d(std::ostream& os, const Value& value, const ExifData*)
 constexpr TagDetails exifExposureProgram[] = {
     {0, N_("Not defined")},       {1, N_("Manual")},           {2, N_("Auto")},
     {3, N_("Aperture priority")}, {4, N_("Shutter priority")}, {5, N_("Creative program")},
-    {6, N_("Action program")},    {7, N_("Portrait mode")},    {8, N_("Landscape mode")}};
+    {6, N_("Action program")},    {7, N_("Portrait mode")},    {8, N_("Landscape mode")},
+};
 
 std::ostream& print0x8822(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifExposureProgram)(os, value, metadata);
@@ -2870,7 +3014,7 @@ std::ostream& print0x9202(std::ostream& os, const Value& value, const ExifData*)
 std::ostream& print0x9204(std::ostream& os, const Value& value, const ExifData*) {
   Rational bias = value.toRational();
 
-  if (bias.first == 0 || bias.first == static_cast<int32_t>(0x80000000)) {
+  if (bias.first == 0 || bias.first == std::numeric_limits<std::int32_t>::min()) {
     os << "0 EV";
   } else if (bias.second <= 0) {
     os << "(" << bias.first << "/" << bias.second << ")";
@@ -2910,7 +3054,7 @@ std::ostream& print0x9206(std::ostream& os, const Value& value, const ExifData*)
 constexpr TagDetails exifMeteringMode[] = {
     {0, N_("Unknown")}, {1, N_("Average")},    {2, N_("Center weighted average")},
     {3, N_("Spot")},    {4, N_("Multi-spot")}, {5, N_("Multi-segment")},
-    {6, N_("Partial")}, {255, N_("Other")},    {255, N_("Other")}  // To silence compiler warning
+    {6, N_("Partial")}, {255, N_("Other")},
 };
 
 std::ostream& print0x9207(std::ostream& os, const Value& value, const ExifData* metadata) {
@@ -2940,20 +3084,23 @@ std::ostream& print0x920a(std::ostream& os, const Value& value, const ExifData*)
 constexpr TagDetails exifColorSpace[] = {
     {1, N_("sRGB")},
     {2, N_("Adobe RGB")},  // Not defined to Exif 2.2 spec. But used by a lot of cameras.
-    {0xffff, N_("Uncalibrated")}};
+    {0xffff, N_("Uncalibrated")},
+};
 
 std::ostream& print0xa001(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifColorSpace)(os, value, metadata);
 }
 
 //! SensingMethod, tag 0xa217
-constexpr TagDetails exifSensingMethod[] = {{1, N_("Not defined")},
-                                            {2, N_("One-chip color area")},
-                                            {3, N_("Two-chip color area")},
-                                            {4, N_("Three-chip color area")},
-                                            {5, N_("Color sequential area")},
-                                            {7, N_("Trilinear sensor")},
-                                            {8, N_("Color sequential linear")}};
+constexpr TagDetails exifSensingMethod[] = {
+    {1, N_("Not defined")},
+    {2, N_("One-chip color area")},
+    {3, N_("Two-chip color area")},
+    {4, N_("Three-chip color area")},
+    {5, N_("Color sequential area")},
+    {7, N_("Trilinear sensor")},
+    {8, N_("Color sequential linear")},
+};
 
 std::ostream& print0xa217(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifSensingMethod)(os, value, metadata);
@@ -2962,36 +3109,49 @@ std::ostream& print0xa217(std::ostream& os, const Value& value, const ExifData* 
 //! FileSource, tag 0xa300
 constexpr TagDetails exifFileSource[] = {
     {1, N_("Film scanner")},             // Not defined to Exif 2.2 spec.
-    {2, N_("Reflexion print scanner")},  // but used by some scanner device softwares.
-    {3, N_("Digital still camera")}};
+    {2, N_("Reflexion print scanner")},  // but used by some scanner device software.
+    {3, N_("Digital still camera")},
+};
 
 std::ostream& print0xa300(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifFileSource)(os, value, metadata);
 }
 
 //! SceneType, tag 0xa301
-constexpr TagDetails exifSceneType[] = {{1, N_("Directly photographed")}};
+constexpr TagDetails exifSceneType[] = {
+    {1, N_("Directly photographed")},
+};
 
 std::ostream& print0xa301(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifSceneType)(os, value, metadata);
 }
 
 //! CustomRendered, tag 0xa401
-constexpr TagDetails exifCustomRendered[] = {{0, N_("Normal process")}, {1, N_("Custom process")}};
+constexpr TagDetails exifCustomRendered[] = {
+    {0, N_("Normal process")},
+    {1, N_("Custom process")},
+};
 
 std::ostream& print0xa401(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifCustomRendered)(os, value, metadata);
 }
 
 //! ExposureMode, tag 0xa402
-constexpr TagDetails exifExposureMode[] = {{0, N_("Auto")}, {1, N_("Manual")}, {2, N_("Auto bracket")}};
+constexpr TagDetails exifExposureMode[] = {
+    {0, N_("Auto")},
+    {1, N_("Manual")},
+    {2, N_("Auto bracket")},
+};
 
 std::ostream& print0xa402(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifExposureMode)(os, value, metadata);
 }
 
 //! WhiteBalance, tag 0xa403
-constexpr TagDetails exifWhiteBalance[] = {{0, N_("Auto")}, {1, N_("Manual")}};
+constexpr TagDetails exifWhiteBalance[] = {
+    {0, N_("Auto")},
+    {1, N_("Manual")},
+};
 
 std::ostream& print0xa403(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifWhiteBalance)(os, value, metadata);
@@ -3013,12 +3173,10 @@ std::ostream& print0xa404(std::ostream& os, const Value& value, const ExifData*)
 }
 
 std::ostream& print0xa405(std::ostream& os, const Value& value, const ExifData*) {
-  const auto length = value.toInt64();
-  if (length == 0) {
+  if (auto length = value.toInt64(); length == 0)
     os << _("Unknown");
-  } else {
+  else
     os << length << ".0 mm";
-  }
   return os;
 }
 
@@ -3028,7 +3186,6 @@ constexpr TagDetails exifSceneCaptureType[] = {
     {1, N_("Landscape")},
     {2, N_("Portrait")},
     {3, N_("Night scene")},
-    {3, N_("Night scene")}  // To silence compiler warning
 };
 
 std::ostream& print0xa406(std::ostream& os, const Value& value, const ExifData* metadata) {
@@ -3036,18 +3193,21 @@ std::ostream& print0xa406(std::ostream& os, const Value& value, const ExifData* 
 }
 
 //! GainControl, tag 0xa407
-constexpr TagDetails exifGainControl[] = {{0, N_("None")},
-                                          {1, N_("Low gain up")},
-                                          {2, N_("High gain up")},
-                                          {3, N_("Low gain down")},
-                                          {4, N_("High gain down")}};
+constexpr TagDetails exifGainControl[] = {
+    {0, N_("None")},          {1, N_("Low gain up")},    {2, N_("High gain up")},
+    {3, N_("Low gain down")}, {4, N_("High gain down")},
+};
 
 std::ostream& print0xa407(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifGainControl)(os, value, metadata);
 }
 
 //! Saturation, tag 0xa409
-constexpr TagDetails exifSaturation[] = {{0, N_("Normal")}, {1, N_("Low")}, {2, N_("High")}};
+constexpr TagDetails exifSaturation[] = {
+    {0, N_("Normal")},
+    {1, N_("Low")},
+    {2, N_("High")},
+};
 
 std::ostream& print0xa409(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifSaturation)(os, value, metadata);
@@ -3059,7 +3219,6 @@ constexpr TagDetails exifSubjectDistanceRange[] = {
     {1, N_("Macro")},
     {2, N_("Close view")},
     {3, N_("Distant view")},
-    {3, N_("Distant view")}  // To silence compiler warning
 };
 
 std::ostream& print0xa40c(std::ostream& os, const Value& value, const ExifData* metadata) {
@@ -3071,7 +3230,11 @@ std::ostream& printGPSDirRef(std::ostream& os, const Value& value, const ExifDat
 }
 
 //! Contrast, tag 0xa408 and Sharpness, tag 0xa40a
-constexpr TagDetails exifNormalSoftHard[] = {{0, N_("Normal")}, {1, N_("Soft")}, {2, N_("Hard")}};
+constexpr TagDetails exifNormalSoftHard[] = {
+    {0, N_("Normal")},
+    {1, N_("Soft")},
+    {2, N_("Hard")},
+};
 
 std::ostream& printNormalSoftHard(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(exifNormalSoftHard)(os, value, metadata);
@@ -3105,7 +3268,7 @@ std::ostream& printXmpDate(std::ostream& os, const Value& value, const ExifData*
   }
 
   std::string stringValue = value.toString();
-  if (stringValue.size() == 20 && stringValue.at(19) == 'Z') {
+  if (stringValue.size() == 20 && stringValue.back() == 'Z') {
     stringValue.pop_back();
   }
   std::replace(stringValue.begin(), stringValue.end(), 'T', ' ');
@@ -3119,7 +3282,7 @@ const GroupInfo* groupList() {
 }
 
 const TagInfo* tagList(const std::string& groupName) {
-  const GroupInfo* ii = find(groupInfo, GroupInfo::GroupName(groupName));
+  auto ii = Exiv2::find(groupInfo, groupName);
   if (!ii || !ii->tagList_) {
     return nullptr;
   }

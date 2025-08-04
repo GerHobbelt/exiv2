@@ -5,7 +5,7 @@
 
 #include "error.hpp"
 #include "i18n.h"  // NLS support.
-#include "metadatum.hpp"
+#include "image_int.hpp"
 #include "tags_int.hpp"
 #include "types.hpp"
 #include "value.hpp"
@@ -21,7 +21,7 @@ struct XmpPrintInfo {
     return key == key_;
   }
 
-  const char* key_;           //!< XMP key
+  std::string_view key_;      //!< XMP key
   Exiv2::PrintFct printFct_;  //!< Print function
 };
 
@@ -527,7 +527,7 @@ const XmpPropertyInfo xmpXmpDMInfo[] = {
     {"videoFrameSize", N_("Video Frame Size"), "Dimensions", xmpText, xmpInternal,
      N_("The frame size. For example: w:720, h: 480, unit:pixels")},
     {"videoModDate", N_("Video Modified Date"), "Date", xmpText, xmpInternal,
-     N_("(deprecated)The date and time when the video was last modified.")},
+     N_("(deprecated) The date and time when the video was last modified.")},
     {"videoPixelDepth", N_("Video Pixel Depth"), "closed Choice of Text", xmpText, xmpInternal,
      N_("The size in bits of each color component of a pixel. Standard Windows 32-bit "
         "pixels have 8 bits per component. One of: 8Int, 16Int, 32Int, 32Float.")},
@@ -3432,7 +3432,7 @@ const XmpPropertyInfo xmpVideoInfo[] = {
     {"AspectRatio", N_("Video Aspect Ratio"), "Rational", xmpText, xmpExternal,
      N_("Ratio of Width:Height, helps to determine how a video would be displayed on a screen")},
     {"AspectRatioType", N_("Video Aspect Ratio Type"), "Text", xmpText, xmpExternal,
-     N_("Aspect Ratio Type. Eg - Free-Resizing or Fixed")},
+     N_("Aspect Ratio Type. E.g.: Free-Resizing or Fixed")},
     {"AttachFileData", N_("Attached File Data"), "Text", xmpText, xmpExternal, N_("Attached File Data")},
     {"AttachFileDesc", N_("Attached File Description"), "Text", xmpText, xmpExternal, N_("Attached File Description")},
     {"AttachFileMIME", N_("Attached File MIME Type"), "Text", xmpText, xmpExternal, N_("Attached File MIME Type")},
@@ -3483,15 +3483,15 @@ const XmpPropertyInfo xmpVideoInfo[] = {
      N_("Information about the Compressor Version.")},
     {"Container", N_("Container Type"), "Text", xmpText, xmpExternal, N_("Primary Metadata Container")},
     {"ContentCompressAlgo", N_("Content Compression Algorithm"), "Text", xmpText, xmpExternal,
-     N_("Content Compression Algorithm. Eg: zlib")},
+     N_("Content Compression Algorithm. E.g.: zlib")},
     {"ContentEncodingType", N_("Content Encoding Type"), "Text", xmpText, xmpExternal,
-     N_("Content Encoding Type. Eg: Encryption or Compression")},
+     N_("Content Encoding Type. E.g.: Encryption or Compression")},
     {"ContentEncryptAlgo", N_("Content Encryption Algorithm"), "Text", xmpText, xmpExternal,
-     N_("Content Encryption Algorithm. Eg: Blowfish")},
+     N_("Content Encryption Algorithm. E.g.: Blowfish")},
     {"ContentSignAlgo", N_("Content Signature Algorithm"), "Text", xmpText, xmpExternal,
-     N_("Content Signature Algorithm. Eg: RSA")},
+     N_("Content Signature Algorithm. E.g.: RSA")},
     {"ContentSignHashAlgo", N_("Content Sign Hash Algorithm"), "Text", xmpText, xmpExternal,
-     N_("Content Signature Hash Algorithm. Eg: SHA1-160 or MD5")},
+     N_("Content Signature Hash Algorithm. E.g.: SHA1-160 or MD5")},
     {"Contrast", N_("Contrast"), "Closed Choice of Integer", xmpText, xmpInternal,
      N_("Indicates the direction of contrast processing applied by the camera.")},
     {"Copyright", N_("Copyright"), "Text", xmpText, xmpExternal,
@@ -3530,7 +3530,7 @@ const XmpPropertyInfo xmpVideoInfo[] = {
      N_("Information about the Dimensions of the video frame.")},
     {"Director", N_("Director"), "Text", xmpText, xmpExternal, N_("Information about the Director.")},
     {"DisplayUnit", N_("Video Display Unit"), "Text", xmpText, xmpExternal,
-     N_("Video display unit. Eg - cm, pixels, inch")},
+     N_("Video display unit. E.g.: cm, pixels, inch")},
     {"DistributedBy", N_("Distributed By"), "Text", xmpText, xmpExternal,
      N_("Distributed By, i.e. name of person or organization.")},
     {"DocType", N_("Doc Type"), "Text", xmpText, xmpExternal,
@@ -3598,7 +3598,8 @@ const XmpPropertyInfo xmpVideoInfo[] = {
     {"FNumber", N_("F Number"), "Rational", xmpText, xmpInternal, N_("F number. Camera Lens specific data.")},
     {"FocalLength", N_("Focal Length"), "Rational", xmpText, xmpInternal,
      N_("Focal length of the lens, in millimeters.")},
-    {"FocusMode", N_("Focus Mode"), "Text", xmpText, xmpExternal, N_("Focus Mode of the Lens. Eg - AF for Auto Focus")},
+    {"FocusMode", N_("Focus Mode"), "Text", xmpText, xmpExternal,
+     N_("Focus Mode of the Lens. E.g.: AF for Auto Focus")},
     {"Format", N_("Format"), "Text", xmpText, xmpExternal,
      N_("Indication of movie format (computer-generated, digitized, and so on).")},
     {"FrameCount", N_("Frame Count"), "Integer", xmpText, xmpExternal, N_("Total number of frames in a video")},
@@ -3802,7 +3803,7 @@ const XmpPropertyInfo xmpVideoInfo[] = {
      N_("A reference to the project that created this file.")},
     {"Rate", N_("Rate"), "Integer", xmpText, xmpExternal, N_("Rate.")},
     {"Rated", N_("Rated"), "Text", xmpText, xmpExternal, N_("The age circle required for viewing the video.")},
-    {"Rating", N_("Rating"), "Text", xmpText, xmpExternal, N_("Rating, eg. 7  or 8 (generally out of 10).")},
+    {"Rating", N_("Rating"), "Text", xmpText, xmpExternal, N_("Rating, e.g. 7  or 8 (generally out of 10).")},
     {"RecordLabelName", N_("Record Label Name"), "Text", xmpText, xmpExternal,
      N_("Record Label Name, or the name of the organization recording the video.")},
     {"RecordLabelURL", N_("Record Label URL"), "Text", xmpText, xmpExternal, N_("Record Label URL.")},
@@ -3813,7 +3814,7 @@ const XmpPropertyInfo xmpVideoInfo[] = {
     {"RippedBy", N_("Ripped By"), "Text", xmpText, xmpExternal, N_("Ripped By, i.e. name of person or organization.")},
     {"Saturation", N_("Saturation"), "Closed Choice of Integer", xmpText, xmpInternal,
      N_("Indicates the direction of saturation processing applied by the camera.")},
-    {"SecondaryGenre", N_("Secondary Genre"), "Text", xmpText, xmpExternal, N_("The name of the secondary genre..")},
+    {"SecondaryGenre", N_("Secondary Genre"), "Text", xmpText, xmpExternal, N_("The name of the secondary genre.")},
     {"SelectionTime", N_("Selection Time"), "Integer", xmpText, xmpExternal,
      N_("The time value for the start time of the current selection.")},
     {"SelectionDuration", N_("Selection Duration"), "Integer", xmpText, xmpExternal,
@@ -3837,13 +3838,13 @@ const XmpPropertyInfo xmpVideoInfo[] = {
     {"Statistics", N_("Statistics"), "Text", xmpText, xmpExternal, N_("Statistics.")},
     {"StreamCount", N_("Stream Count"), "Integer", xmpText, xmpExternal, N_("Total Number Of Streams")},
     {"StreamName", N_("Stream Name"), "Text", xmpText, xmpExternal,
-     N_("Describes the Stream Name. Eg - FUJIFILM AVI STREAM 0100")},
+     N_("Describes the Stream Name. E.g.: FUJIFILM AVI STREAM 0100")},
     {"StreamQuality", N_("Stream Quality"), "Integer", xmpText, xmpExternal, N_("General Stream Quality")},
     {"StreamSampleRate", N_("Stream Sample Rate"), "Rational", xmpText, xmpExternal, N_("Stream Sample Rate")},
     {"StreamSampleCount", N_("Stream Sample Count"), "Integer", xmpText, xmpExternal, N_("Stream Sample Count")},
     {"StreamSampleSize", N_("Stream Sample Size"), "Integer", xmpText, xmpExternal, N_("General Stream Sample Size")},
     {"StreamType", N_("Stream Type"), "Text", xmpText, xmpExternal,
-     N_("Describes the Stream Type. Eg - Video, Audio or Subtitles")},
+     N_("Describes the Stream Type. E.g.: Video, Audio or Subtitles")},
     {"SubTCodec", N_("Subtitles Codec"), "Text", xmpText, xmpExternal,
      N_("Subtitles stream codec, for general purpose")},
     {"SubTCodecDecodeAll", N_("Subtitle Codec Decode Info"), "Text", xmpText, xmpExternal,
@@ -3896,7 +3897,7 @@ const XmpPropertyInfo xmpVideoInfo[] = {
     {"TotalFrameCount", N_("Total Frame Count"), "Integer", xmpText, xmpExternal,
      N_("Total number of frames in a video")},
     {"TotalStream", N_("Number Of Streams"), "Integer", xmpText, xmpExternal,
-     N_("Total number of streams present in a video. Eg - Video, Audio or Subtitles")},
+     N_("Total number of streams present in a video. E.g.: Video, Audio or Subtitles")},
     {"Track", N_("Track"), "Text", xmpText, xmpExternal, N_("Information about the Track.")},
     {"TrackCreateDate", N_("Video Track Create Date"), "Integer", xmpText, xmpExternal,
      N_("A 32-bit integer that indicates (in seconds since midnight, January 1, 1904) when the track header was "
@@ -3969,7 +3970,8 @@ const XmpPropertyInfo xmpVideoInfo[] = {
     {"Year", N_("Year"), "Integer", xmpText, xmpExternal, N_("Year in which the video was made.")},
     {"YResolution", N_("Y Resolution"), "Rational", xmpText, xmpInternal,
      N_("Vertical resolution in pixels per unit.")},
-    {nullptr, nullptr, nullptr, invalidTypeId, xmpInternal, nullptr}};
+    {nullptr, nullptr, nullptr, invalidTypeId, xmpInternal, nullptr},
+};
 
 const XmpPropertyInfo xmpAudioInfo[] = {
     {"AvgBytePerSec", N_("Average Bytes Per Second"), "Integer", xmpText, xmpExternal,
@@ -4821,7 +4823,8 @@ const XmpPropertyInfo xmpDwCInfo[] = {
     {"measurementRemarks", N_("Measurement Remarks"), "Text", xmpText, xmpExternal,
      N_("Comments or notes accompanying the MeasurementOrFact.")},
     // End of list marker
-    {nullptr, nullptr, nullptr, invalidTypeId, xmpInternal, nullptr}};
+    {nullptr, nullptr, nullptr, invalidTypeId, xmpInternal, nullptr},
+};
 
 const XmpPropertyInfo xmpAcdseeInfo[] = {
     {"caption", N_("Caption"), "Text", xmpText, xmpExternal, N_("A brief description of the file")},
@@ -4834,9 +4837,10 @@ const XmpPropertyInfo xmpAcdseeInfo[] = {
     {"categories", N_("Categories"), "Text", xmpText, xmpExternal, N_("Catalog of hierarchical keywords and groups")},
 
     // End of list marker
-    {nullptr, nullptr, nullptr, invalidTypeId, xmpInternal, nullptr}};
+    {nullptr, nullptr, nullptr, invalidTypeId, xmpInternal, nullptr},
+};
 
-const XmpPrintInfo xmpPrintInfo[] = {
+constexpr XmpPrintInfo xmpPrintInfo[] = {
     {"Xmp.crs.CropUnits", EXV_PRINT_TAG(crsCropUnits)},
     {"Xmp.exif.ApertureValue", print0x9202},
     {"Xmp.exif.BrightnessValue", printFloat},
@@ -4902,13 +4906,8 @@ const XmpPrintInfo xmpPrintInfo[] = {
     {"Xmp.plus.MinorModelAgeDisclosure", EXV_PRINT_VOCABULARY(plusMinorModelAgeDisclosure)},
     {"Xmp.plus.ModelReleaseStatus", EXV_PRINT_VOCABULARY(plusModelReleaseStatus)},
     {"Xmp.plus.PropertyReleaseStatus", EXV_PRINT_VOCABULARY(plusPropertyReleaseStatus)},
-    {"Xmp.plus.Reuse", EXV_PRINT_VOCABULARY(plusReuse)}};
-
-XmpNsInfo::Ns::Ns(std::string ns) : ns_(std::move(ns)) {
-}
-
-XmpNsInfo::Prefix::Prefix(std::string prefix) : prefix_(std::move(prefix)) {
-}
+    {"Xmp.plus.Reuse", EXV_PRINT_VOCABULARY(plusReuse)},
+};
 
 bool XmpNsInfo::operator==(const XmpNsInfo::Ns& ns) const {
   return ns_ == ns.ns_;
@@ -4942,11 +4941,10 @@ const XmpNsInfo* XmpProperties::lookupNsRegistryUnsafe(const XmpNsInfo::Prefix& 
 void XmpProperties::registerNs(const std::string& ns, const std::string& prefix) {
   auto scopedWriteLock = std::scoped_lock(mutex_);
   std::string ns2 = ns;
-  if (ns2.substr(ns2.size() - 1, 1) != "/" && ns2.substr(ns2.size() - 1, 1) != "#")
-    ns2 += "/";
+  if (ns2.back() != '/' && ns2.back() != '#')
+    ns2 += '/';
   // Check if there is already a registered namespace with this prefix
-  const XmpNsInfo* xnp = lookupNsRegistryUnsafe(XmpNsInfo::Prefix(prefix));
-  if (xnp) {
+  if (auto xnp = lookupNsRegistryUnsafe(XmpNsInfo::Prefix{prefix})) {
 #ifndef SUPPRESS_WARNINGS
     if (ns2 != xnp->ns_)
       EXV_WARNING << "Updating namespace URI for " << prefix << " from " << xnp->ns_ << " to " << ns2 << "\n";
@@ -4995,25 +4993,21 @@ void XmpProperties::unregisterNs() {
 std::string XmpProperties::prefix(const std::string& ns) {
   auto scoped_read_lock = std::scoped_lock(mutex_);
   std::string ns2 = ns;
-  if (ns2.substr(ns2.size() - 1, 1) != "/" && ns2.substr(ns2.size() - 1, 1) != "#")
-    ns2 += "/";
+  if (ns2.back() != '/' && ns2.back() != '#')
+    ns2 += '/';
 
   auto i = nsRegistry_.find(ns2);
   std::string p;
-  if (i != nsRegistry_.end()) {
+  if (i != nsRegistry_.end())
     p = i->second.prefix_;
-  } else {
-    const XmpNsInfo* xn = find(xmpNsInfo, XmpNsInfo::Ns(ns2));
-    if (xn)
-      p = std::string(xn->prefix_);
-  }
+  else if (auto xn = Exiv2::find(xmpNsInfo, XmpNsInfo::Ns{std::move(ns2)}))
+    p = std::string(xn->prefix_);
   return p;
 }
 
 std::string XmpProperties::ns(const std::string& prefix) {
   auto scoped_read_lock = std::scoped_lock(mutex_);
-  const XmpNsInfo* xn = lookupNsRegistryUnsafe(XmpNsInfo::Prefix(prefix));
-  if (xn)
+  if (auto xn = lookupNsRegistryUnsafe(XmpNsInfo::Prefix{prefix}))
     return xn->ns_;
   return nsInfoUnsafe(prefix)->ns_;
 }
@@ -5037,10 +5031,8 @@ const XmpPropertyInfo* XmpProperties::propertyInfo(const XmpKey& key) {
   std::string prefix = key.groupName();
   std::string property = key.tagName();
   // If property is a path for a nested property, determines the innermost element
-  std::string::size_type i = property.find_last_of('/');
-  if (i != std::string::npos) {
-    for (; i != std::string::npos && !isalpha(property.at(i)); ++i) {
-    }
+  if (auto i = property.find_last_of('/'); i != std::string::npos) {
+    i = std::distance(property.begin(), std::find_if(property.begin() + i, property.end(), isalpha));
     property = property.substr(i);
     i = property.find_first_of(':');
     if (i != std::string::npos) {
@@ -5051,17 +5043,14 @@ const XmpPropertyInfo* XmpProperties::propertyInfo(const XmpKey& key) {
     std::cout << "Nested key: " << key.key() << ", prefix: " << prefix << ", property: " << property << "\n";
 #endif
   }
-  const XmpPropertyInfo* pl = propertyList(prefix);
-  if (!pl)
-    return nullptr;
-  const XmpPropertyInfo* pi = nullptr;
-  for (int j = 0; pl[j].name_; ++j) {
-    if (property == pl[j].name_) {
-      pi = pl + j;
-      break;
+  if (auto pl = propertyList(prefix)) {
+    for (size_t j = 0; pl[j].name_; ++j) {
+      if (property == pl[j].name_) {
+        return pl + j;
+      }
     }
   }
-  return pi;
+  return nullptr;
 }
 
 /// \todo not used internally. At least we should test it
@@ -5079,10 +5068,10 @@ const XmpNsInfo* XmpProperties::nsInfo(const std::string& prefix) {
 }
 
 const XmpNsInfo* XmpProperties::nsInfoUnsafe(const std::string& prefix) {
-  const XmpNsInfo::Prefix pf(prefix);
+  const auto pf = XmpNsInfo::Prefix{prefix};
   const XmpNsInfo* xn = lookupNsRegistryUnsafe(pf);
   if (!xn)
-    xn = find(xmpNsInfo, pf);
+    xn = Exiv2::find(xmpNsInfo, pf);
   if (!xn)
     throw Error(ErrorCode::kerNoNamespaceInfoForXmpPrefix, prefix);
   return xn;
@@ -5096,8 +5085,7 @@ void XmpProperties::registeredNamespaces(Exiv2::Dictionary& nsDict) {
 }
 
 void XmpProperties::printProperties(std::ostream& os, const std::string& prefix) {
-  const XmpPropertyInfo* pl = propertyList(prefix);
-  if (pl) {
+  if (auto pl = propertyList(prefix)) {
     for (int i = 0; pl[i].name_; ++i) {
       os << pl[i];
     }
@@ -5108,8 +5096,7 @@ void XmpProperties::printProperties(std::ostream& os, const std::string& prefix)
 std::ostream& XmpProperties::printProperty(std::ostream& os, const std::string& key, const Value& value) {
   PrintFct fct = printValue;
   if (value.count() != 0) {
-    const XmpPrintInfo* info = find(xmpPrintInfo, key);
-    if (info)
+    if (auto info = Exiv2::find(xmpPrintInfo, key))
       fct = info->printFct_;
   }
   return fct(os, value, nullptr);
@@ -5155,13 +5142,12 @@ XmpKey::XmpKey(const std::string& prefix, const std::string& property) : p_(std:
 
 XmpKey::~XmpKey() = default;
 
-XmpKey::XmpKey(const XmpKey& rhs) : Key(), p_(std::make_unique<Impl>(*rhs.p_)) {
+XmpKey::XmpKey(const XmpKey& rhs) : p_(std::make_unique<Impl>(*rhs.p_)) {
 }
 
 XmpKey& XmpKey::operator=(const XmpKey& rhs) {
   if (this == &rhs)
     return *this;
-  Key::operator=(rhs);
   *p_ = *rhs.p_;
   return *this;
 }
@@ -5175,11 +5161,11 @@ XmpKey* XmpKey::clone_() const {
 }
 
 std::string XmpKey::key() const {
-  return std::string(p_->familyName_) + "." + p_->prefix_ + "." + p_->property_;
+  return std::string(Exiv2::XmpKey::Impl::familyName_) + "." + p_->prefix_ + "." + p_->property_;
 }
 
 const char* XmpKey::familyName() const {
-  return p_->familyName_;
+  return Exiv2::XmpKey::Impl::familyName_;
 }
 
 std::string XmpKey::groupName() const {
@@ -5215,12 +5201,9 @@ std::string XmpKey::ns() const {
 //! @cond IGNORE
 void XmpKey::Impl::decomposeKey(const std::string& key) {
   // Get the family name, prefix and property name parts of the key
+  if (!key.starts_with(familyName_))
+    throw Error(ErrorCode::kerInvalidKey, key);
   std::string::size_type pos1 = key.find('.');
-  if (pos1 == std::string::npos)
-    throw Error(ErrorCode::kerInvalidKey, key);
-  std::string familyName = key.substr(0, pos1);
-  if (familyName != familyName_)
-    throw Error(ErrorCode::kerInvalidKey, key);
   std::string::size_type pos0 = pos1 + 1;
   pos1 = key.find('.', pos0);
   if (pos1 == std::string::npos)
@@ -5236,29 +5219,29 @@ void XmpKey::Impl::decomposeKey(const std::string& key) {
   if (XmpProperties::ns(prefix).empty())
     throw Error(ErrorCode::kerNoNamespaceForPrefix, prefix);
 
-  property_ = property;
-  prefix_ = prefix;
+  property_ = std::move(property);
+  prefix_ = std::move(prefix);
 }  // XmpKey::Impl::decomposeKey
 
 // *************************************************************************
 // free functions
 // *************************************************************************
 // free functions
-std::ostream& operator<<(std::ostream& os, const XmpPropertyInfo& property) {
-  os << property.name_ << "," << property.title_ << "," << property.xmpValueType_ << ","
-     << TypeInfo::typeName(property.typeId_) << "," << (property.xmpCategory_ == xmpExternal ? "External" : "Internal")
-     << ",";
+std::ostream& operator<<(std::ostream& os, const XmpPropertyInfo& propertyInfo) {
   // CSV encoded I am \"dead\" beat" => "I am ""dead"" beat"
-  char Q = '"';
-  os << Q;
-  for (size_t i = 0; i < ::strlen(property.desc_); i++) {
-    char c = property.desc_[i];
-    if (c == Q)
-      os << Q;
-    os << c;
+  std::string escapedDesc;
+  escapedDesc.push_back('"');
+  for (char c : std::string_view(propertyInfo.desc_)) {
+    if (c == '"')
+      escapedDesc += "\"\"";
+    else
+      escapedDesc.push_back(c);
   }
-  os << Q << std::endl;
-  return os;
+  escapedDesc.push_back('"');
+
+  return os << stringFormat("{},{},{},{},{},{}\n", propertyInfo.name_, propertyInfo.title_, propertyInfo.xmpValueType_,
+                            TypeInfo::typeName(propertyInfo.typeId_),
+                            (propertyInfo.xmpCategory_ == xmpExternal ? "External" : "Internal"), escapedDesc);
 }
 //! @endcond
 

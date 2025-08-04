@@ -45,11 +45,14 @@
 #endif  // EXV_ENABLE_VIDEO
 
 // + standard includes
-#include <array>
+#include <bit>
 #include <cstdio>
 #include <cstring>
-#include <limits>
 #include <set>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 // *****************************************************************************
 namespace {
@@ -73,54 +76,58 @@ struct Registry {
 };
 
 /// \todo Use std::unordered_map for implementing the registry. Avoid to use ImageType::none
-constexpr auto registry = std::array{
+constexpr Registry registry[] = {
     // image type       creation fct     type check  Exif mode    IPTC mode    XMP mode     Comment mode
     //---------------  ---------------  ----------  -----------  -----------  -----------  ------------
-    Registry{ImageType::jpeg, newJpegInstance, isJpegType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
-    Registry{ImageType::exv, newExvInstance, isExvType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
-    Registry{ImageType::cr2, newCr2Instance, isCr2Type, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::crw, newCrwInstance, isCrwType, amReadWrite, amNone, amNone, amReadWrite},
-    Registry{ImageType::mrw, newMrwInstance, isMrwType, amRead, amRead, amRead, amNone},
-    Registry{ImageType::tiff, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::webp, newWebPInstance, isWebPType, amReadWrite, amNone, amReadWrite, amNone},
-    Registry{ImageType::dng, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::nef, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::pef, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::arw, newTiffInstance, isTiffType, amRead, amRead, amRead, amNone},
-    Registry{ImageType::rw2, newRw2Instance, isRw2Type, amRead, amRead, amRead, amNone},
-    Registry{ImageType::sr2, newTiffInstance, isTiffType, amRead, amRead, amRead, amNone},
-    Registry{ImageType::srw, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::orf, newOrfInstance, isOrfType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::jpeg, newJpegInstance, isJpegType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
+    {ImageType::exv, newExvInstance, isExvType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
+    {ImageType::cr2, newCr2Instance, isCr2Type, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::crw, newCrwInstance, isCrwType, amReadWrite, amNone, amNone, amReadWrite},
+    {ImageType::mrw, newMrwInstance, isMrwType, amRead, amRead, amRead, amNone},
+    {ImageType::tiff, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::webp, newWebPInstance, isWebPType, amReadWrite, amNone, amReadWrite, amNone},
+    {ImageType::dng, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::nef, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::pef, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::arw, newTiffInstance, isTiffType, amRead, amRead, amRead, amNone},
+    {ImageType::rw2, newRw2Instance, isRw2Type, amRead, amRead, amRead, amNone},
+    {ImageType::sr2, newTiffInstance, isTiffType, amRead, amRead, amRead, amNone},
+    {ImageType::srw, newTiffInstance, isTiffType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::orf, newOrfInstance, isOrfType, amReadWrite, amReadWrite, amReadWrite, amNone},
 #ifdef EXV_HAVE_LIBZ
-    Registry{ImageType::png, newPngInstance, isPngType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
+    {ImageType::png, newPngInstance, isPngType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
 #endif  // EXV_HAVE_LIBZ
-    Registry{ImageType::pgf, newPgfInstance, isPgfType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
-    Registry{ImageType::raf, newRafInstance, isRafType, amRead, amRead, amRead, amNone},
-    Registry{ImageType::eps, newEpsInstance, isEpsType, amNone, amNone, amReadWrite, amNone},
-    Registry{ImageType::xmp, newXmpInstance, isXmpType, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::gif, newGifInstance, isGifType, amNone, amNone, amNone, amNone},
-    Registry{ImageType::psd, newPsdInstance, isPsdType, amReadWrite, amReadWrite, amReadWrite, amNone},
-    Registry{ImageType::tga, newTgaInstance, isTgaType, amNone, amNone, amNone, amNone},
-    Registry{ImageType::bmp, newBmpInstance, isBmpType, amNone, amNone, amNone, amNone},
-    Registry{ImageType::jp2, newJp2Instance, isJp2Type, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::pgf, newPgfInstance, isPgfType, amReadWrite, amReadWrite, amReadWrite, amReadWrite},
+    {ImageType::raf, newRafInstance, isRafType, amRead, amRead, amRead, amNone},
+    {ImageType::eps, newEpsInstance, isEpsType, amNone, amNone, amReadWrite, amNone},
+    {ImageType::xmp, newXmpInstance, isXmpType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::gif, newGifInstance, isGifType, amNone, amNone, amNone, amNone},
+    {ImageType::psd, newPsdInstance, isPsdType, amReadWrite, amReadWrite, amReadWrite, amNone},
+    {ImageType::tga, newTgaInstance, isTgaType, amNone, amNone, amNone, amNone},
+    {ImageType::bmp, newBmpInstance, isBmpType, amNone, amNone, amNone, amNone},
+    {ImageType::jp2, newJp2Instance, isJp2Type, amReadWrite, amReadWrite, amReadWrite, amNone},
 // needs to be before bmff because some ftyp files are handled as qt and
 // the rest should fall through to bmff
 #ifdef EXV_ENABLE_VIDEO
-    Registry{ImageType::qtime, newQTimeInstance, isQTimeType, amRead, amNone, amRead, amNone},
-    Registry{ImageType::asf, newAsfInstance, isAsfType, amRead, amNone, amRead, amNone},
-    Registry{ImageType::riff, newRiffInstance, isRiffType, amRead, amNone, amRead, amNone},
-    Registry{ImageType::mkv, newMkvInstance, isMkvType, amRead, amNone, amRead, amNone},
+    {ImageType::qtime, newQTimeInstance, isQTimeType, amRead, amNone, amRead, amNone},
+    {ImageType::asf, newAsfInstance, isAsfType, amRead, amNone, amRead, amNone},
+    {ImageType::riff, newRiffInstance, isRiffType, amRead, amNone, amRead, amNone},
+    {ImageType::mkv, newMkvInstance, isMkvType, amRead, amNone, amRead, amNone},
 #endif  // EXV_ENABLE_VIDEO
 #ifdef EXV_ENABLE_BMFF
-    Registry{ImageType::bmff, newBmffInstance, isBmffType, amRead, amRead, amRead, amNone},
+    {ImageType::bmff, newBmffInstance, isBmffType, amRead, amRead, amRead, amNone},
 #endif  // EXV_ENABLE_BMFF
 };
 
+#ifdef EXV_ENABLE_FILESYSTEM
 std::string pathOfFileUrl(const std::string& url) {
   std::string path = url.substr(7);
   size_t found = path.find('/');
-  return (found == std::string::npos) ? path : path.substr(found);
+  if (found == std::string::npos)
+    return path;
+  return path.substr(found);
 }
+#endif
 
 }  // namespace
 
@@ -168,42 +175,49 @@ bool Image::isPrintICC(uint16_t type, Exiv2::PrintStructureOption option) {
 }
 
 bool Image::isBigEndianPlatform() {
-  union {
-    uint32_t i;
-    char c[4];
-  } e = {0x01000000};
-
-  return e.c[0] != 0;
+  return std::endian::native == std::endian::big;
 }
 bool Image::isLittleEndianPlatform() {
-  return !isBigEndianPlatform();
+  return std::endian::native == std::endian::little;
 }
 
 uint64_t Image::byteSwap(uint64_t value, bool bSwap) {
+#ifdef __cpp_lib_byteswap
+  return bSwap ? std::byteswap(value) : value;
+#else
   uint64_t result = 0;
-  auto source_value = reinterpret_cast<byte*>(&value);
+  auto source_value = reinterpret_cast<const byte*>(&value);
   auto destination_value = reinterpret_cast<byte*>(&result);
 
   for (int i = 0; i < 8; i++)
     destination_value[i] = source_value[8 - i - 1];
 
   return bSwap ? result : value;
+#endif
 }
 
 uint32_t Image::byteSwap(uint32_t value, bool bSwap) {
+#ifdef __cpp_lib_byteswap
+  return bSwap ? std::byteswap(value) : value;
+#else
   uint32_t result = 0;
   result |= (value & 0x000000FFU) << 24;
   result |= (value & 0x0000FF00U) << 8;
   result |= (value & 0x00FF0000U) >> 8;
   result |= (value & 0xFF000000U) >> 24;
   return bSwap ? result : value;
+#endif
 }
 
 uint16_t Image::byteSwap(uint16_t value, bool bSwap) {
+#ifdef __cpp_lib_byteswap
+  return bSwap ? std::byteswap(value) : value;
+#else
   uint16_t result = 0;
   result |= (value & 0x00FFU) << 8;
   result |= (value & 0xFF00U) >> 8;
   return bSwap ? result : value;
+#endif
 }
 
 uint16_t Image::byteSwap2(const DataBuf& buf, size_t offset, bool bSwap) {
@@ -308,19 +322,18 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
     io.readOrThrow(dir.data(), 2, ErrorCode::kerCorruptedMetadata);
     uint16_t dirLength = byteSwap2(dir, 0, bSwap);
     // Prevent infinite loops. (GHSA-m479-7frc-gqqg)
-    enforce(dirLength > 0, ErrorCode::kerCorruptedMetadata);
+    Internal::enforce(dirLength > 0, ErrorCode::kerCorruptedMetadata);
 
     if (dirLength > 500)  // tooBig
       throw Error(ErrorCode::kerTiffDirectoryTooLarge);
 
     if (bFirst && bPrint) {
-      out << Internal::indent(depth) << Internal::stringFormat("STRUCTURE OF TIFF FILE (%c%c): ", c, c) << io.path()
-          << std::endl;
+      out << Internal::indent(depth) << stringFormat("STRUCTURE OF TIFF FILE ({}{}): {}\n", c, c, io.path());
     }
 
     // Read the dictionary
     for (int i = 0; i < dirLength; i++) {
-      if (visits.find(io.tell()) != visits.end()) {  // #547
+      if (visits.contains(io.tell())) {  // #547
         throw Error(ErrorCode::kerCorruptedMetadata);
       }
       visits.insert(io.tell());
@@ -339,11 +352,9 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
 
       // Break for unknown tag types else we may segfault.
       if (!typeValid(type)) {
-        EXV_ERROR << "invalid type in tiff structure" << type << std::endl;
+        EXV_ERROR << "invalid type in tiff structure" << type << '\n';
         throw Error(ErrorCode::kerInvalidTypeValue);
       }
-
-      std::string sp;  // output spacer
 
       // prepare to print the value
       uint32_t kount = [=] {
@@ -355,13 +366,9 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
           return count;
         // restrict long arrays
         if (isStringType(type)) {
-          if (count > 32u)
-            return 32u;
-          return count;
+          return std::min(count, 32u);
         }
-        if (count > 5u)
-          return 5u;
-        return count;
+        return std::min(count, 5u);
       }();
       uint32_t pad = isStringType(type) ? 1 : 0;
       size_t size = [=] {
@@ -379,14 +386,12 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
       // if ( offset > io.size() ) offset = 0; // Denial of service?
 
       // #55 and #56 memory allocation crash test/data/POC8
-      const size_t allocate64 = size * count + pad + 20;
+      const size_t allocate64 = (size * count) + pad + 20;
       if (allocate64 > io.size()) {
         throw Error(ErrorCode::kerInvalidMalloc);
       }
-      // Overflow check
-      enforce(allocate64 <= std::numeric_limits<size_t>::max(), ErrorCode::kerCorruptedMetadata);
-      DataBuf buf(allocate64);                     // allocate a buffer
-      std::copy_n(dir.c_data(8), 4, buf.begin());  // copy dir[8:11] into buffer (short strings)
+      DataBuf buf(allocate64);                       // allocate a buffer
+      std::copy_n(dir.begin() + 8, 4, buf.begin());  // copy dir[8:11] into buffer (short strings)
 
       // We have already checked that this multiplication cannot overflow.
       const size_t count_x_size = count * size;
@@ -400,12 +405,13 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
       }
 
       if (bPrint) {
-        const size_t address = start + 2 + i * 12;
-        const std::string offsetString = bOffsetIsPointer ? Internal::stringFormat("%10u", offset) : "";
+        const size_t address = start + 2 + (i * 12);
+        const std::string offsetString = bOffsetIsPointer ? stringFormat("{:9}", offset) : "";
+        std::string sp;  // output spacer
 
         out << Internal::indent(depth)
-            << Internal::stringFormat("%8zu | %#06x %-28s |%10s |%9u |%10s | ", address, tag, tagName(tag).c_str(),
-                                      typeName(type), count, offsetString.c_str());
+            << stringFormat("{:8} | {:#06x} {:<28} | {:>9} | {:>8} | {:9} | ", address, tag, tagName(tag),
+                            typeName(type), count, offsetString);
         if (isShortType(type)) {
           for (size_t k = 0; k < kount; k++) {
             out << sp << byteSwap2(buf, k * size, bSwap);
@@ -419,8 +425,8 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
 
         } else if (isRationalType(type)) {
           for (size_t k = 0; k < kount; k++) {
-            uint32_t a = byteSwap4(buf, k * size + 0, bSwap);
-            uint32_t b = byteSwap4(buf, k * size + 4, bSwap);
+            uint32_t a = byteSwap4(buf, (k * size) + 0, bSwap);
+            uint32_t b = byteSwap4(buf, (k * size) + 4, bSwap);
             out << sp << a << "/" << b;
             sp = " ";
           }
@@ -429,7 +435,7 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
         }
 
         sp = kount == count ? "" : " ...";
-        out << sp << std::endl;
+        out << sp << '\n';
 
         if (option == kpsRecursive && (tag == 0x8769 /* ExifTag */ || tag == 0x014a /*SubIFDs*/ || type == tiffIfd)) {
           for (size_t k = 0; k < count; k++) {
@@ -446,12 +452,10 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
 
             const size_t restore = io.tell();
             io.seekOrThrow(offset, BasicIo::beg, ErrorCode::kerCorruptedMetadata);  // position
-            std::vector<byte> bytes(count);                                         // allocate memory
-            // TODO: once we have C++11 use bytes.data()
-            io.readOrThrow(bytes.data(), count, ErrorCode::kerCorruptedMetadata);
+            auto bytes = std::make_unique<byte[]>(count);                           // allocate memory
+            io.readOrThrow(bytes.get(), count, ErrorCode::kerCorruptedMetadata);
             io.seekOrThrow(restore, BasicIo::beg, ErrorCode::kerCorruptedMetadata);
-            // TODO: once we have C++11 use bytes.data()
-            IptcData::printStructure(out, makeSliceUntil(bytes.data(), count), depth);
+            IptcData::printStructure(out, makeSliceUntil(bytes.get(), count), depth);
           }
         } else if (option == kpsRecursive && tag == 0x927c /* MakerNote */ && count > 10) {
           const size_t restore = io.tell();  // save
@@ -469,9 +473,9 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
           if (bNikon) {
             // tag is an embedded tiff
             const long byteslen = count - jump;
-            DataBuf bytes(byteslen);                                                  // allocate a buffer
-            io.readOrThrow(bytes.data(), byteslen, ErrorCode::kerCorruptedMetadata);  // read
-            MemIo memIo(bytes.c_data(), byteslen);                                    // create a file
+            auto b = DataBuf(byteslen);                                           // allocate a buffer
+            io.readOrThrow(b.data(), byteslen, ErrorCode::kerCorruptedMetadata);  // read
+            MemIo memIo(b.c_data(), byteslen);                                    // create a file
             printTiffStructure(memIo, out, option, depth + 1);
           } else {
             // tag is an IFD
@@ -499,7 +503,7 @@ void Image::printIFDStructure(BasicIo& io, std::ostream& out, Exiv2::PrintStruct
   } while (start);
 
   if (bPrint) {
-    out << Internal::indent(depth) << "END " << io.path() << std::endl;
+    out << Internal::indent(depth) << "END " << io.path() << '\n';
   }
   out.flush();
 }
@@ -730,43 +734,33 @@ const std::string& Image::tagName(uint16_t tag) {
 }
 
 AccessMode ImageFactory::checkMode(ImageType type, MetadataId metadataId) {
-  auto r = std::find(registry.begin(), registry.end(), type);
-  if (r == registry.end())
+  auto r = Exiv2::find(registry, type);
+  if (!r)
     throw Error(ErrorCode::kerUnsupportedImageType, static_cast<int>(type));
-  AccessMode am = amNone;
-  switch (metadataId) {
-    case mdNone:
-      break;
-    case mdExif:
-      am = r->exifSupport_;
-      break;
-    case mdIptc:
-      am = r->iptcSupport_;
-      break;
-    case mdXmp:
-      am = r->xmpSupport_;
-      break;
-    case mdComment:
-      am = r->commentSupport_;
-      break;
-    case mdIccProfile:
-      break;
-
-      // no default: let the compiler complain
-  }
-  return am;
+  if (metadataId == mdExif)
+    return r->exifSupport_;
+  if (metadataId == mdIptc)
+    return r->iptcSupport_;
+  if (metadataId == mdXmp)
+    return r->xmpSupport_;
+  if (metadataId == mdComment)
+    return r->commentSupport_;
+  return amNone;
 }
 
 bool ImageFactory::checkType(ImageType type, BasicIo& io, bool advance) {
-  auto r = std::find(registry.begin(), registry.end(), type);
-  if (r != registry.end())
+  if (auto r = Exiv2::find(registry, type))
     return r->isThisType_(io, advance);
   return false;
 }
 
-ImageType ImageFactory::getType(const std::string& path) {
+ImageType ImageFactory::getType([[maybe_unused]] const std::string& path) {
+#ifdef EXV_ENABLE_FILESYSTEM
   FileIo fileIo(path);
   return getType(fileIo);
+#else
+  return ImageType::none;
+#endif
 }
 
 ImageType ImageFactory::getType(const byte* data, size_t size) {
@@ -786,8 +780,8 @@ ImageType ImageFactory::getType(BasicIo& io) {
   return ImageType::none;
 }
 
-BasicIo::UniquePtr ImageFactory::createIo(const std::string& path, bool useCurl) {
-  Protocol fProt = fileProtocol(path);
+BasicIo::UniquePtr ImageFactory::createIo(const std::string& path, [[maybe_unused]] bool useCurl) {
+  [[maybe_unused]] Protocol fProt = fileProtocol(path);
 
 #ifdef EXV_USE_CURL
   if (useCurl && (fProt == pHttp || fProt == pHttps || fProt == pFtp)) {
@@ -795,17 +789,31 @@ BasicIo::UniquePtr ImageFactory::createIo(const std::string& path, bool useCurl)
   }
 #endif
 
+#ifdef EXV_ENABLE_WEBREADY
   if (fProt == pHttp)
     return std::make_unique<HttpIo>(path);  // may throw
+#endif
+#ifdef EXV_ENABLE_FILESYSTEM
   if (fProt == pFileUri)
     return std::make_unique<FileIo>(pathOfFileUrl(path));
   if (fProt == pStdin || fProt == pDataUri)
     return std::make_unique<XPathIo>(path);  // may throw
 
   return std::make_unique<FileIo>(path);
-
-  (void)(useCurl);
+#else
+  throw Error(ErrorCode::kerFileAccessDisabled, path);
+#endif
 }  // ImageFactory::createIo
+
+#ifdef _WIN32
+BasicIo::UniquePtr ImageFactory::createIo(const std::wstring& path) {
+#ifdef EXV_ENABLE_FILESYSTEM
+  return std::make_unique<FileIo>(path);
+#else
+  return nullptr;
+#endif
+}
+#endif
 
 Image::UniquePtr ImageFactory::open(const std::string& path, bool useCurl) {
   auto image = open(ImageFactory::createIo(path, useCurl));  // may throw
@@ -813,6 +821,18 @@ Image::UniquePtr ImageFactory::open(const std::string& path, bool useCurl) {
     throw Error(ErrorCode::kerFileContainsUnknownImageType, path);
   return image;
 }
+
+#ifdef _WIN32
+Image::UniquePtr ImageFactory::open(const std::wstring& path) {
+  auto image = open(ImageFactory::createIo(path));  // may throw
+  if (!image) {
+    char t[1024];
+    WideCharToMultiByte(CP_UTF8, 0, path.c_str(), -1, t, 1024, nullptr, nullptr);
+    throw Error(ErrorCode::kerFileContainsUnknownImageType, t);
+  }
+  return image;
+}
+#endif
 
 Image::UniquePtr ImageFactory::open(const byte* data, size_t size) {
   auto image = open(std::make_unique<MemIo>(data, size));  // may throw
@@ -833,6 +853,7 @@ Image::UniquePtr ImageFactory::open(BasicIo::UniquePtr io) {
   return nullptr;
 }
 
+#ifdef EXV_ENABLE_FILESYSTEM
 Image::UniquePtr ImageFactory::create(ImageType type, const std::string& path) {
   auto fileIo = std::make_unique<FileIo>(path);
   // Create or overwrite the file, then close it
@@ -847,6 +868,7 @@ Image::UniquePtr ImageFactory::create(ImageType type, const std::string& path) {
     throw Error(ErrorCode::kerUnsupportedImageType, static_cast<int>(type));
   return image;
 }
+#endif
 
 Image::UniquePtr ImageFactory::create(ImageType type) {
   auto image = create(type, std::make_unique<MemIo>());
@@ -859,10 +881,9 @@ Image::UniquePtr ImageFactory::create(ImageType type, BasicIo::UniquePtr io) {
   // BasicIo instance does not need to be open
   if (type == ImageType::none)
     return {};
-  auto r = std::find(registry.begin(), registry.end(), type);
-  if (r == registry.end())
-    return {};
-  return r->newInstance_(std::move(io), true);
+  if (auto r = Exiv2::find(registry, type))
+    return r->newInstance_(std::move(io), true);
+  return {};
 }
 
 // *****************************************************************************
@@ -875,7 +896,7 @@ void append(Blob& blob, const byte* buf, size_t len) {
       blob.reserve(size + 65536);
     }
     blob.resize(size + len);
-    std::memcpy(&blob[size], buf, len);
+    std::copy_n(buf, len, blob.begin() + size);
   }
 }  // append
 

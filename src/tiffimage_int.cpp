@@ -1,20 +1,28 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "tiffimage_int.hpp"
+#include "config.h"
+
+#include "basicio.hpp"
 #include "error.hpp"
 #include "i18n.h"  // NLS support.
+#include "image_int.hpp"
 #include "makernote_int.hpp"
 #include "sonymn_int.hpp"
-#include "tags_int.hpp"
+#include "tiffcomposite_int.hpp"
+#include "tiffimage_int.hpp"
 #include "tiffvisitor_int.hpp"
+
+#ifdef EXIV2_DEBUG_MESSAGES
+#include "tags_int.hpp"
+#endif
 
 #include <array>
 #include <iostream>
 
 // Shortcuts for the newTiffBinaryArray templates.
-#define EXV_BINARY_ARRAY(arrayCfg, arrayDef) (newTiffBinaryArray0<arrayCfg, std::size(arrayDef), arrayDef>)
-#define EXV_SIMPLE_BINARY_ARRAY(arrayCfg) (newTiffBinaryArray1<arrayCfg>)
-#define EXV_COMPLEX_BINARY_ARRAY(arraySet, cfgSelFct) (newTiffBinaryArray2<arraySet, std::size(arraySet), cfgSelFct>)
+#define EXV_BINARY_ARRAY(arrayCfg, arrayDef) &newTiffBinaryArray0<arrayCfg, std::size(arrayDef), arrayDef>
+#define EXV_SIMPLE_BINARY_ARRAY(arrayCfg) &newTiffBinaryArray1<arrayCfg>
+#define EXV_COMPLEX_BINARY_ARRAY(arraySet, cfgSelFct) &newTiffBinaryArray2<std::size(arraySet), arraySet, cfgSelFct>
 
 namespace Exiv2::Internal {
 //! Constant for non-encrypted binary arrays
@@ -165,15 +173,20 @@ constexpr ArrayCfg canonLiOpCfg = {
 constexpr ArrayCfg canonLeCfg = {
     IfdId::canonLeId,  // Group for the elements
     invalidByteOrder,  // Use byte order from parent
-    ttSignedLong,      // Type for array entry and size element
+    ttUndefined,       // Type for array entry and size element
     notEncrypted,      // Not encrypted
-    true,              // Has a size element
+    false,             // No size element
     false,             // No fillers
     false,             // Don't concatenate gaps
-    {0, ttSignedLong, 1},
+    {0, ttUnsignedByte, 1},
+};
+//! Canon LensInfo binary array - definition
+constexpr ArrayDef canonLeDef[] = {
+    {0, ttUnsignedByte, 5},  // Serial number
+    {5, ttUndefined, 25},    // The array contains 30 bytes
 };
 
-//! Canon Ambience Selction Info binary array - configuration
+//! Canon Ambience Selection Info binary array - configuration
 constexpr ArrayCfg canonAmCfg = {
     IfdId::canonAmId,  // Group for the elements
     invalidByteOrder,  // Use byte order from parent
@@ -185,7 +198,7 @@ constexpr ArrayCfg canonAmCfg = {
     {0, ttSignedLong, 1},
 };
 
-//! Canon MultiExposure Selction Info binary array - configuration
+//! Canon MultiExposure Selection Info binary array - configuration
 constexpr ArrayCfg canonMeCfg = {
     IfdId::canonMeId,  // Group for the elements
     invalidByteOrder,  // Use byte order from parent
@@ -520,14 +533,16 @@ constexpr ArrayDef nikonFl3Def[] = {
     {16, ttUnsignedByte, 1},  // FlashColorFilter
 };
 //! Nikon Flash Info 6 (0106) binary array - configuration
-constexpr ArrayCfg nikonFl6Cfg = {IfdId::nikonFl6Id,  // Group for the elements
-                                  bigEndian,          // Use byte order from parent
-                                  ttUndefined,        // Type for array entry
-                                  notEncrypted,       // Not encrypted
-                                  false,              // No size element
-                                  true,               // Write all tags
-                                  true,               // Concatenate gaps
-                                  {0, ttUnsignedByte, 1}};
+constexpr ArrayCfg nikonFl6Cfg = {
+    IfdId::nikonFl6Id,  // Group for the elements
+    bigEndian,          // Use byte order from parent
+    ttUndefined,        // Type for array entry
+    notEncrypted,       // Not encrypted
+    false,              // No size element
+    true,               // Write all tags
+    true,               // Concatenate gaps
+    {0, ttUnsignedByte, 1},
+};
 //! Nikon Flash Info 6 (0106) binary array - definition
 constexpr ArrayDef nikonFl6Def[] = {
     {0, ttUndefined, 4},      // Version
@@ -554,14 +569,16 @@ constexpr ArrayDef nikonFl6Def[] = {
     {42, ttUnsignedByte, 1},  // FlashGroupCOutput
 };
 //! Nikon Flash Info 7 (0107 and 0108) binary array - configuration
-constexpr ArrayCfg nikonFl7Cfg = {IfdId::nikonFl7Id,  // Group for the elements
-                                  bigEndian,          // Use byte order from parent
-                                  ttUndefined,        // Type for array entry
-                                  notEncrypted,       // Not encrypted
-                                  false,              // No size element
-                                  true,               // Write all tags
-                                  true,               // Concatenate gaps
-                                  {0, ttUnsignedByte, 1}};
+constexpr ArrayCfg nikonFl7Cfg = {
+    IfdId::nikonFl7Id,  // Group for the elements
+    bigEndian,          // Use byte order from parent
+    ttUndefined,        // Type for array entry
+    notEncrypted,       // Not encrypted
+    false,              // No size element
+    true,               // Write all tags
+    true,               // Concatenate gaps
+    {0, ttUnsignedByte, 1},
+};
 //! Nikon Flash Info 7 (0107 and 0108) binary array - definition
 constexpr ArrayDef nikonFl7Def[] = {
     {0, ttUndefined, 4},      // Version
@@ -768,9 +785,10 @@ constexpr ArrayDef nikonLdDef[] = {
 constexpr ArrayDef nikonLd4Def[] = {
     {0, ttUndefined, 4},       // Version
     {48, ttUnsignedShort, 1},  // LensID
-    {54, ttUnsignedShort, 1},  // MacAperture
+    {54, ttUnsignedShort, 1},  // MaxAperture
     {56, ttUnsignedShort, 1},  // FNumber
     {60, ttUnsignedShort, 1},  // FocalLength
+    {78, ttUnsignedShort, 1},  // FocusDistance
 };
 //! Nikon Lens Data configurations and definitions
 constexpr ArraySet nikonLdSet[] = {
@@ -1394,7 +1412,8 @@ const TiffTreeTable TiffCreator::tiffTreeTable_ = {
     {{Tag::pana, IfdId::ifdIdNotSet}, {IfdId::ifdIdNotSet, Tag::pana}},
     {{Tag::pana, IfdId::panaRawId}, {IfdId::ifdIdNotSet, Tag::pana}},
     {{Tag::pana, IfdId::exifId}, {IfdId::panaRawId, 0x8769}},
-    {{Tag::pana, IfdId::gpsId}, {IfdId::panaRawId, 0x8825}}};
+    {{Tag::pana, IfdId::gpsId}, {IfdId::panaRawId, 0x8825}},
+};
 
 /*
   This table describes the layout of each known TIFF group (including
@@ -1412,258 +1431,258 @@ const TiffGroupTable TiffCreator::tiffGroupTable_ = {
     // ext. tag  group             create function
     //---------  ----------------- -----------------------------------------
     // Root directory
-    {{Tag::root, IfdId::ifdIdNotSet}, newTiffDirectory<IfdId::ifd0Id>},
+    {{Tag::root, IfdId::ifdIdNotSet}, &newTiffDirectory<IfdId::ifd0Id>},
 
     // Fujifilm RAF #1402.  Use different root when parsing embedded tiff.
-    {{Tag::fuji, IfdId::ifdIdNotSet}, newTiffDirectory<IfdId::fujiId>},
-    {{0xf000, IfdId::fujiId}, newTiffSubIfd<IfdId::fujiId>},
+    {{Tag::fuji, IfdId::ifdIdNotSet}, &newTiffDirectory<IfdId::fujiId>},
+    {{0xf000, IfdId::fujiId}, &newTiffSubIfd<IfdId::fujiId>},
 
     // CR3 images #1475
-    {{Tag::cmt2, IfdId::ifdIdNotSet}, newTiffDirectory<IfdId::exifId>},
-    {{Tag::cmt3, IfdId::ifdIdNotSet}, newTiffDirectory<IfdId::canonId>},
-    {{Tag::cmt4, IfdId::ifdIdNotSet}, newTiffDirectory<IfdId::gpsId>},
+    {{Tag::cmt2, IfdId::ifdIdNotSet}, &newTiffDirectory<IfdId::exifId>},
+    {{Tag::cmt3, IfdId::ifdIdNotSet}, &newTiffDirectory<IfdId::canonId>},
+    {{Tag::cmt4, IfdId::ifdIdNotSet}, &newTiffDirectory<IfdId::gpsId>},
 
     // IFD0
-    {{0x8769, IfdId::ifd0Id}, newTiffSubIfd<IfdId::exifId>},
-    {{0x8825, IfdId::ifd0Id}, newTiffSubIfd<IfdId::gpsId>},
-    {{0x0111, IfdId::ifd0Id}, newTiffImageData<0x0117, IfdId::ifd0Id>},
-    {{0x0117, IfdId::ifd0Id}, newTiffImageSize<0x0111, IfdId::ifd0Id>},
-    {{0x0144, IfdId::ifd0Id}, newTiffImageData<0x0145, IfdId::ifd0Id>},
-    {{0x0145, IfdId::ifd0Id}, newTiffImageSize<0x0144, IfdId::ifd0Id>},
-    {{0x0201, IfdId::ifd0Id}, newTiffImageData<0x0202, IfdId::ifd0Id>},
-    {{0x0202, IfdId::ifd0Id}, newTiffImageSize<0x0201, IfdId::ifd0Id>},
-    {{0x014a, IfdId::ifd0Id}, newTiffSubIfd<IfdId::subImage1Id>},
-    {{0xc634, IfdId::ifd0Id}, newTiffMnEntry},
-    {{Tag::next, IfdId::ifd0Id}, newTiffDirectory<IfdId::ifd1Id>},
-    {{Tag::all, IfdId::ifd0Id}, newTiffEntry},
+    {{0x8769, IfdId::ifd0Id}, &newTiffSubIfd<IfdId::exifId>},
+    {{0x8825, IfdId::ifd0Id}, &newTiffSubIfd<IfdId::gpsId>},
+    {{0x0111, IfdId::ifd0Id}, &newTiffImageData<0x0117, IfdId::ifd0Id>},
+    {{0x0117, IfdId::ifd0Id}, &newTiffImageSize<0x0111, IfdId::ifd0Id>},
+    {{0x0144, IfdId::ifd0Id}, &newTiffImageData<0x0145, IfdId::ifd0Id>},
+    {{0x0145, IfdId::ifd0Id}, &newTiffImageSize<0x0144, IfdId::ifd0Id>},
+    {{0x0201, IfdId::ifd0Id}, &newTiffImageData<0x0202, IfdId::ifd0Id>},
+    {{0x0202, IfdId::ifd0Id}, &newTiffImageSize<0x0201, IfdId::ifd0Id>},
+    {{0x014a, IfdId::ifd0Id}, &newTiffSubIfd<IfdId::subImage1Id>},
+    {{0xc634, IfdId::ifd0Id}, &newTiffMnEntry},
+    {{Tag::next, IfdId::ifd0Id}, &newTiffDirectory<IfdId::ifd1Id>},
+    {{Tag::all, IfdId::ifd0Id}, &newTiffEntry},
 
     // Subdir subImage1
-    {{0x0111, IfdId::subImage1Id}, newTiffImageData<0x0117, IfdId::subImage1Id>},
-    {{0x0117, IfdId::subImage1Id}, newTiffImageSize<0x0111, IfdId::subImage1Id>},
-    {{0x0144, IfdId::subImage1Id}, newTiffImageData<0x0145, IfdId::subImage1Id>},
-    {{0x0145, IfdId::subImage1Id}, newTiffImageSize<0x0144, IfdId::subImage1Id>},
-    {{0x0201, IfdId::subImage1Id}, newTiffImageData<0x0202, IfdId::subImage1Id>},
-    {{0x0202, IfdId::subImage1Id}, newTiffImageSize<0x0201, IfdId::subImage1Id>},
+    {{0x0111, IfdId::subImage1Id}, &newTiffImageData<0x0117, IfdId::subImage1Id>},
+    {{0x0117, IfdId::subImage1Id}, &newTiffImageSize<0x0111, IfdId::subImage1Id>},
+    {{0x0144, IfdId::subImage1Id}, &newTiffImageData<0x0145, IfdId::subImage1Id>},
+    {{0x0145, IfdId::subImage1Id}, &newTiffImageSize<0x0144, IfdId::subImage1Id>},
+    {{0x0201, IfdId::subImage1Id}, &newTiffImageData<0x0202, IfdId::subImage1Id>},
+    {{0x0202, IfdId::subImage1Id}, &newTiffImageSize<0x0201, IfdId::subImage1Id>},
     {{Tag::next, IfdId::subImage1Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage1Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage1Id}, &newTiffEntry},
 
     // Subdir subImage2
-    {{0x0111, IfdId::subImage2Id}, newTiffImageData<0x0117, IfdId::subImage2Id>},
-    {{0x0117, IfdId::subImage2Id}, newTiffImageSize<0x0111, IfdId::subImage2Id>},
-    {{0x0144, IfdId::subImage2Id}, newTiffImageData<0x0145, IfdId::subImage2Id>},
-    {{0x0145, IfdId::subImage2Id}, newTiffImageSize<0x0144, IfdId::subImage2Id>},
-    {{0x0201, IfdId::subImage2Id}, newTiffImageData<0x0202, IfdId::subImage2Id>},
-    {{0x0202, IfdId::subImage2Id}, newTiffImageSize<0x0201, IfdId::subImage2Id>},
+    {{0x0111, IfdId::subImage2Id}, &newTiffImageData<0x0117, IfdId::subImage2Id>},
+    {{0x0117, IfdId::subImage2Id}, &newTiffImageSize<0x0111, IfdId::subImage2Id>},
+    {{0x0144, IfdId::subImage2Id}, &newTiffImageData<0x0145, IfdId::subImage2Id>},
+    {{0x0145, IfdId::subImage2Id}, &newTiffImageSize<0x0144, IfdId::subImage2Id>},
+    {{0x0201, IfdId::subImage2Id}, &newTiffImageData<0x0202, IfdId::subImage2Id>},
+    {{0x0202, IfdId::subImage2Id}, &newTiffImageSize<0x0201, IfdId::subImage2Id>},
     {{Tag::next, IfdId::subImage2Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage2Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage2Id}, &newTiffEntry},
 
     // Subdir subImage3
-    {{0x0111, IfdId::subImage3Id}, newTiffImageData<0x0117, IfdId::subImage3Id>},
-    {{0x0117, IfdId::subImage3Id}, newTiffImageSize<0x0111, IfdId::subImage3Id>},
-    {{0x0144, IfdId::subImage3Id}, newTiffImageData<0x0145, IfdId::subImage3Id>},
-    {{0x0145, IfdId::subImage3Id}, newTiffImageSize<0x0144, IfdId::subImage3Id>},
-    {{0x0201, IfdId::subImage3Id}, newTiffImageData<0x0202, IfdId::subImage3Id>},
-    {{0x0202, IfdId::subImage3Id}, newTiffImageSize<0x0201, IfdId::subImage3Id>},
+    {{0x0111, IfdId::subImage3Id}, &newTiffImageData<0x0117, IfdId::subImage3Id>},
+    {{0x0117, IfdId::subImage3Id}, &newTiffImageSize<0x0111, IfdId::subImage3Id>},
+    {{0x0144, IfdId::subImage3Id}, &newTiffImageData<0x0145, IfdId::subImage3Id>},
+    {{0x0145, IfdId::subImage3Id}, &newTiffImageSize<0x0144, IfdId::subImage3Id>},
+    {{0x0201, IfdId::subImage3Id}, &newTiffImageData<0x0202, IfdId::subImage3Id>},
+    {{0x0202, IfdId::subImage3Id}, &newTiffImageSize<0x0201, IfdId::subImage3Id>},
     {{Tag::next, IfdId::subImage3Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage3Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage3Id}, &newTiffEntry},
 
     // Subdir subImage4
-    {{0x0111, IfdId::subImage4Id}, newTiffImageData<0x0117, IfdId::subImage4Id>},
-    {{0x0117, IfdId::subImage4Id}, newTiffImageSize<0x0111, IfdId::subImage4Id>},
-    {{0x0144, IfdId::subImage4Id}, newTiffImageData<0x0145, IfdId::subImage4Id>},
-    {{0x0145, IfdId::subImage4Id}, newTiffImageSize<0x0144, IfdId::subImage4Id>},
-    {{0x0201, IfdId::subImage4Id}, newTiffImageData<0x0202, IfdId::subImage4Id>},
-    {{0x0202, IfdId::subImage4Id}, newTiffImageSize<0x0201, IfdId::subImage4Id>},
+    {{0x0111, IfdId::subImage4Id}, &newTiffImageData<0x0117, IfdId::subImage4Id>},
+    {{0x0117, IfdId::subImage4Id}, &newTiffImageSize<0x0111, IfdId::subImage4Id>},
+    {{0x0144, IfdId::subImage4Id}, &newTiffImageData<0x0145, IfdId::subImage4Id>},
+    {{0x0145, IfdId::subImage4Id}, &newTiffImageSize<0x0144, IfdId::subImage4Id>},
+    {{0x0201, IfdId::subImage4Id}, &newTiffImageData<0x0202, IfdId::subImage4Id>},
+    {{0x0202, IfdId::subImage4Id}, &newTiffImageSize<0x0201, IfdId::subImage4Id>},
     {{Tag::next, IfdId::subImage4Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage4Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage4Id}, &newTiffEntry},
 
     // Subdir subImage5
-    {{0x0111, IfdId::subImage5Id}, newTiffImageData<0x0117, IfdId::subImage5Id>},
-    {{0x0117, IfdId::subImage5Id}, newTiffImageSize<0x0111, IfdId::subImage5Id>},
-    {{0x0144, IfdId::subImage5Id}, newTiffImageData<0x0145, IfdId::subImage5Id>},
-    {{0x0145, IfdId::subImage5Id}, newTiffImageSize<0x0144, IfdId::subImage5Id>},
-    {{0x0201, IfdId::subImage5Id}, newTiffImageData<0x0202, IfdId::subImage5Id>},
-    {{0x0202, IfdId::subImage5Id}, newTiffImageSize<0x0201, IfdId::subImage5Id>},
+    {{0x0111, IfdId::subImage5Id}, &newTiffImageData<0x0117, IfdId::subImage5Id>},
+    {{0x0117, IfdId::subImage5Id}, &newTiffImageSize<0x0111, IfdId::subImage5Id>},
+    {{0x0144, IfdId::subImage5Id}, &newTiffImageData<0x0145, IfdId::subImage5Id>},
+    {{0x0145, IfdId::subImage5Id}, &newTiffImageSize<0x0144, IfdId::subImage5Id>},
+    {{0x0201, IfdId::subImage5Id}, &newTiffImageData<0x0202, IfdId::subImage5Id>},
+    {{0x0202, IfdId::subImage5Id}, &newTiffImageSize<0x0201, IfdId::subImage5Id>},
     {{Tag::next, IfdId::subImage5Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage5Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage5Id}, &newTiffEntry},
 
     // Subdir subImage6
-    {{0x0111, IfdId::subImage6Id}, newTiffImageData<0x0117, IfdId::subImage6Id>},
-    {{0x0117, IfdId::subImage6Id}, newTiffImageSize<0x0111, IfdId::subImage6Id>},
-    {{0x0144, IfdId::subImage6Id}, newTiffImageData<0x0145, IfdId::subImage6Id>},
-    {{0x0145, IfdId::subImage6Id}, newTiffImageSize<0x0144, IfdId::subImage6Id>},
-    {{0x0201, IfdId::subImage6Id}, newTiffImageData<0x0202, IfdId::subImage6Id>},
-    {{0x0202, IfdId::subImage6Id}, newTiffImageSize<0x0201, IfdId::subImage6Id>},
+    {{0x0111, IfdId::subImage6Id}, &newTiffImageData<0x0117, IfdId::subImage6Id>},
+    {{0x0117, IfdId::subImage6Id}, &newTiffImageSize<0x0111, IfdId::subImage6Id>},
+    {{0x0144, IfdId::subImage6Id}, &newTiffImageData<0x0145, IfdId::subImage6Id>},
+    {{0x0145, IfdId::subImage6Id}, &newTiffImageSize<0x0144, IfdId::subImage6Id>},
+    {{0x0201, IfdId::subImage6Id}, &newTiffImageData<0x0202, IfdId::subImage6Id>},
+    {{0x0202, IfdId::subImage6Id}, &newTiffImageSize<0x0201, IfdId::subImage6Id>},
     {{Tag::next, IfdId::subImage6Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage6Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage6Id}, &newTiffEntry},
 
     // Subdir subImage7
-    {{0x0111, IfdId::subImage7Id}, newTiffImageData<0x0117, IfdId::subImage7Id>},
-    {{0x0117, IfdId::subImage7Id}, newTiffImageSize<0x0111, IfdId::subImage7Id>},
-    {{0x0144, IfdId::subImage7Id}, newTiffImageData<0x0145, IfdId::subImage7Id>},
-    {{0x0145, IfdId::subImage7Id}, newTiffImageSize<0x0144, IfdId::subImage7Id>},
-    {{0x0201, IfdId::subImage7Id}, newTiffImageData<0x0202, IfdId::subImage7Id>},
-    {{0x0202, IfdId::subImage7Id}, newTiffImageSize<0x0201, IfdId::subImage7Id>},
+    {{0x0111, IfdId::subImage7Id}, &newTiffImageData<0x0117, IfdId::subImage7Id>},
+    {{0x0117, IfdId::subImage7Id}, &newTiffImageSize<0x0111, IfdId::subImage7Id>},
+    {{0x0144, IfdId::subImage7Id}, &newTiffImageData<0x0145, IfdId::subImage7Id>},
+    {{0x0145, IfdId::subImage7Id}, &newTiffImageSize<0x0144, IfdId::subImage7Id>},
+    {{0x0201, IfdId::subImage7Id}, &newTiffImageData<0x0202, IfdId::subImage7Id>},
+    {{0x0202, IfdId::subImage7Id}, &newTiffImageSize<0x0201, IfdId::subImage7Id>},
     {{Tag::next, IfdId::subImage7Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage7Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage7Id}, &newTiffEntry},
 
     // Subdir subImage8
-    {{0x0111, IfdId::subImage8Id}, newTiffImageData<0x0117, IfdId::subImage8Id>},
-    {{0x0117, IfdId::subImage8Id}, newTiffImageSize<0x0111, IfdId::subImage8Id>},
-    {{0x0144, IfdId::subImage8Id}, newTiffImageData<0x0145, IfdId::subImage8Id>},
-    {{0x0145, IfdId::subImage8Id}, newTiffImageSize<0x0144, IfdId::subImage8Id>},
-    {{0x0201, IfdId::subImage8Id}, newTiffImageData<0x0202, IfdId::subImage8Id>},
-    {{0x0202, IfdId::subImage8Id}, newTiffImageSize<0x0201, IfdId::subImage8Id>},
+    {{0x0111, IfdId::subImage8Id}, &newTiffImageData<0x0117, IfdId::subImage8Id>},
+    {{0x0117, IfdId::subImage8Id}, &newTiffImageSize<0x0111, IfdId::subImage8Id>},
+    {{0x0144, IfdId::subImage8Id}, &newTiffImageData<0x0145, IfdId::subImage8Id>},
+    {{0x0145, IfdId::subImage8Id}, &newTiffImageSize<0x0144, IfdId::subImage8Id>},
+    {{0x0201, IfdId::subImage8Id}, &newTiffImageData<0x0202, IfdId::subImage8Id>},
+    {{0x0202, IfdId::subImage8Id}, &newTiffImageSize<0x0201, IfdId::subImage8Id>},
     {{Tag::next, IfdId::subImage8Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage8Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage8Id}, &newTiffEntry},
 
     // Subdir subImage9
-    {{0x0111, IfdId::subImage9Id}, newTiffImageData<0x0117, IfdId::subImage9Id>},
-    {{0x0117, IfdId::subImage9Id}, newTiffImageSize<0x0111, IfdId::subImage9Id>},
-    {{0x0144, IfdId::subImage9Id}, newTiffImageData<0x0145, IfdId::subImage9Id>},
-    {{0x0145, IfdId::subImage9Id}, newTiffImageSize<0x0144, IfdId::subImage9Id>},
-    {{0x0201, IfdId::subImage9Id}, newTiffImageData<0x0202, IfdId::subImage9Id>},
-    {{0x0202, IfdId::subImage9Id}, newTiffImageSize<0x0201, IfdId::subImage9Id>},
+    {{0x0111, IfdId::subImage9Id}, &newTiffImageData<0x0117, IfdId::subImage9Id>},
+    {{0x0117, IfdId::subImage9Id}, &newTiffImageSize<0x0111, IfdId::subImage9Id>},
+    {{0x0144, IfdId::subImage9Id}, &newTiffImageData<0x0145, IfdId::subImage9Id>},
+    {{0x0145, IfdId::subImage9Id}, &newTiffImageSize<0x0144, IfdId::subImage9Id>},
+    {{0x0201, IfdId::subImage9Id}, &newTiffImageData<0x0202, IfdId::subImage9Id>},
+    {{0x0202, IfdId::subImage9Id}, &newTiffImageSize<0x0201, IfdId::subImage9Id>},
     {{Tag::next, IfdId::subImage9Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subImage9Id}, newTiffEntry},
+    {{Tag::all, IfdId::subImage9Id}, &newTiffEntry},
 
     // Exif subdir
-    {{0xa005, IfdId::exifId}, newTiffSubIfd<IfdId::iopId>},
-    {{0x927c, IfdId::exifId}, newTiffMnEntry},
+    {{0xa005, IfdId::exifId}, &newTiffSubIfd<IfdId::iopId>},
+    {{0x927c, IfdId::exifId}, &newTiffMnEntry},
     {{Tag::next, IfdId::exifId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::exifId}, newTiffEntry},
+    {{Tag::all, IfdId::exifId}, &newTiffEntry},
 
     // GPS subdir
     {{Tag::next, IfdId::gpsId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::gpsId}, newTiffEntry},
+    {{Tag::all, IfdId::gpsId}, &newTiffEntry},
 
     // IOP subdir
     {{Tag::next, IfdId::iopId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::iopId}, newTiffEntry},
+    {{Tag::all, IfdId::iopId}, &newTiffEntry},
 
     // IFD1
-    {{0x0111, IfdId::ifd1Id}, newTiffThumbData<0x0117, IfdId::ifd1Id>},
-    {{0x0117, IfdId::ifd1Id}, newTiffThumbSize<0x0111, IfdId::ifd1Id>},
-    {{0x0144, IfdId::ifd1Id}, newTiffImageData<0x0145, IfdId::ifd1Id>},
-    {{0x0145, IfdId::ifd1Id}, newTiffImageSize<0x0144, IfdId::ifd1Id>},
-    {{0x014a, IfdId::ifd1Id}, newTiffSubIfd<IfdId::subThumb1Id>},
-    {{0x0201, IfdId::ifd1Id}, newTiffThumbData<0x0202, IfdId::ifd1Id>},
-    {{0x0202, IfdId::ifd1Id}, newTiffThumbSize<0x0201, IfdId::ifd1Id>},
-    {{Tag::next, IfdId::ifd1Id}, newTiffDirectory<IfdId::ifd2Id>},
-    {{Tag::all, IfdId::ifd1Id}, newTiffEntry},
+    {{0x0111, IfdId::ifd1Id}, &newTiffThumbData<0x0117, IfdId::ifd1Id>},
+    {{0x0117, IfdId::ifd1Id}, &newTiffThumbSize<0x0111, IfdId::ifd1Id>},
+    {{0x0144, IfdId::ifd1Id}, &newTiffImageData<0x0145, IfdId::ifd1Id>},
+    {{0x0145, IfdId::ifd1Id}, &newTiffImageSize<0x0144, IfdId::ifd1Id>},
+    {{0x014a, IfdId::ifd1Id}, &newTiffSubIfd<IfdId::subThumb1Id>},
+    {{0x0201, IfdId::ifd1Id}, &newTiffThumbData<0x0202, IfdId::ifd1Id>},
+    {{0x0202, IfdId::ifd1Id}, &newTiffThumbSize<0x0201, IfdId::ifd1Id>},
+    {{Tag::next, IfdId::ifd1Id}, &newTiffDirectory<IfdId::ifd2Id>},
+    {{Tag::all, IfdId::ifd1Id}, &newTiffEntry},
 
     // Subdir subThumb1
-    {{0x0111, IfdId::subThumb1Id}, newTiffImageData<0x0117, IfdId::subThumb1Id>},
-    {{0x0117, IfdId::subThumb1Id}, newTiffImageSize<0x0111, IfdId::subThumb1Id>},
-    {{0x0144, IfdId::subThumb1Id}, newTiffImageData<0x0145, IfdId::subThumb1Id>},
-    {{0x0145, IfdId::subThumb1Id}, newTiffImageSize<0x0144, IfdId::subThumb1Id>},
-    {{0x0201, IfdId::subThumb1Id}, newTiffImageData<0x0202, IfdId::subThumb1Id>},
-    {{0x0202, IfdId::subThumb1Id}, newTiffImageSize<0x0201, IfdId::subThumb1Id>},
+    {{0x0111, IfdId::subThumb1Id}, &newTiffImageData<0x0117, IfdId::subThumb1Id>},
+    {{0x0117, IfdId::subThumb1Id}, &newTiffImageSize<0x0111, IfdId::subThumb1Id>},
+    {{0x0144, IfdId::subThumb1Id}, &newTiffImageData<0x0145, IfdId::subThumb1Id>},
+    {{0x0145, IfdId::subThumb1Id}, &newTiffImageSize<0x0144, IfdId::subThumb1Id>},
+    {{0x0201, IfdId::subThumb1Id}, &newTiffImageData<0x0202, IfdId::subThumb1Id>},
+    {{0x0202, IfdId::subThumb1Id}, &newTiffImageSize<0x0201, IfdId::subThumb1Id>},
     {{Tag::next, IfdId::subThumb1Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::subThumb1Id}, newTiffEntry},
+    {{Tag::all, IfdId::subThumb1Id}, &newTiffEntry},
 
     // IFD2 (eg, in Pentax PEF and Canon CR2 files)
-    {{0x0111, IfdId::ifd2Id}, newTiffImageData<0x0117, IfdId::ifd2Id>},
-    {{0x0117, IfdId::ifd2Id}, newTiffImageSize<0x0111, IfdId::ifd2Id>},
-    {{0x0144, IfdId::ifd1Id}, newTiffImageData<0x0145, IfdId::ifd2Id>},
-    {{0x0145, IfdId::ifd1Id}, newTiffImageSize<0x0144, IfdId::ifd2Id>},
-    {{0x0201, IfdId::ifd2Id}, newTiffImageData<0x0202, IfdId::ifd2Id>},
-    {{0x0202, IfdId::ifd2Id}, newTiffImageSize<0x0201, IfdId::ifd2Id>},
-    {{Tag::next, IfdId::ifd2Id}, newTiffDirectory<IfdId::ifd3Id>},
-    {{Tag::all, IfdId::ifd2Id}, newTiffEntry},
+    {{0x0111, IfdId::ifd2Id}, &newTiffImageData<0x0117, IfdId::ifd2Id>},
+    {{0x0117, IfdId::ifd2Id}, &newTiffImageSize<0x0111, IfdId::ifd2Id>},
+    {{0x0144, IfdId::ifd1Id}, &newTiffImageData<0x0145, IfdId::ifd2Id>},
+    {{0x0145, IfdId::ifd1Id}, &newTiffImageSize<0x0144, IfdId::ifd2Id>},
+    {{0x0201, IfdId::ifd2Id}, &newTiffImageData<0x0202, IfdId::ifd2Id>},
+    {{0x0202, IfdId::ifd2Id}, &newTiffImageSize<0x0201, IfdId::ifd2Id>},
+    {{Tag::next, IfdId::ifd2Id}, &newTiffDirectory<IfdId::ifd3Id>},
+    {{Tag::all, IfdId::ifd2Id}, &newTiffEntry},
 
     // IFD3 (eg, in Canon CR2 files)
-    {{0x0111, IfdId::ifd3Id}, newTiffImageData<0x0117, IfdId::ifd3Id>},
-    {{0x0117, IfdId::ifd3Id}, newTiffImageSize<0x0111, IfdId::ifd3Id>},
-    {{0x0144, IfdId::ifd1Id}, newTiffImageData<0x0145, IfdId::ifd3Id>},
-    {{0x0145, IfdId::ifd1Id}, newTiffImageSize<0x0144, IfdId::ifd3Id>},
-    {{0x0201, IfdId::ifd3Id}, newTiffImageData<0x0202, IfdId::ifd3Id>},
-    {{0x0202, IfdId::ifd3Id}, newTiffImageSize<0x0201, IfdId::ifd3Id>},
+    {{0x0111, IfdId::ifd3Id}, &newTiffImageData<0x0117, IfdId::ifd3Id>},
+    {{0x0117, IfdId::ifd3Id}, &newTiffImageSize<0x0111, IfdId::ifd3Id>},
+    {{0x0144, IfdId::ifd1Id}, &newTiffImageData<0x0145, IfdId::ifd3Id>},
+    {{0x0145, IfdId::ifd1Id}, &newTiffImageSize<0x0144, IfdId::ifd3Id>},
+    {{0x0201, IfdId::ifd3Id}, &newTiffImageData<0x0202, IfdId::ifd3Id>},
+    {{0x0202, IfdId::ifd3Id}, &newTiffImageSize<0x0201, IfdId::ifd3Id>},
     {{Tag::next, IfdId::ifd3Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::ifd3Id}, newTiffEntry},
+    {{Tag::all, IfdId::ifd3Id}, &newTiffEntry},
 
     // Olympus makernote - some Olympus cameras use Minolta structures
     // Todo: Adding such tags will not work (maybe result in a Minolta makernote), need separate groups
     {{0x0001, IfdId::olympusId}, EXV_SIMPLE_BINARY_ARRAY(minoCsoCfg)},
     {{0x0003, IfdId::olympusId}, EXV_SIMPLE_BINARY_ARRAY(minoCsnCfg)},
     {{Tag::next, IfdId::olympusId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::olympusId}, newTiffEntry},
+    {{Tag::all, IfdId::olympusId}, &newTiffEntry},
 
     // Olympus2 makernote
     {{0x0001, IfdId::olympus2Id}, EXV_SIMPLE_BINARY_ARRAY(minoCsoCfg)},
     {{0x0003, IfdId::olympus2Id}, EXV_SIMPLE_BINARY_ARRAY(minoCsnCfg)},
-    {{0x2010, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusEqId>},
-    {{0x2020, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusCsId>},
-    {{0x2030, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusRdId>},
-    {{0x2031, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusRd2Id>},
-    {{0x2040, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusIpId>},
-    {{0x2050, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFiId>},
-    {{0x2100, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe1Id>},
-    {{0x2200, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe2Id>},
-    {{0x2300, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe3Id>},
-    {{0x2400, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe4Id>},
-    {{0x2500, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe5Id>},
-    {{0x2600, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe6Id>},
-    {{0x2700, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe7Id>},
-    {{0x2800, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe8Id>},
-    {{0x2900, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusFe9Id>},
-    {{0x3000, IfdId::olympus2Id}, newTiffSubIfd<IfdId::olympusRiId>},
+    {{0x2010, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusEqId>},
+    {{0x2020, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusCsId>},
+    {{0x2030, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusRdId>},
+    {{0x2031, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusRd2Id>},
+    {{0x2040, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusIpId>},
+    {{0x2050, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFiId>},
+    {{0x2100, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe1Id>},
+    {{0x2200, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe2Id>},
+    {{0x2300, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe3Id>},
+    {{0x2400, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe4Id>},
+    {{0x2500, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe5Id>},
+    {{0x2600, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe6Id>},
+    {{0x2700, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe7Id>},
+    {{0x2800, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe8Id>},
+    {{0x2900, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusFe9Id>},
+    {{0x3000, IfdId::olympus2Id}, &newTiffSubIfd<IfdId::olympusRiId>},
     {{Tag::next, IfdId::olympus2Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::olympus2Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympus2Id}, &newTiffEntry},
 
     // Olympus2 equipment subdir
-    {{Tag::all, IfdId::olympusEqId}, newTiffEntry},
+    {{Tag::all, IfdId::olympusEqId}, &newTiffEntry},
 
     // Olympus2 camera settings subdir
-    {{0x0101, IfdId::olympusCsId}, newTiffImageData<0x0102, IfdId::olympusCsId>},
-    {{0x0102, IfdId::olympusCsId}, newTiffImageSize<0x0101, IfdId::olympusCsId>},
-    {{Tag::all, IfdId::olympusCsId}, newTiffEntry},
+    {{0x0101, IfdId::olympusCsId}, &newTiffImageData<0x0102, IfdId::olympusCsId>},
+    {{0x0102, IfdId::olympusCsId}, &newTiffImageSize<0x0101, IfdId::olympusCsId>},
+    {{Tag::all, IfdId::olympusCsId}, &newTiffEntry},
 
     // Olympus2 raw development subdir
-    {{Tag::all, IfdId::olympusRdId}, newTiffEntry},
+    {{Tag::all, IfdId::olympusRdId}, &newTiffEntry},
 
     // Olympus2 raw development 2 subdir
-    {{Tag::all, IfdId::olympusRd2Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusRd2Id}, &newTiffEntry},
 
     // Olympus2 image processing subdir
-    {{Tag::all, IfdId::olympusIpId}, newTiffEntry},
+    {{Tag::all, IfdId::olympusIpId}, &newTiffEntry},
 
     // Olympus2 focus info subdir
-    {{Tag::all, IfdId::olympusFiId}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFiId}, &newTiffEntry},
 
     // Olympus2 FE 1 subdir
-    {{Tag::all, IfdId::olympusFe1Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe1Id}, &newTiffEntry},
 
     // Olympus2 FE 2 subdir
-    {{Tag::all, IfdId::olympusFe2Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe2Id}, &newTiffEntry},
 
     // Olympus2 FE 3 subdir
-    {{Tag::all, IfdId::olympusFe3Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe3Id}, &newTiffEntry},
 
     // Olympus2 FE 4 subdir
-    {{Tag::all, IfdId::olympusFe4Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe4Id}, &newTiffEntry},
 
     // Olympus2 FE 5 subdir
-    {{Tag::all, IfdId::olympusFe5Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe5Id}, &newTiffEntry},
 
     // Olympus2 FE 6 subdir
-    {{Tag::all, IfdId::olympusFe6Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe6Id}, &newTiffEntry},
 
     // Olympus2 FE 7 subdir
-    {{Tag::all, IfdId::olympusFe7Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe7Id}, &newTiffEntry},
 
     // Olympus2 FE 8 subdir
-    {{Tag::all, IfdId::olympusFe8Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe8Id}, &newTiffEntry},
 
     // Olympus2 FE 9 subdir
-    {{Tag::all, IfdId::olympusFe9Id}, newTiffEntry},
+    {{Tag::all, IfdId::olympusFe9Id}, &newTiffEntry},
 
     // Olympus2 Raw Info subdir
-    {{Tag::all, IfdId::olympusRiId}, newTiffEntry},
+    {{Tag::all, IfdId::olympusRiId}, &newTiffEntry},
 
     // Fujifilm makernote
     {{Tag::next, IfdId::fujiId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::fujiId}, newTiffEntry},
+    {{Tag::all, IfdId::fujiId}, &newTiffEntry},
 
     // Canon makernote
     {{0x0001, IfdId::canonId}, EXV_BINARY_ARRAY(canonCsCfg, canonCsDef)},
@@ -1678,7 +1697,7 @@ const TiffGroupTable TiffCreator::tiffGroupTable_ = {
     //  {{    0x4015, IfdId::canonId,          EXV_SIMPLE_BINARY_ARRAY(canonVigCorCfg)   },
     {{0x4016, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonVigCor2Cfg)},
     {{0x4018, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonLiOpCfg)},
-    {{0x4019, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonLeCfg)},
+    {{0x4019, IfdId::canonId}, EXV_BINARY_ARRAY(canonLeCfg, canonLeDef)},
     {{0x4020, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonAmCfg)},
     {{0x4021, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonMeCfg)},
     {{0x4024, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonFilCfg)},
@@ -1686,274 +1705,274 @@ const TiffGroupTable TiffCreator::tiffGroupTable_ = {
     {{0x4028, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonAfCCfg)},
     {{0x403f, IfdId::canonId}, EXV_SIMPLE_BINARY_ARRAY(canonRawBCfg)},
     {{Tag::next, IfdId::canonId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::canonId}, newTiffEntry},
+    {{Tag::all, IfdId::canonId}, &newTiffEntry},
 
     // Canon makernote composite tags
-    {{Tag::all, IfdId::canonCsId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonSiId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonPaId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonCfId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonPiId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonTiId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonFiId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonPrId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonAfMiAdjId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::canonCsId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonSiId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonPaId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonCfId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonPiId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonTiId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonFiId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonPrId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonAfMiAdjId}, &newTiffBinaryElement},
     // {{  Tag::all, IfdId::canonVigCorId,    newTiffBinaryElement                      },
-    {{Tag::all, IfdId::canonVigCor2Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonLiOpId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonLeId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonAmId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonMeId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonFilId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonHdrId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonAfCId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::canonRawBId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::canonVigCor2Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonLiOpId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonLeId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonAmId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonMeId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonFilId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonHdrId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonAfCId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::canonRawBId}, &newTiffBinaryElement},
 
     // Nikon1 makernote
     {{Tag::next, IfdId::nikon1Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::nikon1Id}, newTiffEntry},
+    {{Tag::all, IfdId::nikon1Id}, &newTiffEntry},
 
     // Nikon2 makernote
     {{Tag::next, IfdId::nikon2Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::nikon2Id}, newTiffEntry},
+    {{Tag::all, IfdId::nikon2Id}, &newTiffEntry},
 
     // Nikon3 makernote
     {{Tag::next, IfdId::nikon3Id}, ignoreTiffComponent},
-    {{0x0011, IfdId::nikon3Id}, newTiffSubIfd<IfdId::nikonPvId>},
+    {{0x0011, IfdId::nikon3Id}, &newTiffSubIfd<IfdId::nikonPvId>},
     {{0x001f, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonVrCfg, nikonVrDef)},
     {{0x0023, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonPcCfg, nikonPcDef)},
     {{0x0024, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonWtCfg, nikonWtDef)},
     {{0x0025, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonIiCfg, nikonIiDef)},
     {{0x0088, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonAfCfg, nikonAfDef)},
-    {{0x0091, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonSiSet, nikonSelector)},
-    {{0x0097, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonCbSet, nikonSelector)},
-    {{0x0098, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonLdSet, nikonSelector)},
-    {{0x00a8, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonFlSet, nikonSelector)},
+    {{0x0091, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonSiSet, &nikonSelector)},
+    {{0x0097, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonCbSet, &nikonSelector)},
+    {{0x0098, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonLdSet, &nikonSelector)},
+    {{0x00a8, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonFlSet, &nikonSelector)},
     {{0x00b0, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonMeCfg, nikonMeDef)},
-    {{0x00b7, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonAf2Set, nikonSelector)},
+    {{0x00b7, IfdId::nikon3Id}, EXV_COMPLEX_BINARY_ARRAY(nikonAf2Set, &nikonSelector)},
     {{0x00b8, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonFiCfg, nikonFiDef)},
     {{0x00b9, IfdId::nikon3Id}, EXV_BINARY_ARRAY(nikonAFTCfg, nikonAFTDef)},
-    {{Tag::all, IfdId::nikon3Id}, newTiffEntry},
+    {{Tag::all, IfdId::nikon3Id}, &newTiffEntry},
 
     // Nikon3 makernote preview subdir
-    {{0x0201, IfdId::nikonPvId}, newTiffThumbData<0x0202, IfdId::nikonPvId>},
-    {{0x0202, IfdId::nikonPvId}, newTiffThumbSize<0x0201, IfdId::nikonPvId>},
+    {{0x0201, IfdId::nikonPvId}, &newTiffThumbData<0x0202, IfdId::nikonPvId>},
+    {{0x0202, IfdId::nikonPvId}, &newTiffThumbSize<0x0201, IfdId::nikonPvId>},
     {{Tag::next, IfdId::nikonPvId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::nikonPvId}, newTiffEntry},
+    {{Tag::all, IfdId::nikonPvId}, &newTiffEntry},
 
     // Nikon3 vibration reduction
-    {{Tag::all, IfdId::nikonVrId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonVrId}, &newTiffBinaryElement},
 
     // Nikon3 picture control
-    {{Tag::all, IfdId::nikonPcId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonPcId}, &newTiffBinaryElement},
 
     // Nikon3 world time
-    {{Tag::all, IfdId::nikonWtId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonWtId}, &newTiffBinaryElement},
 
     // Nikon3 ISO info
-    {{Tag::all, IfdId::nikonIiId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonIiId}, &newTiffBinaryElement},
 
     // Nikon3 auto focus
-    {{Tag::all, IfdId::nikonAfId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonAfId}, &newTiffBinaryElement},
 
     // Nikon3 auto focus 2
-    {{Tag::all, IfdId::nikonAf21Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonAf22Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonAf21Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonAf22Id}, &newTiffBinaryElement},
 
     // Nikon3 AF Fine Tune
-    {{Tag::all, IfdId::nikonAFTId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonAFTId}, &newTiffBinaryElement},
 
     // Nikon3 file info
-    {{Tag::all, IfdId::nikonFiId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonFiId}, &newTiffBinaryElement},
 
     // Nikon3 multi exposure
-    {{Tag::all, IfdId::nikonMeId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonMeId}, &newTiffBinaryElement},
 
     // Nikon3 flash info
-    {{Tag::all, IfdId::nikonFl1Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonFl2Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonFl3Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonFl6Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonFl7Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonFl1Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonFl2Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonFl3Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonFl6Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonFl7Id}, &newTiffBinaryElement},
 
     // Nikon3 shot info
-    {{Tag::all, IfdId::nikonSi1Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonSi2Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonSi3Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonSi4Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonSi5Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonSi6Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonSi1Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonSi2Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonSi3Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonSi4Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonSi5Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonSi6Id}, &newTiffBinaryElement},
 
     // Nikon3 color balance
-    {{Tag::all, IfdId::nikonCb1Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonCb2Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonCb2aId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonCb2bId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonCb3Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonCb4Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonCb1Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonCb2Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonCb2aId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonCb2bId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonCb3Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonCb4Id}, &newTiffBinaryElement},
 
     // Nikon3 lens data
-    {{Tag::all, IfdId::nikonLd1Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonLd2Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonLd3Id}, newTiffBinaryElement},
-    {{Tag::all, IfdId::nikonLd4Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonLd1Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonLd2Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonLd3Id}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::nikonLd4Id}, &newTiffBinaryElement},
 
     // Panasonic makernote
     {{Tag::next, IfdId::panasonicId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::panasonicId}, newTiffEntry},
+    {{Tag::all, IfdId::panasonicId}, &newTiffEntry},
 
     // Pentax DNG makernote
-    {{0x0003, IfdId::pentaxDngId}, newTiffThumbSize<0x0004, IfdId::pentaxDngId>},
-    {{0x0004, IfdId::pentaxDngId}, newTiffThumbData<0x0003, IfdId::pentaxDngId>},
+    {{0x0003, IfdId::pentaxDngId}, &newTiffThumbSize<0x0004, IfdId::pentaxDngId>},
+    {{0x0004, IfdId::pentaxDngId}, &newTiffThumbData<0x0003, IfdId::pentaxDngId>},
     {{Tag::next, IfdId::pentaxDngId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::pentaxDngId}, newTiffEntry},
+    {{Tag::all, IfdId::pentaxDngId}, &newTiffEntry},
 
     // Pentax makernote
-    {{0x0003, IfdId::pentaxId}, newTiffThumbSize<0x0004, IfdId::pentaxId>},
-    {{0x0004, IfdId::pentaxId}, newTiffThumbData<0x0003, IfdId::pentaxId>},
+    {{0x0003, IfdId::pentaxId}, &newTiffThumbSize<0x0004, IfdId::pentaxId>},
+    {{0x0004, IfdId::pentaxId}, &newTiffThumbData<0x0003, IfdId::pentaxId>},
     {{Tag::next, IfdId::pentaxId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::pentaxId}, newTiffEntry},
+    {{Tag::all, IfdId::pentaxId}, &newTiffEntry},
 
     // Samsung2 makernote
     {{0x0021, IfdId::samsung2Id}, EXV_BINARY_ARRAY(samsungPwCfg, samsungPwDef)},
-    {{0x0035, IfdId::samsung2Id}, newTiffSubIfd<IfdId::samsungPvId>},
+    {{0x0035, IfdId::samsung2Id}, &newTiffSubIfd<IfdId::samsungPvId>},
     {{Tag::next, IfdId::samsung2Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::samsung2Id}, newTiffEntry},
+    {{Tag::all, IfdId::samsung2Id}, &newTiffEntry},
 
     // Samsung PictureWizard binary array
-    {{Tag::all, IfdId::samsungPwId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::samsungPwId}, &newTiffBinaryElement},
 
     // Samsung2 makernote preview subdir
-    {{0x0201, IfdId::samsungPvId}, newTiffThumbData<0x0202, IfdId::samsungPvId>},
-    {{0x0202, IfdId::samsungPvId}, newTiffThumbSize<0x0201, IfdId::samsungPvId>},
+    {{0x0201, IfdId::samsungPvId}, &newTiffThumbData<0x0202, IfdId::samsungPvId>},
+    {{0x0202, IfdId::samsungPvId}, &newTiffThumbSize<0x0201, IfdId::samsungPvId>},
     {{Tag::next, IfdId::samsungPvId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::samsungPvId}, newTiffEntry},
+    {{Tag::all, IfdId::samsungPvId}, &newTiffEntry},
 
     // Sigma/Foveon makernote
     {{Tag::next, IfdId::sigmaId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::sigmaId}, newTiffEntry},
+    {{Tag::all, IfdId::sigmaId}, &newTiffEntry},
 
-    {{Tag::all, IfdId::sony2010eId}, newTiffBinaryElement},
-    {{0x2010, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sony2010eSet, sony2010eSelector)},
+    {{Tag::all, IfdId::sony2010eId}, &newTiffBinaryElement},
+    {{0x2010, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sony2010eSet, &sony2010eSelector)},
 
     // Tag 0x9402 Sony2Fp Focus Position
-    {{Tag::all, IfdId::sony2FpId}, newTiffBinaryElement},
-    {{0x9402, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sony2FpSet, sony2FpSelector)},
+    {{Tag::all, IfdId::sony2FpId}, &newTiffBinaryElement},
+    {{0x9402, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sony2FpSet, &sony2FpSelector)},
 
     // Tag 0x9404 SonyMisc2b
-    {{Tag::all, IfdId::sonyMisc2bId}, newTiffBinaryElement},
-    {{0x9404, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc2bSet, sonyMisc2bSelector)},
+    {{Tag::all, IfdId::sonyMisc2bId}, &newTiffBinaryElement},
+    {{0x9404, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc2bSet, &sonyMisc2bSelector)},
 
     // Tag 0x9400 SonyMisc3c
-    {{Tag::all, IfdId::sonyMisc3cId}, newTiffBinaryElement},
-    {{0x9400, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc3cSet, sonyMisc3cSelector)},
+    {{Tag::all, IfdId::sonyMisc3cId}, &newTiffBinaryElement},
+    {{0x9400, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc3cSet, &sonyMisc3cSelector)},
 
     // Tag 0x9403 SonyMisc1
-    {{Tag::all, IfdId::sonyMisc1Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::sonyMisc1Id}, &newTiffBinaryElement},
     {{0x9403, IfdId::sony1Id}, EXV_BINARY_ARRAY(sonyMisc1Cfg, sonyMisc1Def)},
 
     // Tag 0x3000 SonySInfo1
-    {{Tag::all, IfdId::sonySInfo1Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::sonySInfo1Id}, &newTiffBinaryElement},
     {{0x3000, IfdId::sony1Id}, EXV_BINARY_ARRAY(sonySInfo1Cfg, sonySInfo1Def)},
 
     // Sony1 makernote
-    {{0x0114, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sony1CsSet, sonyCsSelector)},
-    {{0xb028, IfdId::sony1Id}, newTiffSubIfd<IfdId::sonyMltId>},
+    {{0x0114, IfdId::sony1Id}, EXV_COMPLEX_BINARY_ARRAY(sony1CsSet, &sonyCsSelector)},
+    {{0xb028, IfdId::sony1Id}, &newTiffSubIfd<IfdId::sonyMltId>},
     {{Tag::next, IfdId::sony1Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::sony1Id}, newTiffEntry},
+    {{Tag::all, IfdId::sony1Id}, &newTiffEntry},
 
     // Sony1 camera settings
-    {{Tag::all, IfdId::sony1CsId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::sony1Cs2Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::sony1CsId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::sony1Cs2Id}, &newTiffBinaryElement},
 
-    {{Tag::all, IfdId::sony2010eId}, newTiffBinaryElement},
-    {{0x2010, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sony2010eSet, sony2010eSelector)},
+    {{Tag::all, IfdId::sony2010eId}, &newTiffBinaryElement},
+    {{0x2010, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sony2010eSet, &sony2010eSelector)},
 
     // Tag 0x9402 Sony2Fp Focus Position
-    {{Tag::all, IfdId::sony2FpId}, newTiffBinaryElement},
-    {{0x9402, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sony2FpSet, sony2FpSelector)},
+    {{Tag::all, IfdId::sony2FpId}, &newTiffBinaryElement},
+    {{0x9402, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sony2FpSet, &sony2FpSelector)},
 
     // Tag 0x9403 SonyMisc1
-    {{Tag::all, IfdId::sonyMisc1Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::sonyMisc1Id}, &newTiffBinaryElement},
     {{0x9403, IfdId::sony2Id}, EXV_BINARY_ARRAY(sonyMisc1Cfg, sonyMisc1Def)},
 
     // Tag 0x9404 SonyMisc2b
-    {{Tag::all, IfdId::sonyMisc2bId}, newTiffBinaryElement},
-    {{0x9404, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc2bSet, sonyMisc2bSelector)},
+    {{Tag::all, IfdId::sonyMisc2bId}, &newTiffBinaryElement},
+    {{0x9404, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc2bSet, &sonyMisc2bSelector)},
 
     // Tag 0x9400 SonyMisc3c
-    {{Tag::all, IfdId::sonyMisc3cId}, newTiffBinaryElement},
-    {{0x9400, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc3cSet, sonyMisc3cSelector)},
+    {{Tag::all, IfdId::sonyMisc3cId}, &newTiffBinaryElement},
+    {{0x9400, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sonyMisc3cSet, &sonyMisc3cSelector)},
 
     // Tag 0x3000 SonySInfo1
-    {{Tag::all, IfdId::sonySInfo1Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::sonySInfo1Id}, &newTiffBinaryElement},
     {{0x3000, IfdId::sony2Id}, EXV_BINARY_ARRAY(sonySInfo1Cfg, sonySInfo1Def)},
 
     // Sony2 makernote
-    {{0x0114, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sony2CsSet, sonyCsSelector)},
+    {{0x0114, IfdId::sony2Id}, EXV_COMPLEX_BINARY_ARRAY(sony2CsSet, &sonyCsSelector)},
     {{Tag::next, IfdId::sony2Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::sony2Id}, newTiffEntry},
+    {{Tag::all, IfdId::sony2Id}, &newTiffEntry},
 
     // Sony2 camera settings
-    {{Tag::all, IfdId::sony2CsId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::sony2Cs2Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::sony2CsId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::sony2Cs2Id}, &newTiffBinaryElement},
 
     // Sony1 Minolta makernote
     {{0x0001, IfdId::sonyMltId}, EXV_SIMPLE_BINARY_ARRAY(sony1MCsoCfg)},
     {{0x0003, IfdId::sonyMltId}, EXV_SIMPLE_BINARY_ARRAY(sony1MCsnCfg)},
     {{0x0004, IfdId::sonyMltId}, EXV_BINARY_ARRAY(sony1MCs7Cfg, minoCs7Def)},  // minoCs7Def [sic]
-    {{0x0088, IfdId::sonyMltId}, newTiffThumbData<0x0089, IfdId::sonyMltId>},
-    {{0x0089, IfdId::sonyMltId}, newTiffThumbSize<0x0088, IfdId::sonyMltId>},
+    {{0x0088, IfdId::sonyMltId}, &newTiffThumbData<0x0089, IfdId::sonyMltId>},
+    {{0x0089, IfdId::sonyMltId}, &newTiffThumbSize<0x0088, IfdId::sonyMltId>},
     {{0x0114, IfdId::sonyMltId}, EXV_BINARY_ARRAY(sony1MCsA100Cfg, sony1MCsA100Def)},
     {{Tag::next, IfdId::sonyMltId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::sonyMltId}, newTiffEntry},
+    {{Tag::all, IfdId::sonyMltId}, &newTiffEntry},
 
     // Sony1 Minolta makernote composite tags
-    {{Tag::all, IfdId::sony1MltCsOldId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::sony1MltCsNewId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::sony1MltCs7DId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::sony1MltCsA100Id}, newTiffBinaryElement},
+    {{Tag::all, IfdId::sony1MltCsOldId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::sony1MltCsNewId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::sony1MltCs7DId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::sony1MltCsA100Id}, &newTiffBinaryElement},
 
     // Minolta makernote
     {{0x0001, IfdId::minoltaId}, EXV_SIMPLE_BINARY_ARRAY(minoCsoCfg)},
     {{0x0003, IfdId::minoltaId}, EXV_SIMPLE_BINARY_ARRAY(minoCsnCfg)},
     {{0x0004, IfdId::minoltaId}, EXV_BINARY_ARRAY(minoCs7Cfg, minoCs7Def)},
-    {{0x0088, IfdId::minoltaId}, newTiffThumbData<0x0089, IfdId::minoltaId>},
-    {{0x0089, IfdId::minoltaId}, newTiffThumbSize<0x0088, IfdId::minoltaId>},
+    {{0x0088, IfdId::minoltaId}, &newTiffThumbData<0x0089, IfdId::minoltaId>},
+    {{0x0089, IfdId::minoltaId}, &newTiffThumbSize<0x0088, IfdId::minoltaId>},
     {{0x0114, IfdId::minoltaId}, EXV_BINARY_ARRAY(minoCs5Cfg, minoCs5Def)},
     {{Tag::next, IfdId::minoltaId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::minoltaId}, newTiffEntry},
+    {{Tag::all, IfdId::minoltaId}, &newTiffEntry},
 
     // Minolta makernote composite tags
-    {{Tag::all, IfdId::minoltaCsOldId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::minoltaCsNewId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::minoltaCs7DId}, newTiffBinaryElement},
-    {{Tag::all, IfdId::minoltaCs5DId}, newTiffBinaryElement},
+    {{Tag::all, IfdId::minoltaCsOldId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::minoltaCsNewId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::minoltaCs7DId}, &newTiffBinaryElement},
+    {{Tag::all, IfdId::minoltaCs5DId}, &newTiffBinaryElement},
 
     // -----------------------------------------------------------------------
     // Root directory of Panasonic RAW images
-    {{Tag::pana, IfdId::ifdIdNotSet}, newTiffDirectory<IfdId::panaRawId>},
+    {{Tag::pana, IfdId::ifdIdNotSet}, &newTiffDirectory<IfdId::panaRawId>},
 
     // IFD0 of Panasonic RAW images
-    {{0x8769, IfdId::panaRawId}, newTiffSubIfd<IfdId::exifId>},
-    {{0x8825, IfdId::panaRawId}, newTiffSubIfd<IfdId::gpsId>},
+    {{0x8769, IfdId::panaRawId}, &newTiffSubIfd<IfdId::exifId>},
+    {{0x8825, IfdId::panaRawId}, &newTiffSubIfd<IfdId::gpsId>},
     //        {{    0x0111, IfdId::panaRawId,        newTiffImageData<0x0117, IfdId::panaRawId>       },
     //        {{    0x0117, IfdId::panaRawId,        newTiffImageSize<0x0111, IfdId::panaRawId>       },
     {{Tag::next, IfdId::panaRawId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::panaRawId}, newTiffEntry},
+    {{Tag::all, IfdId::panaRawId}, &newTiffEntry},
 
     // Casio makernote
     {{Tag::next, IfdId::casioId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::casioId}, newTiffEntry},
+    {{Tag::all, IfdId::casioId}, &newTiffEntry},
 
     // Casio2 makernote
     {{Tag::next, IfdId::casio2Id}, ignoreTiffComponent},
-    {{Tag::all, IfdId::casio2Id}, newTiffEntry},
+    {{Tag::all, IfdId::casio2Id}, &newTiffEntry},
 
     // -----------------------------------------------------------------------
     // Tags which are not de/encoded
     {{Tag::next, IfdId::ignoreId}, ignoreTiffComponent},
-    {{Tag::all, IfdId::ignoreId}, newTiffEntry},
+    {{Tag::all, IfdId::ignoreId}, &newTiffEntry},
 };
 
 // TIFF mapping table for special decoding and encoding requirements
@@ -1965,20 +1984,18 @@ const TiffMappingInfo TiffMapping::tiffMappingInfo_[] = {
     {"*", 0x0026, IfdId::canonId, &TiffDecoder::decodeCanonAFInfo, nullptr /* Exiv2.Canon.AFInfo is read-only */},
 };
 
-DecoderFct TiffMapping::findDecoder(const std::string& make, uint32_t extendedTag, IfdId group) {
+DecoderFct TiffMapping::findDecoder(std::string_view make, uint32_t extendedTag, IfdId group) {
   DecoderFct decoderFct = &TiffDecoder::decodeStdTiffEntry;
-  const TiffMappingInfo* td = find(tiffMappingInfo_, TiffMappingInfo::Key(make, extendedTag, group));
-  if (td) {
+  if (auto td = Exiv2::find(tiffMappingInfo_, TiffMappingInfo::Key{make, extendedTag, group})) {
     // This may set decoderFct to 0, meaning that the tag should not be decoded
     decoderFct = td->decoderFct_;
   }
   return decoderFct;
 }
 
-EncoderFct TiffMapping::findEncoder(const std::string& make, uint32_t extendedTag, IfdId group) {
+EncoderFct TiffMapping::findEncoder(std::string_view make, uint32_t extendedTag, IfdId group) {
   EncoderFct encoderFct = nullptr;
-  const TiffMappingInfo* td = find(tiffMappingInfo_, TiffMappingInfo::Key(make, extendedTag, group));
-  if (td) {
+  if (auto td = Exiv2::find(tiffMappingInfo_, TiffMappingInfo::Key{make, extendedTag, group})) {
     // Returns 0 if no special encoder function is found
     encoderFct = td->encoderFct_;
   }
@@ -1986,16 +2003,14 @@ EncoderFct TiffMapping::findEncoder(const std::string& make, uint32_t extendedTa
 }
 
 TiffComponent::UniquePtr TiffCreator::create(uint32_t extendedTag, IfdId group) {
-  auto tag = static_cast<uint16_t>(extendedTag & 0xffff);
+  auto tag = static_cast<uint16_t>(extendedTag);
   auto i = tiffGroupTable_.find(TiffGroupKey(extendedTag, group));
   // If the lookup failed then try again with Tag::all.
   if (i == tiffGroupTable_.end()) {
     i = tiffGroupTable_.find(TiffGroupKey(Tag::all, group));
   }
-  if (i != tiffGroupTable_.end()) {
-    if (i->second) {
-      return i->second(tag, group);
-    }
+  if (i != tiffGroupTable_.end() && i->second) {
+    return i->second(tag, group);
   }
 #ifdef EXIV2_DEBUG_MESSAGES
   if (i == tiffGroupTable_.end())
@@ -2008,9 +2023,10 @@ TiffComponent::UniquePtr TiffCreator::create(uint32_t extendedTag, IfdId group) 
   return nullptr;
 }  // TiffCreator::create
 
-void TiffCreator::getPath(TiffPath& tiffPath, uint32_t extendedTag, IfdId group, uint32_t root) {
+TiffPath TiffCreator::getPath(uint32_t extendedTag, IfdId group, uint32_t root) {
+  TiffPath ret;
   while (true) {
-    tiffPath.emplace(extendedTag, group);
+    ret.emplace(extendedTag, group);
     const auto ts = tiffTreeTable_.find(TiffGroupKey(root, group));
     assert(ts != tiffTreeTable_.end());
     extendedTag = ts->second.second;
@@ -2019,6 +2035,7 @@ void TiffCreator::getPath(TiffPath& tiffPath, uint32_t extendedTag, IfdId group,
       break;
     }
   }
+  return ret;
 }
 
 ByteOrder TiffParserWorker::decode(ExifData& exifData, IptcData& iptcData, XmpData& xmpData, const byte* pData,
@@ -2030,19 +2047,17 @@ ByteOrder TiffParserWorker::decode(ExifData& exifData, IptcData& iptcData, XmpDa
     pHeader = ph.get();
   }
 
-  auto rootDir = parse(pData, size, root, pHeader);
-  if (rootDir) {
-    TiffDecoder decoder(exifData, iptcData, xmpData, rootDir.get(), findDecoderFct);
+  if (auto rootDir = parse(pData, size, root, pHeader)) {
+    auto decoder = TiffDecoder(exifData, iptcData, xmpData, rootDir.get(), findDecoderFct);
     rootDir->accept(decoder);
   }
   return pHeader->byteOrder();
 
 }  // TiffParserWorker::decode
 
-WriteMethod TiffParserWorker::encode(BasicIo& io, const byte* pData, size_t size, const ExifData& exifData,
-                                     const IptcData& iptcData, const XmpData& xmpData, uint32_t root,
-                                     FindEncoderFct findEncoderFct, TiffHeaderBase* pHeader,
-                                     OffsetWriter* pOffsetWriter) {
+WriteMethod TiffParserWorker::encode(BasicIo& io, const byte* pData, size_t size, ExifData& exifData,
+                                     IptcData& iptcData, XmpData& xmpData, uint32_t root, FindEncoderFct findEncoderFct,
+                                     TiffHeaderBase* pHeader, OffsetWriter* pOffsetWriter) {
   /*
      1) parse the binary image, if one is provided, and
      2) attempt updating the parsed tree in-place ("non-intrusive writing")
@@ -2052,11 +2067,10 @@ WriteMethod TiffParserWorker::encode(BasicIo& io, const byte* pData, size_t size
    */
   WriteMethod writeMethod = wmIntrusive;
   auto parsedTree = parse(pData, size, root, pHeader);
-  PrimaryGroups primaryGroups;
-  findPrimaryGroups(primaryGroups, parsedTree.get());
+  auto primaryGroups = findPrimaryGroups(parsedTree);
   if (parsedTree) {
     // Attempt to update existing TIFF components based on metadata entries
-    TiffEncoder encoder(exifData, iptcData, xmpData, parsedTree.get(), false, &primaryGroups, pHeader, findEncoderFct);
+    TiffEncoder encoder(exifData, iptcData, xmpData, parsedTree.get(), false, primaryGroups, pHeader, findEncoderFct);
     parsedTree->accept(encoder);
     if (!encoder.dirty())
       writeMethod = wmNonIntrusive;
@@ -2065,11 +2079,11 @@ WriteMethod TiffParserWorker::encode(BasicIo& io, const byte* pData, size_t size
     auto createdTree = TiffCreator::create(root, IfdId::ifdIdNotSet);
     if (parsedTree) {
       // Copy image tags from the original image to the composite
-      TiffCopier copier(createdTree.get(), root, pHeader, &primaryGroups);
+      TiffCopier copier(createdTree.get(), root, pHeader, primaryGroups);
       parsedTree->accept(copier);
     }
     // Add entries from metadata to composite
-    TiffEncoder encoder(exifData, iptcData, xmpData, createdTree.get(), !parsedTree, &primaryGroups, pHeader,
+    TiffEncoder encoder(exifData, iptcData, xmpData, createdTree.get(), !parsedTree, std::move(primaryGroups), pHeader,
                         findEncoderFct);
     encoder.add(createdTree.get(), parsedTree.get(), root);
     // Write binary representation from the composite tree
@@ -2095,16 +2109,17 @@ WriteMethod TiffParserWorker::encode(BasicIo& io, const byte* pData, size_t size
 
 TiffComponent::UniquePtr TiffParserWorker::parse(const byte* pData, size_t size, uint32_t root,
                                                  TiffHeaderBase* pHeader) {
+  TiffComponent::UniquePtr rootDir;
   if (!pData || size == 0)
-    return nullptr;
+    return rootDir;
   if (!pHeader->read(pData, size) || pHeader->offset() >= size) {
     throw Error(ErrorCode::kerNotAnImage, "TIFF");
   }
-  auto rootDir = TiffCreator::create(root, IfdId::ifdIdNotSet);
+  rootDir = TiffCreator::create(root, IfdId::ifdIdNotSet);
   if (rootDir) {
     rootDir->setStart(pData + pHeader->offset());
-    TiffRwState state(pHeader->byteOrder(), 0);
-    TiffReader reader(pData, size, rootDir.get(), state);
+    auto state = TiffRwState{pHeader->byteOrder(), 0};
+    auto reader = TiffReader{pData, size, rootDir.get(), state};
     rootDir->accept(reader);
     reader.postProcess();
   }
@@ -2112,9 +2127,10 @@ TiffComponent::UniquePtr TiffParserWorker::parse(const byte* pData, size_t size,
 
 }  // TiffParserWorker::parse
 
-void TiffParserWorker::findPrimaryGroups(PrimaryGroups& primaryGroups, TiffComponent* pSourceDir) {
+PrimaryGroups TiffParserWorker::findPrimaryGroups(const std::unique_ptr<TiffComponent>& pSourceDir) {
+  PrimaryGroups ret;
   if (!pSourceDir)
-    return;
+    return ret;
 
   static constexpr auto imageGroups = std::array{
       IfdId::ifd0Id,      IfdId::ifd1Id,      IfdId::ifd2Id,      IfdId::ifd3Id,      IfdId::subImage1Id,
@@ -2125,13 +2141,15 @@ void TiffParserWorker::findPrimaryGroups(PrimaryGroups& primaryGroups, TiffCompo
   for (auto imageGroup : imageGroups) {
     TiffFinder finder(0x00fe, imageGroup);
     pSourceDir->accept(finder);
-    auto te = dynamic_cast<TiffEntryBase*>(finder.result());
-    const Value* pV = te ? te->pValue() : nullptr;
+    auto te = dynamic_cast<const TiffEntryBase*>(finder.result());
+    if (!te)
+      continue;
+    const Value* pV = te->pValue();
     if (pV && pV->typeId() == unsignedLong && pV->count() == 1 && (pV->toInt64() & 1) == 0) {
-      primaryGroups.push_back(te->group());
+      ret.push_back(te->group());
     }
   }
-
+  return ret;
 }  // TiffParserWorker::findPrimaryGroups
 
 TiffHeaderBase::TiffHeaderBase(uint16_t tag, uint32_t size, ByteOrder byteOrder, uint32_t offset) :
@@ -2150,8 +2168,9 @@ bool TiffHeaderBase::read(const byte* pData, size_t size) {
     return false;
   }
   uint16_t t = getUShort(pData + 2, byteOrder_);
-  if (t != 444 && tag_ != t)
-    return false;  // 444 is for the JPEG-XR
+  if (t != 444 && t != 17234 && tag_ != t)
+    return false;  // 444 is for the JPEG-XR; 17234 is for DCP
+  tag_ = t;
   offset_ = getULong(pData + 4, byteOrder_);
 
   return true;
@@ -2175,10 +2194,8 @@ DataBuf TiffHeaderBase::write() const {
   return buf;
 }
 
-void TiffHeaderBase::print(std::ostream& os, const std::string& prefix) const {
-  std::ios::fmtflags f(os.flags());
-  os << prefix << _("TIFF header, offset") << " = 0x" << std::setw(8) << std::setfill('0') << std::hex << std::right
-     << offset_;
+void TiffHeaderBase::print(std::ostream& os, std::string_view prefix) const {
+  os << stringFormat("{}{} = 0x{:08x}", prefix, _("TIFF header, offset"), offset_);
 
   switch (byteOrder_) {
     case littleEndian:
@@ -2191,7 +2208,6 @@ void TiffHeaderBase::print(std::ostream& os, const std::string& prefix) const {
       break;
   }
   os << "\n";
-  os.flags(f);
 }  // TiffHeaderBase::print
 
 ByteOrder TiffHeaderBase::byteOrder() const {
@@ -2218,7 +2234,7 @@ uint16_t TiffHeaderBase::tag() const {
   return tag_;
 }
 
-bool TiffHeaderBase::isImageTag(uint16_t /*tag*/, IfdId /*group*/, const PrimaryGroups* /*primaryGroups*/) const {
+bool TiffHeaderBase::isImageTag(uint16_t /*tag*/, IfdId /*group*/, const PrimaryGroups& /*primaryGroups*/) const {
   return false;
 }
 
@@ -2317,7 +2333,7 @@ TiffHeader::TiffHeader(ByteOrder byteOrder, uint32_t offset, bool hasImageTags) 
     TiffHeaderBase(42, 8, byteOrder, offset), hasImageTags_(hasImageTags) {
 }
 
-bool TiffHeader::isImageTag(uint16_t tag, IfdId group, const PrimaryGroups* pPrimaryGroups) const {
+bool TiffHeader::isImageTag(uint16_t tag, IfdId group, const PrimaryGroups& pPrimaryGroups) const {
   if (!hasImageTags_) {
 #ifdef EXIV2_DEBUG_MESSAGES
     std::cerr << "No image tags in this image\n";
@@ -2328,8 +2344,8 @@ bool TiffHeader::isImageTag(uint16_t tag, IfdId group, const PrimaryGroups* pPri
   ExifKey key(tag, groupName(group));
 #endif
   // If there are primary groups and none matches group, we're done
-  if (pPrimaryGroups && !pPrimaryGroups->empty() &&
-      std::find(pPrimaryGroups->begin(), pPrimaryGroups->end(), group) == pPrimaryGroups->end()) {
+  if (!pPrimaryGroups.empty() &&
+      std::find(pPrimaryGroups.begin(), pPrimaryGroups.end(), group) == pPrimaryGroups.end()) {
 #ifdef EXIV2_DEBUG_MESSAGES
     std::cerr << "Not an image tag: " << key << " (1)\n";
 #endif
@@ -2337,7 +2353,7 @@ bool TiffHeader::isImageTag(uint16_t tag, IfdId group, const PrimaryGroups* pPri
   }
   // All tags of marked primary groups other than IFD0 are considered
   // image tags. That should take care of NEFs until we know better.
-  if (pPrimaryGroups && !pPrimaryGroups->empty() && group != IfdId::ifd0Id) {
+  if (!pPrimaryGroups.empty() && group != IfdId::ifd0Id) {
 #ifdef EXIV2_DEBUG_MESSAGES
     ExifKey key(tag, groupName(group));
     std::cerr << "Image tag: " << key << " (2)\n";
@@ -2349,7 +2365,7 @@ bool TiffHeader::isImageTag(uint16_t tag, IfdId group, const PrimaryGroups* pPri
 }  // TiffHeader::isImageTag
 
 void OffsetWriter::setOrigin(OffsetId id, uint32_t origin, ByteOrder byteOrder) {
-  offsetList_[id] = OffsetData(origin, byteOrder);
+  offsetList_[id] = OffsetData{origin, 0, byteOrder};
 }
 
 void OffsetWriter::setTarget(OffsetId id, uint32_t target) {

@@ -8,9 +8,6 @@
 int main(int argc, char* const argv[]) try {
   Exiv2::XmpParser::initialize();
   ::atexit(Exiv2::XmpParser::terminate);
-#ifdef EXV_ENABLE_BMFF
-  Exiv2::enableBMFF();
-#endif
 
   if (argc != 2) {
     std::cout << "Usage: " << argv[0] << " file\n";
@@ -27,12 +24,11 @@ int main(int argc, char* const argv[]) try {
     throw Exiv2::Error(Exiv2::ErrorCode::kerErrorMessage, error);
   }
 
-  auto end = iptcData.end();
-  for (auto md = iptcData.begin(); md != end; ++md) {
-    std::cout << std::setw(44) << std::setfill(' ') << std::left << md->key() << " "
-              << "0x" << std::setw(4) << std::setfill('0') << std::right << std::hex << md->tag() << " " << std::setw(9)
-              << std::setfill(' ') << std::left << md->typeName() << " " << std::dec << std::setw(3)
-              << std::setfill(' ') << std::right << md->count() << "  " << std::dec << md->value() << std::endl;
+  for (const auto& md : iptcData) {
+    std::cout << std::setw(44) << std::setfill(' ') << std::left << md.key() << " "
+              << "0x" << std::setw(4) << std::setfill('0') << std::right << std::hex << md.tag() << " " << std::setw(9)
+              << std::setfill(' ') << std::left << md.typeName() << " " << std::dec << std::setw(3) << std::setfill(' ')
+              << std::right << md.count() << "  " << std::dec << md.value() << '\n';
   }
 
   return EXIT_SUCCESS;

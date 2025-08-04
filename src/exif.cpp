@@ -97,7 +97,6 @@ class TiffThumbnail : public Thumbnail {
  public:
   //! Shortcut for a %TiffThumbnail auto pointer.
   using UniquePtr = std::unique_ptr<TiffThumbnail>;
-  ~TiffThumbnail() override = default;
 
   //! @name Accessors
   //@{
@@ -113,7 +112,6 @@ class JpegThumbnail : public Thumbnail {
  public:
   //! Shortcut for a %JpegThumbnail auto pointer.
   using UniquePtr = std::unique_ptr<JpegThumbnail>;
-  ~JpegThumbnail() override = default;
 
   //! @name Accessors
   //@{
@@ -158,7 +156,7 @@ Exifdatum::Exifdatum(const ExifKey& key, const Value* pValue) : key_(key.clone()
     value_ = pValue->clone();
 }
 
-Exifdatum::Exifdatum(const Exifdatum& rhs) : Metadatum(rhs) {
+Exifdatum::Exifdatum(const Exifdatum& rhs) {
   if (rhs.key_)
     key_ = rhs.key_->clone();  // deep copy
   if (rhs.value_)
@@ -170,9 +168,8 @@ std::ostream& Exifdatum::write(std::ostream& os, const ExifData* pMetadata) cons
     return os;
 
   PrintFct fct = printValue;
-  const TagInfo* ti = Internal::tagInfo(tag(), static_cast<IfdId>(ifdId()));
   // be careful with comments (User.Photo.UserComment, GPSAreaInfo etc).
-  if (ti) {
+  if (auto ti = Internal::tagInfo(tag(), ifdId())) {
     fct = ti->printFct_;
     if (ti->typeId_ == comment) {
       os << value().toString();
@@ -207,7 +204,6 @@ const Value& Exifdatum::value() const {
 Exifdatum& Exifdatum::operator=(const Exifdatum& rhs) {
   if (this == &rhs)
     return *this;
-  Metadatum::operator=(rhs);
 
   key_.reset();
   if (rhs.key_)
@@ -268,7 +264,7 @@ int Exifdatum::setValue(const std::string& value) {
   return value_->read(value);
 }
 
-int Exifdatum::setDataArea(const byte* buf, size_t len) {
+int Exifdatum::setDataArea(const byte* buf, size_t len) const {
   return value_ ? value_->setDataArea(buf, len) : -1;
 }
 
@@ -305,7 +301,7 @@ IfdId Exifdatum::ifdId() const {
 }
 
 const char* Exifdatum::ifdName() const {
-  return key_ ? Internal::ifdName(static_cast<IfdId>(key_->ifdId())) : "";
+  return key_ ? Internal::ifdName(key_->ifdId()) : "";
 }
 
 int Exifdatum::idx() const {
@@ -378,6 +374,7 @@ DataBuf ExifThumbC::copy() const {
   return thumbnail->copy(exifData_);
 }
 
+#ifdef EXV_ENABLE_FILESYSTEM
 size_t ExifThumbC::writeFile(const std::string& path) const {
   auto thumbnail = Thumbnail::create(exifData_);
   if (!thumbnail)
@@ -390,6 +387,7 @@ size_t ExifThumbC::writeFile(const std::string& path) const {
 
   return Exiv2::writeFile(buf, name);
 }
+#endif
 
 const char* ExifThumbC::mimeType() const {
   auto thumbnail = Thumbnail::create(exifData_);
@@ -408,10 +406,12 @@ const char* ExifThumbC::extension() const {
 ExifThumb::ExifThumb(ExifData& exifData) : ExifThumbC(exifData), exifData_(exifData) {
 }
 
+#ifdef EXV_ENABLE_FILESYSTEM
 void ExifThumb::setJpegThumbnail(const std::string& path, URational xres, URational yres, uint16_t unit) {
   DataBuf thumb = readFile(path);  // may throw
   setJpegThumbnail(thumb.c_data(), thumb.size(), xres, yres, unit);
 }
+#endif
 
 void ExifThumb::setJpegThumbnail(const byte* buf, size_t size, URational xres, URational yres, uint16_t unit) {
   setJpegThumbnail(buf, size);
@@ -420,15 +420,17 @@ void ExifThumb::setJpegThumbnail(const byte* buf, size_t size, URational xres, U
   exifData_["Exif.Thumbnail.ResolutionUnit"] = unit;
 }
 
+#ifdef EXV_ENABLE_FILESYSTEM
 void ExifThumb::setJpegThumbnail(const std::string& path) {
   DataBuf thumb = readFile(path);  // may throw
   setJpegThumbnail(thumb.c_data(), thumb.size());
 }
+#endif
 
 void ExifThumb::setJpegThumbnail(const byte* buf, size_t size) {
-  exifData_["Exif.Thumbnail.Compression"] = static_cast<uint16_t>(6);
+  exifData_["Exif.Thumbnail.Compression"] = std::uint16_t{6};
   Exifdatum& format = exifData_["Exif.Thumbnail.JPEGInterchangeFormat"];
-  format = static_cast<uint32_t>(0);
+  format = 0U;
   format.setDataArea(buf, size);
   exifData_["Exif.Thumbnail.JPEGInterchangeFormatLength"] = static_cast<uint32_t>(size);
 }
@@ -441,8 +443,7 @@ Exifdatum& ExifData::operator[](const std::string& key) {
   ExifKey exifKey(key);
   auto pos = findKey(exifKey);
   if (pos == end()) {
-    exifMetadata_.emplace_back(exifKey);
-    return exifMetadata_.back();
+    return exifMetadata_.emplace_back(exifKey);
   }
   return *pos;
 }
@@ -503,10 +504,7 @@ ByteOrder ExifParser::decode(ExifData& exifData, const byte* pData, size_t size)
 enum Ptt { pttLen, pttTag, pttIfd };
 //! @endcond
 
-WriteMethod ExifParser::encode(Blob& blob, const byte* pData, size_t size, ByteOrder byteOrder,
-                               const ExifData& exifData) {
-  ExifData ed = exifData;
-
+WriteMethod ExifParser::encode(Blob& blob, const byte* pData, size_t size, ByteOrder byteOrder, ExifData& exifData) {
   // Delete IFD0 tags that are "not recorded" in compressed images
   // Reference: Exif 2.2 specs, 4.6.8 Tag Support Levels, section A
   static constexpr auto filteredIfd0Tags = std::array{
@@ -536,12 +534,12 @@ WriteMethod ExifParser::encode(Blob& blob, const byte* pData, size_t size, ByteO
       "Exif.Canon.AFFineRotation",
   };
   for (auto&& filteredIfd0Tag : filteredIfd0Tags) {
-    auto pos = ed.findKey(ExifKey(filteredIfd0Tag));
-    if (pos != ed.end()) {
+    auto pos = exifData.findKey(ExifKey(filteredIfd0Tag));
+    if (pos != exifData.end()) {
 #ifdef EXIV2_DEBUG_MESSAGES
       std::cerr << "Warning: Exif tag " << pos->key() << " not encoded\n";
 #endif
-      ed.erase(pos);
+      exifData.erase(pos);
     }
   }
 
@@ -555,7 +553,7 @@ WriteMethod ExifParser::encode(Blob& blob, const byte* pData, size_t size, ByteO
 #ifdef EXIV2_DEBUG_MESSAGES
     std::cerr << "Warning: Exif IFD " << filteredIfd << " not encoded\n";
 #endif
-    eraseIfd(ed, filteredIfd);
+    eraseIfd(exifData, filteredIfd);
   }
 
   // IPTC and XMP are stored elsewhere, not in the Exif APP1 segment.
@@ -565,7 +563,7 @@ WriteMethod ExifParser::encode(Blob& blob, const byte* pData, size_t size, ByteO
   // Encode and check if the result fits into a JPEG Exif APP1 segment
   MemIo mio1;
   TiffHeader header(byteOrder, 0x00000008, false);
-  WriteMethod wm = TiffParserWorker::encode(mio1, pData, size, ed, emptyIptc, emptyXmp, Tag::root,
+  WriteMethod wm = TiffParserWorker::encode(mio1, pData, size, exifData, emptyIptc, emptyXmp, Tag::root,
                                             TiffMapping::findEncoder, &header, nullptr);
   if (mio1.size() <= 65527) {
     append(blob, mio1.mmap(), mio1.size());
@@ -612,24 +610,22 @@ WriteMethod ExifParser::encode(Blob& blob, const byte* pData, size_t size, ByteO
     switch (ptt) {
       case pttLen: {
         delTags = false;
-        auto pos = ed.findKey(ExifKey(key));
-        if (pos != ed.end() && sumToLong(*pos) > 32768) {
+        if (auto pos = exifData.findKey(ExifKey(key)); pos != exifData.end() && sumToLong(*pos) > 32768) {
           delTags = true;
 #ifndef SUPPRESS_WARNINGS
           EXV_WARNING << "Exif tag " << pos->key() << " not encoded\n";
 #endif
-          ed.erase(pos);
+          exifData.erase(pos);
         }
         break;
       }
       case pttTag: {
         if (delTags) {
-          auto pos = ed.findKey(ExifKey(key));
-          if (pos != ed.end()) {
+          if (auto pos = exifData.findKey(ExifKey(key)); pos != exifData.end()) {
 #ifndef SUPPRESS_WARNINGS
             EXV_WARNING << "Exif tag " << pos->key() << " not encoded\n";
 #endif
-            ed.erase(pos);
+            exifData.erase(pos);
           }
         }
         break;
@@ -639,27 +635,19 @@ WriteMethod ExifParser::encode(Blob& blob, const byte* pData, size_t size, ByteO
 #ifndef SUPPRESS_WARNINGS
           EXV_WARNING << "Exif IFD " << key << " not encoded\n";
 #endif
-          eraseIfd(ed, Internal::groupId(key));
+          eraseIfd(exifData, Internal::groupId(key));
         }
         break;
     }
   }
 
   // Delete unknown tags larger than 4kB and known tags larger than 20kB.
-  for (auto tag_iter = ed.begin(); tag_iter != ed.end();) {
-    if ((tag_iter->size() > 4096 && tag_iter->tagName().substr(0, 2) == "0x") || tag_iter->size() > 20480) {
-#ifndef SUPPRESS_WARNINGS
-      EXV_WARNING << "Exif tag " << tag_iter->key() << " not encoded\n";
-#endif
-      tag_iter = ed.erase(tag_iter);
-    } else {
-      ++tag_iter;
-    }
-  }
+  auto f = [](const auto& tag) { return (tag.size() > 4096 && tag.tagName().starts_with("0x")) || tag.size() > 20480; };
+  exifData.erase(std::remove_if(exifData.begin(), exifData.end(), f), exifData.end());
 
   // Encode the remaining Exif tags again, don't care if it fits this time
   MemIo mio2;
-  wm = TiffParserWorker::encode(mio2, pData, size, ed, emptyIptc, emptyXmp, Tag::root, TiffMapping::findEncoder,
+  wm = TiffParserWorker::encode(mio2, pData, size, exifData, emptyIptc, emptyXmp, Tag::root, TiffMapping::findEncoder,
                                 &header, nullptr);
   append(blob, mio2.mmap(), mio2.size());
 #ifdef EXIV2_DEBUG_MESSAGES
@@ -685,8 +673,7 @@ Thumbnail::UniquePtr Thumbnail::create(const Exiv2::ExifData& exifData) {
   if (pos != exifData.end()) {
     if (pos->count() == 0)
       return nullptr;
-    auto compression = pos->toInt64();
-    if (compression == 6)
+    if (pos->toInt64() == 6)
       return std::make_unique<JpegThumbnail>();
     return std::make_unique<TiffThumbnail>();
   }

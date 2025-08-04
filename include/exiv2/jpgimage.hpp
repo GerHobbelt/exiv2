@@ -27,15 +27,6 @@ class EXIV2API JpegBase : public Image {
   void printStructure(std::ostream& out, PrintStructureOption option, size_t depth) override;
   //@}
 
-  ~JpegBase() override = default;
-  //! @name NOT implemented
-  //@{
-  //! Copy constructor
-  JpegBase(const JpegBase&) = delete;
-  //! Assignment operator
-  JpegBase& operator=(const JpegBase&) = delete;
-  //@}
-
  protected:
   //! @name Creators
   //@{
@@ -95,6 +86,9 @@ class EXIV2API JpegBase : public Image {
   virtual int writeHeader(BasicIo& oIo) const = 0;
   //@}
 
+  int num_color_components_{-1};      //!< image number of color components
+  std::string sof_encoding_process_;  //!< image encoding process
+
  private:
   //! @name Manipulators
   //@{
@@ -109,9 +103,9 @@ class EXIV2API JpegBase : public Image {
   /*!
     @brief Provides the main implementation of writeMetadata() by
           writing all buffered metadata to the provided BasicIo.
-    @param oIo BasicIo instance to write to (a temporary location).
+    @throw Error on input-output errors or when the image data is not valid.
+    @param outIo BasicIo instance to write to (a temporary location).
 
-    @return 4 if opening or writing to the associated BasicIo fails
    */
   void doWriteMetadata(BasicIo& outIo);
   //@}
@@ -162,14 +156,19 @@ class EXIV2API JpegImage : public JpegBase {
   //! @name Accessors
   //@{
   [[nodiscard]] std::string mimeType() const override;
+  /*!
+    @brief Get the number of color components of the JPEG Image
+  */
+  [[nodiscard]] int numColorComponents() const {
+    return num_color_components_;
+  }
+  /*!
+    @brief Get the encoding process of the JPEG Image derived from the Start of Frame (SOF) markers
+  */
+  [[nodiscard]] std::string encodingProcess() const {
+    return sof_encoding_process_;
+  }
   //@}
-
-  ~JpegImage() override = default;
-  // NOT Implemented
-  //! Copy constructor
-  JpegImage(const JpegImage&) = delete;
-  //! Assignment operator
-  JpegImage& operator=(const JpegImage&) = delete;
 
  protected:
   //! @name Accessors
@@ -180,7 +179,7 @@ class EXIV2API JpegImage : public JpegBase {
   //@{
   /*!
     @brief Writes a Jpeg header (aka signature) to the BasicIo instance.
-    @param oIo BasicIo instance that the header is written to.
+    @param outIo BasicIo instance that the header is written to.
     @return 0 if successful;<BR>
            2 if the input image is invalid or can not be read;<BR>
            4 if the temporary image can not be written to;<BR>
@@ -191,7 +190,7 @@ class EXIV2API JpegImage : public JpegBase {
 
  private:
   // Constant data
-  static const byte blank_[];  ///< Minimal Jpeg image
+  static const byte blank_[];  //!< Minimal Jpeg image
 };
 
 //! Helper class to access %Exiv2 files
@@ -222,13 +221,6 @@ class EXIV2API ExvImage : public JpegBase {
   //@{
   [[nodiscard]] std::string mimeType() const override;
   //@}
-
-  ~ExvImage() override = default;
-  // NOT Implemented
-  //! Copy constructor
-  ExvImage(const ExvImage&) = delete;
-  //! Assignment operator
-  ExvImage& operator=(const ExvImage&) = delete;
 
  protected:
   //! @name Accessors

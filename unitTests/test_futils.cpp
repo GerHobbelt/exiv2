@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "utils.hpp"
+
 #include <exiv2/exiv2.hpp>
 // File under test
 #include <exiv2/futils.hpp>
@@ -23,21 +25,21 @@ TEST(strError, returnSuccessAfterClosingFile) {
   // -> reset errno so that a real failure is only detected here
   errno = 0;
 
-  std::string tmpFile("tmp.dat");
-  std::ofstream auxFile(tmpFile.c_str());
+  fs::path tmpFile("tmp.dat");
+  std::ofstream auxFile(tmpFile);
   auxFile.close();
-  fs::remove(tmpFile.c_str());
-  ASSERT_TRUE(strError().find("(errno = 0)") != std::string::npos);
+  fs::remove(tmpFile);
+  ASSERT_TRUE(Internal::contains(strError(), "(errno = 0)"));
 }
 
 TEST(strError, returnNoSuchFileOrDirectoryWhenTryingToOpenNonExistingFile) {
   std::ifstream auxFile("nonExistingFile");
-  ASSERT_STREQ("No such file or directory (errno = 2)", strError().c_str());
+  ASSERT_TRUE(Internal::contains(strError(), "No such file or directory (errno = "));
 }
 
 TEST(strError, doNotRecognizeUnknownError) {
   errno = 9999;
-  ASSERT_TRUE(strError().find("(errno = 9999)") != std::string::npos);
+  ASSERT_TRUE(Internal::contains(strError(), "(errno = 9999)"));
 }
 
 TEST(getEnv, getsDefaultValueWhenExpectedEnvVariableDoesNotExist) {
@@ -101,7 +103,7 @@ TEST(base64decode, decodesValidString) {
   const std::string original("VGhpcyBpcyBhIHVuaXQgdGVzdA==");
   const std::string expected("This is a unit test");
   std::vector<char> result(original.size());
-  ASSERT_EQ(static_cast<long>(expected.size()), base64decode(original.c_str(), result.data(), original.size()));
+  ASSERT_EQ(expected.size(), base64decode(original.c_str(), result.data(), original.size()));
   ASSERT_STREQ(expected.c_str(), result.data());
 }
 

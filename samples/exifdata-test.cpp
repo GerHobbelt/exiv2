@@ -3,8 +3,8 @@
 #include <exiv2/exiv2.hpp>
 #include <iostream>
 
-void write(const std::string& file, Exiv2::ExifData& ed);
-void print(const std::string& file);
+static void write(const std::string& file, Exiv2::ExifData& ed);
+static void print(const std::string& file);
 
 // *****************************************************************************
 // Main
@@ -12,9 +12,6 @@ int main(int argc, char* const argv[]) {
   try {
     Exiv2::XmpParser::initialize();
     ::atexit(Exiv2::XmpParser::terminate);
-#ifdef EXV_ENABLE_BMFF
-    Exiv2::enableBMFF();
-#endif
 
     if (argc != 2) {
       std::cout << "Usage: " << argv[0] << " file\n";
@@ -34,9 +31,9 @@ int main(int argc, char* const argv[]) {
     std::cout << "Copy construction, non-intrusive changes\n";
     Exiv2::ExifData ed1(ed);
     ed1["Exif.Image.DateTime"] = "Sunday, 11am";
-    ed1["Exif.Image.Orientation"] = static_cast<uint16_t>(2);
+    ed1["Exif.Image.Orientation"] = std::uint16_t{2};
     ed1["Exif.Photo.DateTimeOriginal"] = "Sunday, 11am";
-    ed1["Exif.Photo.MeteringMode"] = static_cast<uint16_t>(1);
+    ed1["Exif.Photo.MeteringMode"] = std::uint16_t{1};
     ed1["Exif.Iop.InteroperabilityIndex"] = "123";
     //    ed1["Exif.Thumbnail.Orientation"] = uint16_t(2);
     write(file, ed1);
@@ -61,11 +58,11 @@ int main(int argc, char* const argv[]) {
     ed3["Exif.Thumbnail.Artist"] = "Test 6 Ifd1 tag";
     ed3 = ed;
     ed3["Exif.Image.DateTime"] = "Sunday, 11am";
-    ed3["Exif.Image.Orientation"] = static_cast<uint16_t>(2);
+    ed3["Exif.Image.Orientation"] = std::uint16_t{2};
     ed3["Exif.Photo.DateTimeOriginal"] = "Sunday, 11am";
-    ed3["Exif.Photo.MeteringMode"] = static_cast<uint16_t>(1);
+    ed3["Exif.Photo.MeteringMode"] = std::uint16_t{1};
     ed3["Exif.Iop.InteroperabilityIndex"] = "123";
-    ed3["Exif.Thumbnail.Orientation"] = static_cast<uint16_t>(2);
+    ed3["Exif.Thumbnail.Orientation"] = std::uint16_t{2};
     write(file, ed3);
     print(file);
     std::cout << "----------------------------------------------\n";
@@ -78,9 +75,9 @@ int main(int argc, char* const argv[]) {
     ed4["Exif.Image.DateTime"] = "Sunday, 11am and ten minutes";
     ed4["Exif.Image.Orientation"] = "2 3 4 5";
     ed4["Exif.Photo.DateTimeOriginal"] = "Sunday, 11am and ten minutes";
-    ed4["Exif.Photo.MeteringMode"] = static_cast<uint16_t>(1);
+    ed4["Exif.Photo.MeteringMode"] = std::uint16_t{1};
     ed4["Exif.Iop.InteroperabilityIndex"] = "123";
-    ed4["Exif.Thumbnail.Orientation"] = static_cast<uint16_t>(2);
+    ed4["Exif.Thumbnail.Orientation"] = std::uint16_t{2};
     write(file, ed4);
     print(file);
 
@@ -101,13 +98,11 @@ void print(const std::string& file) {
   auto image = Exiv2::ImageFactory::open(file);
   image->readMetadata();
 
-  Exiv2::ExifData& ed = image->exifData();
-  auto end = ed.end();
-  for (auto i = ed.begin(); i != end; ++i) {
-    std::cout << std::setw(45) << std::setfill(' ') << std::left << i->key() << " "
-              << "0x" << std::setw(4) << std::setfill('0') << std::right << std::hex << i->tag() << " " << std::setw(12)
-              << std::setfill(' ') << std::left << i->ifdName() << " " << std::setw(9) << std::setfill(' ') << std::left
-              << i->typeName() << " " << std::dec << std::setw(3) << std::setfill(' ') << std::right << i->count()
-              << " " << std::dec << i->toString() << "\n";
+  for (const auto& i : image->exifData()) {
+    std::cout << std::setw(45) << std::setfill(' ') << std::left << i.key() << " "
+              << "0x" << std::setw(4) << std::setfill('0') << std::right << std::hex << i.tag() << " " << std::setw(12)
+              << std::setfill(' ') << std::left << i.ifdName() << " " << std::setw(9) << std::setfill(' ') << std::left
+              << i.typeName() << " " << std::dec << std::setw(3) << std::setfill(' ') << std::right << i.count() << " "
+              << std::dec << i.toString() << "\n";
   }
 }

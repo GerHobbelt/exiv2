@@ -13,7 +13,6 @@
 #include "tiffimage.hpp"
 #include "tiffimage_int.hpp"
 
-#include <array>
 #include <iostream>
 
 // *****************************************************************************
@@ -52,7 +51,7 @@ void OrfImage::setComment(const std::string&) {
 }
 
 void OrfImage::printStructure(std::ostream& out, PrintStructureOption option, size_t depth) {
-  out << "ORF IMAGE" << std::endl;
+  out << "ORF IMAGE" << '\n';
   if (io_->open() != 0)
     throw Error(ErrorCode::kerDataSourceOpenFailed, io_->path(), strError());
   // Ensure that this is the correct image type
@@ -116,11 +115,8 @@ ByteOrder OrfParser::decode(ExifData& exifData, IptcData& iptcData, XmpData& xmp
                                   &orfHeader);
 }
 
-WriteMethod OrfParser::encode(BasicIo& io, const byte* pData, size_t size, ByteOrder byteOrder,
-                              const ExifData& exifData, const IptcData& iptcData, const XmpData& xmpData) {
-  // Copy to be able to modify the Exif data
-  ExifData ed = exifData;
-
+WriteMethod OrfParser::encode(BasicIo& io, const byte* pData, size_t size, ByteOrder byteOrder, ExifData& exifData,
+                              IptcData& iptcData, XmpData& xmpData) {
   // Delete IFDs which do not occur in TIFF images
   static constexpr auto filteredIfds = {
       IfdId::panaRawId,
@@ -129,12 +125,12 @@ WriteMethod OrfParser::encode(BasicIo& io, const byte* pData, size_t size, ByteO
 #ifdef EXIV2_DEBUG_MESSAGES
     std::cerr << "Warning: Exif IFD " << filteredIfd << " not encoded\n";
 #endif
-    ed.erase(std::remove_if(ed.begin(), ed.end(), FindExifdatum(filteredIfd)), ed.end());
+    exifData.erase(std::remove_if(exifData.begin(), exifData.end(), FindExifdatum(filteredIfd)), exifData.end());
   }
 
   OrfHeader header(byteOrder);
-  return TiffParserWorker::encode(io, pData, size, ed, iptcData, xmpData, Tag::root, TiffMapping::findEncoder, &header,
-                                  nullptr);
+  return TiffParserWorker::encode(io, pData, size, exifData, iptcData, xmpData, Tag::root, TiffMapping::findEncoder,
+                                  &header, nullptr);
 }
 
 // *************************************************************************

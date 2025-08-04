@@ -7,9 +7,6 @@
 int main(int argc, char* const argv[]) try {
   Exiv2::XmpParser::initialize();
   ::atexit(Exiv2::XmpParser::terminate);
-#ifdef EXV_ENABLE_BMFF
-  Exiv2::enableBMFF();
-#endif
 
   if (argc != 2) {
     std::cout << "Usage: " << argv[0] << " file\n";
@@ -33,7 +30,7 @@ int main(int argc, char* const argv[]) try {
   for (auto&& md : xmpData) {
     std::cout << std::setfill(' ') << std::left << std::setw(44) << md.key() << " " << std::setw(9) << std::setfill(' ')
               << std::left << md.typeName() << " " << std::dec << std::setw(3) << std::setfill(' ') << std::right
-              << md.count() << "  " << std::dec << md.toString() << std::endl;
+              << md.count() << "  " << std::dec << md.toString() << '\n';
   }
   Exiv2::XmpParser::terminate();
   return EXIT_SUCCESS;

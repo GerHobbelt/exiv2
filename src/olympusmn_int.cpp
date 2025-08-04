@@ -6,8 +6,10 @@
 
 #include "exif.hpp"
 #include "i18n.h"  // NLS support.
+#include "image_int.hpp"
 #include "makernote_int.hpp"
 #include "tags_int.hpp"
+#include "utils.hpp"
 #include "value.hpp"
 
 #include <array>
@@ -16,88 +18,127 @@
 // class member definitions
 namespace Exiv2::Internal {
 //! OffOn, multiple tags
-constexpr TagDetails olympusOffOn[] = {{0, N_("Off")}, {1, N_("On")}};
+constexpr TagDetails olympusOffOn[] = {
+    {0, N_("Off")},
+    {1, N_("On")},
+};
 
 //! NoYes, multiple tags
-constexpr TagDetails olympusNoYes[] = {{0, N_("No")}, {1, N_("Yes")}};
+constexpr TagDetails olympusNoYes[] = {
+    {0, N_("No")},
+    {1, N_("Yes")},
+};
 
 //! Quality, tag 0x0201
-constexpr TagDetails olympusQuality[] = {{1, N_("Standard Quality (SQ)")},
-                                         {2, N_("High Quality (HQ)")},
-                                         {3, N_("Super High Quality (SHQ)")},
-                                         {6, N_("Raw")}};
+constexpr TagDetails olympusQuality[] = {
+    {1, N_("Standard Quality (SQ)")},
+    {2, N_("High Quality (HQ)")},
+    {3, N_("Super High Quality (SHQ)")},
+    {6, N_("Raw")},
+};
 
 //! Macro, tag 0x0202
-constexpr TagDetails olympusMacro[] = {{0, N_("Off")}, {1, N_("On")}, {2, N_("Super macro")}};
+constexpr TagDetails olympusMacro[] = {
+    {0, N_("Off")},
+    {1, N_("On")},
+    {2, N_("Super macro")},
+};
 
 //! OneTouchWB, tag 0x0302
-constexpr TagDetails olympusOneTouchWb[] = {{0, N_("Off")}, {1, N_("On")}, {2, N_("On (preset)")}};
+constexpr TagDetails olympusOneTouchWb[] = {
+    {0, N_("Off")},
+    {1, N_("On")},
+    {2, N_("On (preset)")},
+};
 
 //! SceneMode, tag 0x403 and CameraSettings tag 0x509
-constexpr TagDetails olympusSceneMode[] = {{0, N_("Standard")},
-                                           {6, N_("Auto")},
-                                           {7, N_("Sport")},
-                                           {8, N_("Portrait")},
-                                           {9, N_("Landscape+Portrait")},
-                                           {10, N_("Landscape")},
-                                           {11, N_("Night Scene")},
-                                           {12, N_("Self Portrait")},
-                                           {13, N_("Panorama")},
-                                           {14, N_("2 in 1")},
-                                           {15, N_("Movie")},
-                                           {16, N_("Landscape+Portrait")},
-                                           {17, N_("Night+Portrait")},
-                                           {18, N_("Indoor")},
-                                           {19, N_("Fireworks")},
-                                           {20, N_("Sunset")},
-                                           {22, N_("Macro")},
-                                           {23, N_("Super Macro")},
-                                           {24, N_("Food")},
-                                           {25, N_("Documents")},
-                                           {26, N_("Museum")},
-                                           {27, N_("Shoot & Select")},
-                                           {28, N_("Beach & Snow")},
-                                           {29, N_("Self Portrait+Timer")},
-                                           {30, N_("Candle")},
-                                           {31, N_("Available Light")},
-                                           {32, N_("Behind Glass")},
-                                           {33, N_("My Mode")},
-                                           {34, N_("Pet")},
-                                           {35, N_("Underwater Wide1")},
-                                           {36, N_("Underwater Macro")},
-                                           {37, N_("Shoot & Select1")},
-                                           {38, N_("Shoot & Select2")},
-                                           {39, N_("High Key")},
-                                           {40, N_("Digital Image Stabilization")},
-                                           {41, N_("Auction")},
-                                           {42, N_("Beach")},
-                                           {43, N_("Snow")},
-                                           {44, N_("Underwater Wide2")},
-                                           {45, N_("Low Key")},
-                                           {46, N_("Children")},
-                                           {47, N_("Vivid")},
-                                           {48, N_("Nature Macro")},
-                                           {49, N_("Underwater Snapshot")},
-                                           {50, N_("Shooting Guide")}};
+constexpr TagDetails olympusSceneMode[] = {
+    {0, N_("Standard")},
+    {6, N_("Auto")},
+    {7, N_("Sport")},
+    {8, N_("Portrait")},
+    {9, N_("Landscape+Portrait")},
+    {10, N_("Landscape")},
+    {11, N_("Night Scene")},
+    {12, N_("Self Portrait")},
+    {13, N_("Panorama")},
+    {14, N_("2 in 1")},
+    {15, N_("Movie")},
+    {16, N_("Landscape+Portrait")},
+    {17, N_("Night+Portrait")},
+    {18, N_("Indoor")},
+    {19, N_("Fireworks")},
+    {20, N_("Sunset")},
+    {22, N_("Macro")},
+    {23, N_("Super Macro")},
+    {24, N_("Food")},
+    {25, N_("Documents")},
+    {26, N_("Museum")},
+    {27, N_("Shoot & Select")},
+    {28, N_("Beach & Snow")},
+    {29, N_("Self Portrait+Timer")},
+    {30, N_("Candle")},
+    {31, N_("Available Light")},
+    {32, N_("Behind Glass")},
+    {33, N_("My Mode")},
+    {34, N_("Pet")},
+    {35, N_("Underwater Wide1")},
+    {36, N_("Underwater Macro")},
+    {37, N_("Shoot & Select1")},
+    {38, N_("Shoot & Select2")},
+    {39, N_("High Key")},
+    {40, N_("Digital Image Stabilization")},
+    {41, N_("Auction")},
+    {42, N_("Beach")},
+    {43, N_("Snow")},
+    {44, N_("Underwater Wide2")},
+    {45, N_("Low Key")},
+    {46, N_("Children")},
+    {47, N_("Vivid")},
+    {48, N_("Nature Macro")},
+    {49, N_("Underwater Snapshot")},
+    {50, N_("Shooting Guide")},
+};
 
 //! FlashDevice, tag 0x1005
 constexpr TagDetails olympusFlashDevice[] = {
-    {0, N_("None")}, {1, N_("Internal")}, {4, N_("External")}, {5, N_("Internal + External")}};
+    {0, N_("None")},
+    {1, N_("Internal")},
+    {4, N_("External")},
+    {5, N_("Internal + External")},
+};
 
 //! FocusRange, tag 0x100a
-constexpr TagDetails olympusFocusRange[] = {{0, N_("Normal")}, {1, N_("Macro")}};
+constexpr TagDetails olympusFocusRange[] = {
+    {0, N_("Normal")},
+    {1, N_("Macro")},
+};
 
 //! FocusMode, tag 0x100b
-constexpr TagDetails olympusFocusMode[] = {{0, N_("Auto")}, {1, N_("Manual")}};
+constexpr TagDetails olympusFocusMode[] = {
+    {0, N_("Auto")},
+    {1, N_("Manual")},
+};
 
 //! Sharpness, tag 0x100f
-constexpr TagDetails olympusSharpness[] = {{0, N_("Normal")}, {1, N_("Hard")}, {2, N_("Soft")}};
+constexpr TagDetails olympusSharpness[] = {
+    {0, N_("Normal")},
+    {1, N_("Hard")},
+    {2, N_("Soft")},
+};
 
 //! Contrast, tag 0x1029
-constexpr TagDetails olympusContrast[] = {{0, N_("High")}, {1, N_("Normal")}, {2, N_("Low")}};
+constexpr TagDetails olympusContrast[] = {
+    {0, N_("High")},
+    {1, N_("Normal")},
+    {2, N_("Low")},
+};
 
 //! CCDScanMode, tag 0x1039
-constexpr TagDetails olympusCCDScanMode[] = {{0, N_("Interlaced")}, {1, N_("Progressive")}};
+constexpr TagDetails olympusCCDScanMode[] = {
+    {0, N_("Interlaced")},
+    {1, N_("Progressive")},
+};
 
 // Olympus Tag Info
 constexpr TagInfo OlympusMakerNote::tagInfo_[] = {
@@ -286,124 +327,156 @@ const TagInfo* OlympusMakerNote::tagList() {
 
 // Olympus CameraSettings Tags
 //! ExposureMode, tag 0x0200
-constexpr TagDetails olympusExposureMode[] = {{1, N_("Manual")},
-                                              {2, N_("Program")},
-                                              {3, N_("Aperture-priority AE")},
-                                              {4, N_("Shutter speed priority AE")},
-                                              {5, N_("Program-shift")}};
+constexpr TagDetails olympusExposureMode[] = {
+    {1, N_("Manual")},        {2, N_("Program")}, {3, N_("Aperture-priority AE")}, {4, N_("Shutter speed priority AE")},
+    {5, N_("Program-shift")},
+};
 
 //! MeteringMode, tag 0x0202
-constexpr TagDetails olympusMeteringMode[] = {{2, N_("Center-weighted average")},
-                                              {3, N_("Spot")},
-                                              {5, N_("ESP")},
-                                              {261, N_("Pattern+AF")},
-                                              {515, N_("Spot+Highlight control")},
-                                              {1027, N_("Spot+Shadow control")}};
+constexpr TagDetails olympusMeteringMode[] = {
+    {2, N_("Center-weighted average")},
+    {3, N_("Spot")},
+    {5, N_("ESP")},
+    {261, N_("Pattern+AF")},
+    {515, N_("Spot+Highlight control")},
+    {1027, N_("Spot+Shadow control")},
+};
 
 //! MacroMode, tag 0x0300
-constexpr TagDetails olympusMacroMode[] = {{0, N_("Off")}, {1, N_("On")}, {2, N_("Super Macro")}};
+constexpr TagDetails olympusMacroMode[] = {
+    {0, N_("Off")},
+    {1, N_("On")},
+    {2, N_("Super Macro")},
+};
 
 //! FocusMode, tag 0x0301
-[[maybe_unused]] constexpr TagDetails olympusCsFocusMode[] = {{0, N_("Single AF")},
-                                                              {1, N_("Sequential shooting AF")},
-                                                              {2, N_("Continuous AF")},
-                                                              {3, N_("Multi AF")},
-                                                              {10, N_("MF")}};
+[[maybe_unused]] constexpr TagDetails olympusCsFocusMode[] = {
+    {0, N_("Single AF")}, {1, N_("Sequential shooting AF")}, {2, N_("Continuous AF")}, {3, N_("Multi AF")},
+    {10, N_("MF")},
+};
 
 //! FocusProcess, tag 0x0302
-constexpr TagDetails olympusFocusProcess[] = {{0, N_("AF Not Used")}, {1, N_("AF Used")}};
+constexpr TagDetails olympusFocusProcess[] = {
+    {0, N_("AF Not Used")},
+    {1, N_("AF Used")},
+};
 
 //! AFSearch, tag 0x0303
-constexpr TagDetails olympusAFSearch[] = {{0, N_("Not Ready")}, {1, N_("Ready")}};
+constexpr TagDetails olympusAFSearch[] = {
+    {0, N_("Not Ready")},
+    {1, N_("Ready")},
+};
 
 //! FlashMode, tag 0x0400
 constexpr TagDetailsBitmask olympusFlashMode[] = {
-    {0x0000, N_("Off")},       {0x0001, N_("On")},        {0x0002, N_("Fill-in")},    {0x0004, N_("Red-eye")},
-    {0x0008, N_("Slow-sync")}, {0x0010, N_("Forced On")}, {0x0020, N_("2nd Curtain")}};
+    {0x0000, N_("Off")},       {0x0001, N_("On")},        {0x0002, N_("Fill-in")},     {0x0004, N_("Red-eye")},
+    {0x0008, N_("Slow-sync")}, {0x0010, N_("Forced On")}, {0x0020, N_("2nd Curtain")},
+};
 
 //! FlashRemoteControl, tag 0x0403
-constexpr TagDetails olympusFlashRemoteControl[] = {{0x0, N_("Off")},
-                                                    {0x1, N_("Channel 1, Low")},
-                                                    {0x2, N_("Channel 2, Low")},
-                                                    {0x3, N_("Channel 3, Low")},
-                                                    {0x4, N_("Channel 4, Low")},
-                                                    {0x9, N_("Channel 1, Mid")},
-                                                    {0xa, N_("Channel 2, Mid")},
-                                                    {0xb, N_("Channel 3, Mid")},
-                                                    {0xc, N_("Channel 4, Mid")},
-                                                    {0x11, N_("Channel 1, High")},
-                                                    {0x12, N_("Channel 2, High")},
-                                                    {0x13, N_("Channel 3, High")},
-                                                    {0x14, N_("Channel 4, High")}};
+constexpr TagDetails olympusFlashRemoteControl[] = {
+    {0x0, N_("Off")},
+    {0x1, N_("Channel 1, Low")},
+    {0x2, N_("Channel 2, Low")},
+    {0x3, N_("Channel 3, Low")},
+    {0x4, N_("Channel 4, Low")},
+    {0x9, N_("Channel 1, Mid")},
+    {0xa, N_("Channel 2, Mid")},
+    {0xb, N_("Channel 3, Mid")},
+    {0xc, N_("Channel 4, Mid")},
+    {0x11, N_("Channel 1, High")},
+    {0x12, N_("Channel 2, High")},
+    {0x13, N_("Channel 3, High")},
+    {0x14, N_("Channel 4, High")},
+};
 
 //! FlashControlMode, tag 0x0404
-constexpr TagDetails olympusFlashControlMode[] = {{0, N_("Off")}, {3, N_("TTL")}, {4, N_("Auto")}, {5, N_("Manual")}};
+constexpr TagDetails olympusFlashControlMode[] = {
+    {0, N_("Off")},
+    {3, N_("TTL")},
+    {4, N_("Auto")},
+    {5, N_("Manual")},
+};
 
 //! WhiteBalance, tag 0x0500
-constexpr TagDetails olympusWhiteBalance[] = {{0, N_("Auto")},
-                                              {1, N_("Auto (Keep Warm Color Off)")},
-                                              {16, N_("7500K (Fine Weather with Shade)")},
-                                              {17, N_("6000K (Cloudy)")},
-                                              {18, N_("5300K (Fine Weather)")},
-                                              {20, N_("3000K (Tungsten light)")},
-                                              {21, N_("3600K (Tungsten light-like)")},
-                                              {22, N_("Auto Setup")},
-                                              {23, N_("5500K (Flash)")},
-                                              {33, N_("6600K (Daylight fluorescent)")},
-                                              {34, N_("4500K (Neutral white fluorescent)")},
-                                              {35, N_("4000K (Cool white fluorescent)")},
-                                              {36, N_("White Fluorescent")},
-                                              {48, N_("3600K (Tungsten light-like)")},
-                                              {67, N_("Underwater")},
-                                              {256, N_("One Touch WB 1")},
-                                              {257, N_("One Touch WB 2")},
-                                              {258, N_("One Touch WB 3")},
-                                              {259, N_("One Touch WB 4")},
-                                              {512, N_("Custom WB 1")},
-                                              {513, N_("Custom WB 2")},
-                                              {514, N_("Custom WB 3")},
-                                              {515, N_("Custom WB 4")}};
+constexpr TagDetails olympusWhiteBalance[] = {
+    {0, N_("Auto")},
+    {1, N_("Auto (Keep Warm Color Off)")},
+    {16, N_("7500K (Fine Weather with Shade)")},
+    {17, N_("6000K (Cloudy)")},
+    {18, N_("5300K (Fine Weather)")},
+    {20, N_("3000K (Tungsten light)")},
+    {21, N_("3600K (Tungsten light-like)")},
+    {22, N_("Auto Setup")},
+    {23, N_("5500K (Flash)")},
+    {33, N_("6600K (Daylight fluorescent)")},
+    {34, N_("4500K (Neutral white fluorescent)")},
+    {35, N_("4000K (Cool white fluorescent)")},
+    {36, N_("White Fluorescent")},
+    {48, N_("3600K (Tungsten light-like)")},
+    {67, N_("Underwater")},
+    {256, N_("One Touch WB 1")},
+    {257, N_("One Touch WB 2")},
+    {258, N_("One Touch WB 3")},
+    {259, N_("One Touch WB 4")},
+    {512, N_("Custom WB 1")},
+    {513, N_("Custom WB 2")},
+    {514, N_("Custom WB 3")},
+    {515, N_("Custom WB 4")},
+};
 
 //! ModifiedSaturation, tag 0x0504
-constexpr TagDetails olympusModifiedSaturation[] = {{0, N_("Off")},
-                                                    {1, N_("CM1 (Red Enhance)")},
-                                                    {2, N_("CM2 (Green Enhance)")},
-                                                    {3, N_("CM3 (Blue Enhance)")},
-                                                    {4, N_("CM4 (Skin Tones)")}};
+constexpr TagDetails olympusModifiedSaturation[] = {
+    {0, N_("Off")},
+    {1, N_("CM1 (Red Enhance)")},
+    {2, N_("CM2 (Green Enhance)")},
+    {3, N_("CM3 (Blue Enhance)")},
+    {4, N_("CM4 (Skin Tones)")},
+};
 
 //! ColorSpace, tag 0x0507
-constexpr TagDetails olympusColorSpace[] = {{0, N_("sRGB")}, {1, N_("Adobe RGB")}, {2, N_("Pro Photo RGB")}};
+constexpr TagDetails olympusColorSpace[] = {
+    {0, N_("sRGB")},
+    {1, N_("Adobe RGB")},
+    {2, N_("Pro Photo RGB")},
+};
 
 //! NoiseReduction, tag 0x050a
-constexpr TagDetailsBitmask olympusNoiseReduction[] = {{0x0001, N_("Noise Reduction")},
-                                                       {0x0002, N_("Noise Filter")},
-                                                       {0x0004, N_("Noise Filter (ISO Boost)")},
-                                                       {0x0008, N_("Auto")}};
+constexpr TagDetailsBitmask olympusNoiseReduction[] = {
+    {0x0001, N_("Noise Reduction")},
+    {0x0002, N_("Noise Filter")},
+    {0x0004, N_("Noise Filter (ISO Boost)")},
+    {0x0008, N_("Auto")},
+};
 
 //! PictureMode, tag 0x0520
-constexpr TagDetails olympusPictureMode[] = {{1, N_("Vivid")},
-                                             {2, N_("Natural")},
-                                             {3, N_("Muted")},
-                                             {4, N_("Portrait")},
-                                             {5, N_("i-Enhance")},
-                                             {6, N_("e-Portrait")},
-                                             {7, N_("Color Creator")},
-                                             {9, N_("Color Profile 1")},
-                                             {10, N_("Color Profile 2")},
-                                             {11, N_("Color Profile 3")},
-                                             {12, N_("Monochrome Profile 1")},
-                                             {13, N_("Monochrome Profile 2")},
-                                             {14, N_("Monochrome Profile 3")},
-                                             {256, N_("Monotone")},
-                                             {512, N_("Sepia")}};
+constexpr TagDetails olympusPictureMode[] = {
+    {1, N_("Vivid")},
+    {2, N_("Natural")},
+    {3, N_("Muted")},
+    {4, N_("Portrait")},
+    {5, N_("i-Enhance")},
+    {6, N_("e-Portrait")},
+    {7, N_("Color Creator")},
+    {9, N_("Color Profile 1")},
+    {10, N_("Color Profile 2")},
+    {11, N_("Color Profile 3")},
+    {12, N_("Monochrome Profile 1")},
+    {13, N_("Monochrome Profile 2")},
+    {14, N_("Monochrome Profile 3")},
+    {256, N_("Monotone")},
+    {512, N_("Sepia")},
+};
 
 //! PictureModeBWFilter, tag 0x0525
-constexpr TagDetails olympusPictureModeBWFilter[] = {{0, N_("n/a")},    {1, N_("Neutral")}, {2, N_("Yellow")},
-                                                     {3, N_("Orange")}, {4, N_("Red")},     {5, N_("Green")}};
+constexpr TagDetails olympusPictureModeBWFilter[] = {
+    {0, N_("n/a")}, {1, N_("Neutral")}, {2, N_("Yellow")}, {3, N_("Orange")}, {4, N_("Red")}, {5, N_("Green")},
+};
 
 //! PictureModeTone, tag 0x0526
-constexpr TagDetails olympusPictureModeTone[] = {{0, N_("n/a")},  {1, N_("Neutral")}, {2, N_("Sepia")},
-                                                 {3, N_("Blue")}, {4, N_("Purple")},  {5, N_("Green")}};
+constexpr TagDetails olympusPictureModeTone[] = {
+    {0, N_("n/a")}, {1, N_("Neutral")}, {2, N_("Sepia")}, {3, N_("Blue")}, {4, N_("Purple")}, {5, N_("Green")},
+};
 
 constexpr TagDetails artFilters[] = {
     {0, N_("Off")},
@@ -447,11 +520,17 @@ constexpr TagDetails artFilters[] = {
 };
 
 //! OlympusCs Quality, tag 0x0603
-constexpr TagDetails olympusCsQuality[] = {{1, N_("SQ")}, {2, N_("HQ")}, {3, N_("SHQ")}, {4, N_("RAW")}};
+constexpr TagDetails olympusCsQuality[] = {
+    {1, N_("SQ")},
+    {2, N_("HQ")},
+    {3, N_("SHQ")},
+    {4, N_("RAW")},
+};
 
 //! Olympus ImageStabilization, tag 0x0604
 static constexpr TagDetails olympusImageStabilization[] = {
-    {0, N_("Off")}, {1, N_("S-IS 1")}, {2, N_("S-IS 2")}, {3, N_("S-IS 3")}, {4, N_("S-IS AUTO")}};
+    {0, N_("Off")}, {1, N_("S-IS 1")}, {2, N_("S-IS 2")}, {3, N_("S-IS 3")}, {4, N_("S-IS AUTO")},
+};
 
 constexpr TagInfo OlympusMakerNote::tagInfoCs_[] = {
     {0x0000, "CameraSettingsVersion", N_("Camera Settings Version"), N_("Camera settings version"), IfdId::olympusCsId,
@@ -572,12 +651,16 @@ const TagInfo* OlympusMakerNote::tagListCs() {
 }
 
 //! OlympusEq FlashType, tag 0x1000
-constexpr TagDetails olympusEqFlashType[] = {{0, N_("None")}, {2, N_("Simple E-System")}, {3, N_("E-System")}};
+constexpr TagDetails olympusEqFlashType[] = {
+    {0, N_("None")},
+    {2, N_("Simple E-System")},
+    {3, N_("E-System")},
+};
 
 //! OlympusEq FlashModel, tag 0x1001
 constexpr TagDetails olympusEqFlashModel[] = {
-    {0, N_("None")}, {1, "FL-20"},  {2, "FL-50"}, {3, "RF-11"},    {4, "TF-22"},   {5, "FL-36"},
-    {6, "FL-50R"},   {7, "FL-36R"}, {9, "FL-14"}, {11, "FL-600R"}, {11, "FL-600R"}  // To silence compiler warning
+    {0, N_("None")}, {1, "FL-20"},  {2, "FL-50"},  {3, "RF-11"}, {4, "TF-22"},
+    {5, "FL-36"},    {6, "FL-50R"}, {7, "FL-36R"}, {9, "FL-14"}, {11, "FL-600R"},
 };
 
 constexpr TagInfo OlympusMakerNote::tagInfoEq_[] = {
@@ -619,7 +702,7 @@ constexpr TagInfo OlympusMakerNote::tagInfoEq_[] = {
      SectionId::makerTags, asciiString, -1, printValue},
     {0x0303, "ExtenderModel", N_("Extender Model"), N_("Extender model"), IfdId::olympusEqId, SectionId::makerTags,
      asciiString, -1, printValue},
-    {0x0304, "ExtenderFirmwareVersion", N_("Extender Firmware Version"), N_("Extender firmwareversion"),
+    {0x0304, "ExtenderFirmwareVersion", N_("Extender Firmware Version"), N_("Extender firmware version"),
      IfdId::olympusEqId, SectionId::makerTags, unsignedLong, -1, printValue},
     {0x0403, "ConversionLens", N_("Conversion Lens"), N_("Conversion lens"), IfdId::olympusEqId, SectionId::makerTags,
      asciiString, -1, printValue},
@@ -641,21 +724,34 @@ const TagInfo* OlympusMakerNote::tagListEq() {
 }
 
 //! OlympusRd ColorSpace, tag 0x0108
-constexpr TagDetails olympusRdColorSpace[] = {{0, N_("sRGB")}, {1, N_("Adobe RGB")}, {2, N_("Pro Photo RGB")}};
+constexpr TagDetails olympusRdColorSpace[] = {
+    {0, N_("sRGB")},
+    {1, N_("Adobe RGB")},
+    {2, N_("Pro Photo RGB")},
+};
 
 //! OlympusRd Engine, tag 0x0109
 constexpr TagDetails olympusRdEngine[] = {
-    {0, N_("High Speed")}, {1, N_("High Function")}, {2, N_("Advanced High Speed")}, {3, N_("Advanced High Function")}};
+    {0, N_("High Speed")},
+    {1, N_("High Function")},
+    {2, N_("Advanced High Speed")},
+    {3, N_("Advanced High Function")},
+};
 
 //! OlympusRd EditStatus, tag 0x010b
 constexpr TagDetails olympusRdEditStatus[] = {
-    {0, N_("Original")}, {1, N_("Edited (Landscape)")}, {6, N_("Edited (Portrait)")}, {8, N_("Edited (Portrait)")}};
+    {0, N_("Original")},
+    {1, N_("Edited (Landscape)")},
+    {6, N_("Edited (Portrait)")},
+    {8, N_("Edited (Portrait)")},
+};
 
 //! OlympusRd Settings, tag 0x010c
-constexpr TagDetailsBitmask olympusRdSettings[] = {{0x0001, N_("WB Color Temp")}, {0x0004, N_("WB Gray Point")},
-                                                   {0x0008, N_("Saturation")},    {0x0010, N_("Contrast")},
-                                                   {0x0020, N_("Sharpness")},     {0x0040, N_("Color Space")},
-                                                   {0x0080, N_("High Function")}, {0x0100, N_("Noise Reduction")}};
+constexpr TagDetailsBitmask olympusRdSettings[] = {
+    {0x0001, N_("WB Color Temp")}, {0x0004, N_("WB Gray Point")},   {0x0008, N_("Saturation")},
+    {0x0010, N_("Contrast")},      {0x0020, N_("Sharpness")},       {0x0040, N_("Color Space")},
+    {0x0080, N_("High Function")}, {0x0100, N_("Noise Reduction")},
+};
 
 constexpr TagInfo OlympusMakerNote::tagInfoRd_[] = {
     {0x0000, "RawDevVersion", N_("Raw Development Version"), N_("Raw development version"), IfdId::olympusRdId,
@@ -696,25 +792,38 @@ const TagInfo* OlympusMakerNote::tagListRd() {
 }
 
 //! OlympusRd2 WhiteBalance, tag 0x0101
-constexpr TagDetails olympusRd2WhiteBalance[] = {{1, N_("Color Temperature")}, {2, N_("Gray Point")}};
+constexpr TagDetails olympusRd2WhiteBalance[] = {
+    {1, N_("Color Temperature")},
+    {2, N_("Gray Point")},
+};
 
 //! OlympusRd2 ColorSpace, tag 0x0109
-constexpr TagDetails olympusRd2ColorSpace[] = {{0, N_("sRGB")}, {1, N_("Adobe RGB")}, {2, N_("Pro Photo RGB")}};
+constexpr TagDetails olympusRd2ColorSpace[] = {
+    {0, N_("sRGB")},
+    {1, N_("Adobe RGB")},
+    {2, N_("Pro Photo RGB")},
+};
 
 //! OlympusRd2 Engine, tag 0x010b
-constexpr TagDetails olympusRd2Engine[] = {{0, N_("High Speed")}, {1, N_("High Function")}};
+constexpr TagDetails olympusRd2Engine[] = {
+    {0, N_("High Speed")},
+    {1, N_("High Function")},
+};
 
 //! OlympusRd2 PictureMode, tag 0x010c
 constexpr TagDetails olympusRd2PictureMode[] = {
-    {1, N_("Vivid")}, {2, N_("Natural")}, {3, N_("Muted")}, {256, N_("Monotone")}, {512, N_("Sepia")}};
+    {1, N_("Vivid")}, {2, N_("Natural")}, {3, N_("Muted")}, {256, N_("Monotone")}, {512, N_("Sepia")},
+};
 
 //! OlympusRd2 PM_BWFilter, tag 0x0110
 constexpr TagDetails olympusRd2PM_BWFilter[] = {
-    {1, N_("Neutral")}, {2, N_("Yellow")}, {3, N_("Orange")}, {4, N_("Red")}, {5, N_("Green")}};
+    {1, N_("Neutral")}, {2, N_("Yellow")}, {3, N_("Orange")}, {4, N_("Red")}, {5, N_("Green")},
+};
 
 //! OlympusRd2 PMPictureTone, tag 0x0111
 constexpr TagDetails olympusRd2PMPictureTone[] = {
-    {1, N_("Neutral")}, {2, N_("Sepia")}, {3, N_("Blue")}, {4, N_("Purple")}, {5, N_("Green")}};
+    {1, N_("Neutral")}, {2, N_("Sepia")}, {3, N_("Blue")}, {4, N_("Purple")}, {5, N_("Green")},
+};
 
 constexpr TagInfo OlympusMakerNote::tagInfoRd2_[] = {
     {0x0000, "RawDev2Version", N_("Raw Development 2 Version"), N_("Raw development 2 version"), IfdId::olympusRd2Id,
@@ -774,11 +883,15 @@ const TagInfo* OlympusMakerNote::tagListRd2() {
 
 //! OlympusIp MultipleExposureMode, tag 0x101c
 constexpr TagDetails olympusIpMultipleExposureMode[] = {
-    {0, N_("Off")}, {2, N_("On (2 frames)")}, {3, N_("On (3 frames)")}};
+    {0, N_("Off")},
+    {2, N_("On (2 frames)")},
+    {3, N_("On (3 frames)")},
+};
 
 //! OlympusIp olympusIpAspectRatio, tag 0x101c
-constexpr TagDetails olympusIpAspectRatio[] = {{1, "4:3"}, {2, "3:2"}, {3, "16:9"}, {4, "6:6"}, {5, "5:4"},
-                                               {6, "7:6"}, {7, "6:5"}, {8, "7:5"},  {9, "3:4"}};
+constexpr TagDetails olympusIpAspectRatio[] = {
+    {1, "4:3"}, {2, "3:2"}, {3, "16:9"}, {4, "6:6"}, {5, "5:4"}, {6, "7:6"}, {7, "6:5"}, {8, "7:5"}, {9, "3:4"},
+};
 
 constexpr TagInfo OlympusMakerNote::tagInfoIp_[] = {
     {0x0000, "ImageProcessingVersion", N_("Image Processing Version"), N_("Image processing version"),
@@ -893,7 +1006,10 @@ const TagInfo* OlympusMakerNote::tagListIp() {
 }
 
 //! OlympusFi ExternalFlashBounce, tag 0x1204
-constexpr TagDetails olympusFiExternalFlashBounce[] = {{0, N_("Bounce or Off")}, {1, N_("Direct")}};
+constexpr TagDetails olympusFiExternalFlashBounce[] = {
+    {0, N_("Bounce or Off")},
+    {1, N_("Direct")},
+};
 
 constexpr TagInfo OlympusMakerNote::tagInfoFi_[] = {
     {0x0000, "FocusInfoVersion", N_("Focus Info Version"), N_("Focus info version"), IfdId::olympusFiId,
@@ -956,18 +1072,20 @@ const TagInfo* OlympusMakerNote::tagListFe() {
 }
 
 //! OlympusRi LightSource, tag 0x1000
-constexpr TagDetails olympusRiLightSource[] = {{0, N_("Unknown")},
-                                               {16, N_("Shade")},
-                                               {17, N_("Cloudy")},
-                                               {18, N_("Fine Weather")},
-                                               {20, N_("Tungsten (incandescent)")},
-                                               {22, N_("Evening Sunlight")},
-                                               {33, N_("Daylight Fluorescent (D 5700 - 7100K)")},
-                                               {34, N_("Day White Fluorescent (N 4600 - 5400K)")},
-                                               {35, N_("Cool White Fluorescent (W 3900 - 4500K)")},
-                                               {36, N_("White Fluorescent (WW 3200 - 3700K)")},
-                                               {256, N_("One Touch White Balance")},
-                                               {512, N_("Custom 1-4")}};
+constexpr TagDetails olympusRiLightSource[] = {
+    {0, N_("Unknown")},
+    {16, N_("Shade")},
+    {17, N_("Cloudy")},
+    {18, N_("Fine Weather")},
+    {20, N_("Tungsten (incandescent)")},
+    {22, N_("Evening Sunlight")},
+    {33, N_("Daylight Fluorescent (D 5700 - 7100K)")},
+    {34, N_("Day White Fluorescent (N 4600 - 5400K)")},
+    {35, N_("Cool White Fluorescent (W 3900 - 4500K)")},
+    {36, N_("White Fluorescent (WW 3200 - 3700K)")},
+    {256, N_("One Touch White Balance")},
+    {512, N_("Custom 1-4")},
+};
 
 constexpr TagInfo OlympusMakerNote::tagInfoRi_[] = {
     {0x0000, "RawInfoVersion", N_("Raw Info Version"), N_("Raw info version"), IfdId::olympusRiId, SectionId::makerTags,
@@ -1158,19 +1276,13 @@ std::ostream& OlympusMakerNote::print0x0200(std::ostream& os, const Value& value
 }  // OlympusMakerNote::print0x0200
 
 std::ostream& OlympusMakerNote::print0x0204(std::ostream& os, const Value& value, const ExifData*) {
-  std::ios::fmtflags of(os.flags());
   if (value.count() == 0 || value.toRational().second == 0) {
     return os << "(" << value << ")";
   }
   float f = value.toFloat();
   if (f == 0.0F || f == 1.0F)
     return os << _("None");
-  std::ostringstream oss;
-  oss.copyfmt(os);
-  os << std::fixed << std::setprecision(1) << f << "x";
-  os.copyfmt(oss);
-  os.flags(of);
-  return os;
+  return os << stringFormat("{:.1f}x", f);
 }  // OlympusMakerNote::print0x0204
 
 std::ostream& OlympusMakerNote::print0x1015(std::ostream& os, const Value& value, const ExifData*) {
@@ -1243,7 +1355,7 @@ std::ostream& OlympusMakerNote::print0x0201(std::ostream& os, const Value& value
 
   // 6 numbers: 0. Make, 1. Unknown, 2. Model, 3. Sub-model, 4-5. Unknown.
   // Only the Make, Model and Sub-model are used to determine the lens model
-  static struct {
+  static constexpr struct {
     byte val[3];
     const char* label;
   } lensTypes[] = {
@@ -1397,7 +1509,7 @@ std::ostream& OlympusMakerNote::print0x0209(std::ostream& os, const Value& value
 std::ostream& OlympusMakerNote::printEq0x0301(std::ostream& os, const Value& value, const ExifData*) {
   // 6 numbers: 0. Make, 1. Unknown, 2. Model, 3. Sub-model, 4-5. Unknown.
   // Only the Make and Model are used to determine the extender model
-  static struct {
+  static constexpr struct {
     byte val[2];
     const char* label;
   } extenderModels[] = {
@@ -1425,17 +1537,16 @@ std::ostream& OlympusMakerNote::printEq0x0301(std::ostream& os, const Value& val
 //! OlympusCs FocusMode, tag 0x0301
 // (1 or 2 values)
 std::ostream& OlympusMakerNote::printCs0x0301(std::ostream& os, const Value& value, const ExifData*) {
-  using mode0 = std::pair<uint16_t, const char*>;
-  static constexpr auto focusModes0 = std::array{
-      mode0(0, N_("Single AF")),     mode0(1, N_("Sequential shooting AF")),
-      mode0(2, N_("Continuous AF")), mode0(3, N_("Multi AF")),
-      mode0(4, N_("Face detect")),   mode0(10, N_("MF")),
+  using mode = std::pair<uint16_t, const char*>;
+  static constexpr mode focusModes0[] = {
+      {0, N_("Single AF")},     {1, N_("Sequential shooting AF")},
+      {2, N_("Continuous AF")}, {3, N_("Multi AF")},
+      {4, N_("Face detect")},   {10, N_("MF")},
   };
 
-  using mode1 = std::pair<uint16_t, const char*>;
-  static constexpr auto focusModes1 = std::array{
-      mode1(0x0001, N_("S-AF")),        mode1(0x0004, N_("C-AF")),      mode1(0x0010, N_("MF")),
-      mode1(0x0020, N_("Face detect")), mode1(0x0040, N_("Imager AF")), mode1(0x0100, N_("AF sensor")),
+  static constexpr mode focusModes1[] = {
+      {0x0001, N_("S-AF")},        {0x0004, N_("C-AF")},      {0x0010, N_("MF")},
+      {0x0020, N_("Face detect")}, {0x0040, N_("Imager AF")}, {0x0100, N_("AF sensor")},
   };
 
   if (value.count() < 1 || value.typeId() != unsignedShort) {
@@ -1513,60 +1624,48 @@ std::ostream& OlympusMakerNote::print0x1209(std::ostream& os, const Value& value
 
 // Olympus FocusDistance 0x0305
 std::ostream& OlympusMakerNote::print0x0305(std::ostream& os, const Value& value, const ExifData*) {
-  std::ios::fmtflags f(os.flags());
   if (value.count() != 1 || value.typeId() != unsignedRational) {
-    os.flags(f);
     return os << value;
   }
 
   auto [r, s] = value.toRational();
   if (static_cast<uint32_t>(r) == 0xffffffff) {
-    os << _("Infinity");
-  } else {
-    std::ostringstream oss;
-    oss.copyfmt(os);
-    os << std::fixed << std::setprecision(2);
-    os << static_cast<float>(r) / 1000 << " m";
-    os.copyfmt(oss);
+    return os << _("Infinity");
   }
-  os.flags(f);
-  return os;
+  return os << stringFormat("{:.2f} m", static_cast<float>(r) / 1000);
 }
 
 // Olympus FocusInfo tag 0x0308 AFPoint
 std::ostream& OlympusMakerNote::print0x0308(std::ostream& os, const Value& value, const ExifData* metadata) {
-  using point = std::pair<uint16_t, const char*>;
-  static constexpr auto afPoints = std::array{
-      point(0, N_("Left (or n/a)")), point(1, N_("Center (horizontal)")),
-      point(2, N_("Right")),         point(3, N_("Center (vertical)")),
-      point(255, N_("None")),
+  static constexpr std::pair<uint16_t, const char*> afPoints[] = {
+      {0, N_("Left (or n/a)")}, {1, N_("Center (horizontal)")}, {2, N_("Right")}, {3, N_("Center (vertical)")},
+      {255, N_("None")},
   };
 
-  using pointE3 = std::pair<byte, const char*>;
-  static constexpr auto afPointsE3 = std::array{
-      pointE3(0x00, N_("None")),
-      pointE3(0x01, N_("Top-left (horizontal)")),
-      pointE3(0x02, N_("Top-center (horizontal)")),
-      pointE3(0x03, N_("Top-right (horizontal)")),
-      pointE3(0x04, N_("Left (horizontal)")),
-      pointE3(0x05, N_("Mid-left (horizontal)")),
-      pointE3(0x06, N_("Center (horizontal)")),
-      pointE3(0x07, N_("Mid-right (horizontal)")),
-      pointE3(0x08, N_("Right (horizontal)")),
-      pointE3(0x09, N_("Bottom-left (horizontal)")),
-      pointE3(0x0a, N_("Bottom-center (horizontal)")),
-      pointE3(0x0b, N_("Bottom-right (horizontal)")),
-      pointE3(0x0c, N_("Top-left (vertical)")),
-      pointE3(0x0d, N_("Top-center (vertical)")),
-      pointE3(0x0e, N_("Top-right (vertical)")),
-      pointE3(0x0f, N_("Left (vertical)")),
-      pointE3(0x10, N_("Mid-left (vertical)")),
-      pointE3(0x11, N_("Center (vertical)")),
-      pointE3(0x12, N_("Mid-right (vertical)")),
-      pointE3(0x13, N_("Right (vertical)")),
-      pointE3(0x14, N_("Bottom-left (vertical)")),
-      pointE3(0x15, N_("Bottom-center (vertical)")),
-      pointE3(0x16, N_("Bottom-right (vertical)")),
+  static constexpr std::pair<byte, const char*> afPointsE3[] = {
+      {0x00, N_("None")},
+      {0x01, N_("Top-left (horizontal)")},
+      {0x02, N_("Top-center (horizontal)")},
+      {0x03, N_("Top-right (horizontal)")},
+      {0x04, N_("Left (horizontal)")},
+      {0x05, N_("Mid-left (horizontal)")},
+      {0x06, N_("Center (horizontal)")},
+      {0x07, N_("Mid-right (horizontal)")},
+      {0x08, N_("Right (horizontal)")},
+      {0x09, N_("Bottom-left (horizontal)")},
+      {0x0a, N_("Bottom-center (horizontal)")},
+      {0x0b, N_("Bottom-right (horizontal)")},
+      {0x0c, N_("Top-left (vertical)")},
+      {0x0d, N_("Top-center (vertical)")},
+      {0x0e, N_("Top-right (vertical)")},
+      {0x0f, N_("Left (vertical)")},
+      {0x10, N_("Mid-left (vertical)")},
+      {0x11, N_("Center (vertical)")},
+      {0x12, N_("Mid-right (vertical)")},
+      {0x13, N_("Right (vertical)")},
+      {0x14, N_("Bottom-left (vertical)")},
+      {0x15, N_("Bottom-center (vertical)")},
+      {0x16, N_("Bottom-right (vertical)")},
   };
 
   if (value.count() != 1 || value.typeId() != unsignedShort) {
@@ -1579,7 +1678,7 @@ std::ostream& OlympusMakerNote::print0x0308(std::ostream& os, const Value& value
     auto pos = metadata->findKey(ExifKey("Exif.Image.Model"));
     if (pos != metadata->end() && pos->count() != 0) {
       std::string model = pos->toString();
-      if (model.find("E-3 ") != std::string::npos || model.find("E-30 ") != std::string::npos) {
+      if (Internal::contains(model, "E-3 ") || Internal::contains(model, "E-30 ")) {
         E3_E30model = true;
       }
     }

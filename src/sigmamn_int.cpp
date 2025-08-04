@@ -3,12 +3,13 @@
 // included header files
 #include "sigmamn_int.hpp"
 #include "i18n.h"  // NLS support.
+#include "tags.hpp"
 #include "tags_int.hpp"
 #include "types.hpp"
 #include "value.hpp"
 
 // + standard includes
-#include <sstream>
+#include <ostream>
 #include <string>
 
 // *****************************************************************************
@@ -73,8 +74,7 @@ const TagInfo* SigmaMakerNote::tagList() {
 
 std::ostream& SigmaMakerNote::printStripLabel(std::ostream& os, const Value& value, const ExifData*) {
   std::string v = value.toString();
-  std::string::size_type pos = v.find(':');
-  if (pos != std::string::npos) {
+  if (auto pos = v.find(':'); pos != std::string::npos) {
     if (v.at(pos + 1) == ' ')
       ++pos;
     v = v.substr(pos + 1);
@@ -83,7 +83,7 @@ std::ostream& SigmaMakerNote::printStripLabel(std::ostream& os, const Value& val
 }
 
 std::ostream& SigmaMakerNote::print0x0008(std::ostream& os, const Value& value, const ExifData*) {
-  switch (value.toString().at(0)) {
+  switch (value.toString().front()) {
     case 'P':
       os << _("Program");
       break;
@@ -104,7 +104,7 @@ std::ostream& SigmaMakerNote::print0x0008(std::ostream& os, const Value& value, 
 }
 
 std::ostream& SigmaMakerNote::print0x0009(std::ostream& os, const Value& value, const ExifData*) {
-  switch (value.toString().at(0)) {
+  switch (value.toString().front()) {
     case 'A':
       os << _("Average");
       break;

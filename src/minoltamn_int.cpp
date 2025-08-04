@@ -4,12 +4,10 @@
 #include "minoltamn_int.hpp"
 #include "exif.hpp"
 #include "i18n.h"  // NLS support.
+#include "image_int.hpp"
 #include "makernote_int.hpp"
 #include "tags_int.hpp"
 #include "value.hpp"
-
-#include <array>
-#include <sstream>
 
 #include <cstdio>  // popen to call exiftool
 
@@ -24,21 +22,28 @@ constexpr TagDetails minoltaWhiteBalanceStd0x0115[] = {
     {0x10, N_("Daylight")}, {0x20, N_("Cloudy")},
     {0x30, N_("Shade")},    {0x40, N_("Tungsten")},
     {0x50, N_("Flash")},    {0x60, N_("Fluorescent")},
-    {0x70, N_("Custom")}};
+    {0x70, N_("Custom")},
+};
 
 //! Lookup table to translate Minolta color mode values to readable labels
 constexpr TagDetails minoltaColorMode[] = {
-    {0, N_("Natural Color")}, {1, N_("Black & White")},  {2, N_("Vivid Color")}, {3, N_("Solarization")},
-    {4, N_("AdobeRGB")},      {5, N_("Sepia")},          {9, N_("Natural")},     {12, N_("Portrait")},
-    {13, N_("Natural sRGB")}, {14, N_("Natural+ sRGB")}, {15, N_("Landscape")},  {16, N_("Evening")},
-    {17, N_("Night Scene")},  {18, N_("Night Portrait")}};
+    {0, N_("Natural Color")}, {1, N_("Black & White")},   {2, N_("Vivid Color")}, {3, N_("Solarization")},
+    {4, N_("AdobeRGB")},      {5, N_("Sepia")},           {9, N_("Natural")},     {12, N_("Portrait")},
+    {13, N_("Natural sRGB")}, {14, N_("Natural+ sRGB")},  {15, N_("Landscape")},  {16, N_("Evening")},
+    {17, N_("Night Scene")},  {18, N_("Night Portrait")},
+};
 
 //! Lookup table to translate Minolta image quality values to readable labels
-constexpr TagDetails minoltaImageQuality[] = {{0, N_("Raw")},      {1, N_("Super Fine")}, {2, N_("Fine")},
-                                              {3, N_("Standard")}, {4, N_("Economy")},    {5, N_("Extra Fine")}};
+constexpr TagDetails minoltaImageQuality[] = {
+    {0, N_("Raw")},      {1, N_("Super Fine")}, {2, N_("Fine")},
+    {3, N_("Standard")}, {4, N_("Economy")},    {5, N_("Extra Fine")},
+};
 
 //! Lookup table to translate Minolta image stabilization values
-constexpr TagDetails minoltaImageStabilization[] = {{1, N_("Off")}, {5, N_("On")}};
+constexpr TagDetails minoltaImageStabilization[] = {
+    {1, N_("Off")},
+    {5, N_("On")},
+};
 
 // Minolta Tag Info
 constexpr TagInfo MinoltaMakerNote::tagInfo_[] = {
@@ -126,62 +131,92 @@ const TagInfo* MinoltaMakerNote::tagList() {
 
 //! Lookup table to translate Minolta Std camera settings exposure mode values to readable labels
 constexpr TagDetails minoltaExposureModeStd[] = {
-    {0, N_("Program")}, {1, N_("Aperture priority")}, {2, N_("Shutter priority")}, {3, N_("Manual")}};
+    {0, N_("Program")},
+    {1, N_("Aperture priority")},
+    {2, N_("Shutter priority")},
+    {3, N_("Manual")},
+};
 
 //! Lookup table to translate Minolta Std camera settings flash mode values to readable labels
-constexpr TagDetails minoltaFlashModeStd[] = {{0, N_("Fill flash")},
-                                              {1, N_("Red-eye reduction")},
-                                              {2, N_("Rear flash sync")},
-                                              {3, N_("Wireless")},
-                                              {4, N_("Off")}};
+constexpr TagDetails minoltaFlashModeStd[] = {
+    {0, N_("Fill flash")}, {1, N_("Red-eye reduction")}, {2, N_("Rear flash sync")}, {3, N_("Wireless")},
+    {4, N_("Off")},
+};
 
 //! Lookup table to translate Minolta Std camera settings white balance values to readable labels
-constexpr TagDetails minoltaWhiteBalanceStd[] = {{0, N_("Auto")},          {1, N_("Daylight")},  {2, N_("Cloudy")},
-                                                 {3, N_("Tungsten")},      {5, N_("Custom")},    {7, N_("Fluorescent")},
-                                                 {8, N_("Fluorescent 2")}, {11, N_("Custom 2")}, {12, N_("Custom 3")}};
+constexpr TagDetails minoltaWhiteBalanceStd[] = {
+    {0, N_("Auto")},        {1, N_("Daylight")},      {2, N_("Cloudy")},    {3, N_("Tungsten")},  {5, N_("Custom")},
+    {7, N_("Fluorescent")}, {8, N_("Fluorescent 2")}, {11, N_("Custom 2")}, {12, N_("Custom 3")},
+};
 
 //! Lookup table to translate Minolta Std camera settings image size values to readable labels
-constexpr TagDetails minoltaImageSizeStd[] = {{0, N_("Full size")}, {1, "1600x1200"}, {2, "1280x960"}, {3, "640x480"},
-                                              {6, "2080x1560"},     {7, "2560x1920"}, {8, "3264x2176"}};
+constexpr TagDetails minoltaImageSizeStd[] = {
+    {0, N_("Full size")}, {1, "1600x1200"}, {2, "1280x960"},  {3, "640x480"},
+    {6, "2080x1560"},     {7, "2560x1920"}, {8, "3264x2176"},
+};
 
 //! Lookup table to translate Minolta Std camera settings image quality values to readable labels
-constexpr TagDetails minoltaImageQualityStd[] = {{0, N_("Raw")},      {1, N_("Super fine")}, {2, N_("Fine")},
-                                                 {3, N_("Standard")}, {4, N_("Economy")},    {5, N_("Extra fine")}};
+constexpr TagDetails minoltaImageQualityStd[] = {
+    {0, N_("Raw")},      {1, N_("Super fine")}, {2, N_("Fine")},
+    {3, N_("Standard")}, {4, N_("Economy")},    {5, N_("Extra fine")},
+};
 
 //! Lookup table to translate Minolta Std camera settings drive mode values to readable labels
-constexpr TagDetails minoltaDriveModeStd[] = {{0, N_("Single Frame")}, {1, N_("Continuous")}, {2, N_("Self-timer")},
-                                              {4, N_("Bracketing")},   {5, N_("Interval")},   {6, N_("UHS continuous")},
-                                              {7, N_("HS continuous")}};
+constexpr TagDetails minoltaDriveModeStd[] = {
+    {0, N_("Single Frame")}, {1, N_("Continuous")},     {2, N_("Self-timer")},    {4, N_("Bracketing")},
+    {5, N_("Interval")},     {6, N_("UHS continuous")}, {7, N_("HS continuous")},
+};
 
 //! Lookup table to translate Minolta Std camera settings metering mode values to readable labels
 constexpr TagDetails minoltaMeteringModeStd[] = {
-    {0, N_("Multi-segment")}, {1, N_("Center weighted average")}, {2, N_("Spot")}};
+    {0, N_("Multi-segment")},
+    {1, N_("Center weighted average")},
+    {2, N_("Spot")},
+};
 
 //! Lookup table to translate Minolta Std camera settings digital zoom values to readable labels
-constexpr TagDetails minoltaDigitalZoomStd[] = {{0, N_("Off")}, {1, N_("Electronic magnification")}, {2, "2x"}};
+constexpr TagDetails minoltaDigitalZoomStd[] = {
+    {0, N_("Off")},
+    {1, N_("Electronic magnification")},
+    {2, "2x"},
+};
 
 //! Lookup table to translate Minolta Std camera bracket step mode values to readable labels
-constexpr TagDetails minoltaBracketStepStd[] = {{0, "1/3 EV"}, {1, "2/3 EV"}, {2, "1 EV"}};
+constexpr TagDetails minoltaBracketStepStd[] = {
+    {0, "1/3 EV"},
+    {1, "2/3 EV"},
+    {2, "1 EV"},
+};
 
 //! Lookup table to translate Minolta Std camera settings AF points values to readable labels
 [[maybe_unused]] constexpr TagDetails minoltaAFPointsStd[] = {
-    {0, N_("Center")}, {1, N_("Top")},         {2, N_("Top-right")}, {3, N_("Right")},   {4, N_("Bottom-right")},
-    {5, N_("Bottom")}, {6, N_("Bottom-left")}, {7, N_("Left")},      {8, N_("Top-left")}};
+    {0, N_("Center")}, {1, N_("Top")},         {2, N_("Top-right")}, {3, N_("Right")},    {4, N_("Bottom-right")},
+    {5, N_("Bottom")}, {6, N_("Bottom-left")}, {7, N_("Left")},      {8, N_("Top-left")},
+};
 
 //! Lookup table to translate Minolta Std camera settings flash fired values to readable labels
-constexpr TagDetails minoltaFlashFired[] = {{0, N_("Did not fire")}, {1, N_("Fired")}};
+constexpr TagDetails minoltaFlashFired[] = {
+    {0, N_("Did not fire")},
+    {1, N_("Fired")},
+};
 
 //! Lookup table to translate Minolta Std camera settings sharpness values to readable labels
-constexpr TagDetails minoltaSharpnessStd[] = {{0, N_("Hard")}, {1, N_("Normal")}, {2, N_("Soft")}};
+constexpr TagDetails minoltaSharpnessStd[] = {
+    {0, N_("Hard")},
+    {1, N_("Normal")},
+    {2, N_("Soft")},
+};
 
 //! Lookup table to translate Minolta Std camera settings subject program values to readable labels
-constexpr TagDetails minoltaSubjectProgramStd[] = {{0, N_("None")},   {1, N_("Portrait")},
-                                                   {2, N_("Text")},   {3, N_("Night portrait")},
-                                                   {4, N_("Sunset")}, {5, N_("Sports action")}};
+constexpr TagDetails minoltaSubjectProgramStd[] = {
+    {0, N_("None")},           {1, N_("Portrait")}, {2, N_("Text")},
+    {3, N_("Night portrait")}, {4, N_("Sunset")},   {5, N_("Sports action")},
+};
 
 //! Lookup table to translate Minolta Std camera settings ISO settings values to readable labels
-constexpr TagDetails minoltaISOSettingStd[] = {{0, "100"}, {1, "200"},      {2, "400"},
-                                               {3, "800"}, {4, N_("Auto")}, {5, "64"}};
+constexpr TagDetails minoltaISOSettingStd[] = {
+    {0, "100"}, {1, "200"}, {2, "400"}, {3, "800"}, {4, N_("Auto")}, {5, "64"},
+};
 
 //! Lookup table to translate Minolta Std camera settings model values to readable labels
 constexpr TagDetails minoltaModelStd[] = {
@@ -193,49 +228,72 @@ constexpr TagDetails minoltaModelStd[] = {
     {5, "DiMAGE 7Hi"},
     {6, "DiMAGE A1"},
     {7, "DiMAGE A2 | S414"},
-    {7, "DiMAGE A2 | S414"}  // To silence compiler warning
 };
 
 //! Lookup table to translate Minolta Std camera settings interval mode values to readable labels
-constexpr TagDetails minoltaIntervalModeStd[] = {{0, N_("Still image")}, {1, N_("Time-lapse movie")}};
+constexpr TagDetails minoltaIntervalModeStd[] = {
+    {0, N_("Still image")},
+    {1, N_("Time-lapse movie")},
+};
 
 //! Lookup table to translate Minolta Std camera settings folder name values to readable labels
-constexpr TagDetails minoltaFolderNameStd[] = {{0, N_("Standard form")}, {1, N_("Data form")}};
+constexpr TagDetails minoltaFolderNameStd[] = {
+    {0, N_("Standard form")},
+    {1, N_("Data form")},
+};
 
 //! Lookup table to translate Minolta Std camera settings color mode values to readable labels
-constexpr TagDetails minoltaColorModeStd[] = {{0, N_("Natural color")},
-                                              {1, N_("Black and white")},
-                                              {2, N_("Vivid color")},
-                                              {3, N_("Solarization")},
-                                              {4, N_("Adobe RGB")}};
+constexpr TagDetails minoltaColorModeStd[] = {
+    {0, N_("Natural color")}, {1, N_("Black and white")}, {2, N_("Vivid color")},
+    {3, N_("Solarization")},  {4, N_("Adobe RGB")},
+};
 
 //! Lookup table to translate Minolta Std camera settings wide focus zone values to readable labels
-constexpr TagDetails minoltaWideFocusZoneStd[] = {{0, N_("No zone")},
-                                                  {1, N_("Center zone (horizontal orientation)")},
-                                                  {1, N_("Center zone (vertical orientation)")},
-                                                  {1, N_("Left zone")},
-                                                  {4, N_("Right zone")}};
+constexpr TagDetails minoltaWideFocusZoneStd[] = {
+    {0, N_("No zone")},
+    {1, N_("Center zone (horizontal orientation)")},
+    {1, N_("Center zone (vertical orientation)")},
+    {1, N_("Left zone")},
+    {4, N_("Right zone")},
+};
 
 //! Lookup table to translate Minolta Std camera settings focus mode values to readable labels
-constexpr TagDetails minoltaFocusModeStd[] = {{0, N_("Auto focus")}, {1, N_("Manual focus")}};
+constexpr TagDetails minoltaFocusModeStd[] = {
+    {0, N_("Auto focus")},
+    {1, N_("Manual focus")},
+};
 
 //! Lookup table to translate Minolta Std camera settings focus area values to readable labels
-constexpr TagDetails minoltaFocusAreaStd[] = {{0, N_("Wide focus (normal)")}, {1, N_("Spot focus")}};
+constexpr TagDetails minoltaFocusAreaStd[] = {
+    {0, N_("Wide focus (normal)")},
+    {1, N_("Spot focus")},
+};
 
 //! Lookup table to translate Minolta Std camera settings DEC switch position values to readable labels
 constexpr TagDetails minoltaDECPositionStd[] = {
-    {0, N_("Exposure")}, {1, N_("Contrast")}, {2, N_("Saturation")}, {3, N_("Filter")}};
+    {0, N_("Exposure")},
+    {1, N_("Contrast")},
+    {2, N_("Saturation")},
+    {3, N_("Filter")},
+};
 
 //! Lookup table to translate Minolta Std camera settings color profile values to readable labels
-constexpr TagDetails minoltaColorProfileStd[] = {{0, N_("Not embedded")}, {1, N_("Embedded")}};
+constexpr TagDetails minoltaColorProfileStd[] = {
+    {0, N_("Not embedded")},
+    {1, N_("Embedded")},
+};
 
 //! Lookup table to translate Minolta Std camera settings data Imprint values to readable labels
 constexpr TagDetails minoltaDataImprintStd[] = {
-    {0, N_("None")}, {1, "YYYY/MM/DD"}, {2, "MM/DD/HH:MM"}, {3, N_("Text")}, {4, N_("Text + ID#")}};
+    {0, N_("None")}, {1, "YYYY/MM/DD"}, {2, "MM/DD/HH:MM"}, {3, N_("Text")}, {4, N_("Text + ID#")},
+};
 
 //! Lookup table to translate Minolta Std camera settings flash metering values to readable labels
 constexpr TagDetails minoltaFlashMeteringStd[] = {
-    {0, N_("ADI (Advanced Distance Integration)")}, {1, N_("Pre-flash TTl")}, {2, N_("Manual flash control")}};
+    {0, N_("ADI (Advanced Distance Integration)")},
+    {1, N_("Pre-flash TTl")},
+    {2, N_("Manual flash control")},
+};
 
 std::ostream& MinoltaMakerNote::printMinoltaExposureSpeedStd(std::ostream& os, const Value& value, const ExifData*) {
   // From the PHP JPEG Metadata Toolkit
@@ -270,17 +328,15 @@ std::ostream& MinoltaMakerNote::printMinoltaFocalLengthStd(std::ostream& os, con
 
 std::ostream& MinoltaMakerNote::printMinoltaDateStd(std::ostream& os, const Value& value, const ExifData*) {
   // From the PHP JPEG Metadata Toolkit
-  os << value.toInt64() / 65536 << ":" << std::right << std::setw(2) << std::setfill('0')
-     << (value.toInt64() - value.toInt64() / 65536 * 65536) / 256 << ":" << std::right << std::setw(2)
-     << std::setfill('0') << value.toInt64() % 256;
+  auto val = value.toInt64();
+  os << stringFormat("{}:{:02}:{:02}", val / 65536, (val % 65536) / 256, val % 256);
   return os;
 }
 
 std::ostream& MinoltaMakerNote::printMinoltaTimeStd(std::ostream& os, const Value& value, const ExifData*) {
   // From the PHP JPEG Metadata Toolkit
-  os << std::right << std::setw(2) << std::setfill('0') << value.toInt64() / 65536 << ":" << std::right << std::setw(2)
-     << std::setfill('0') << (value.toInt64() - value.toInt64() / 65536 * 65536) / 256 << ":" << std::right
-     << std::setw(2) << std::setfill('0') << value.toInt64() % 256;
+  auto val = value.toInt64();
+  os << stringFormat("{:02}:{:02}:{:02}", val / 65536, (val % 65536) / 256, val % 256);
   return os;
 }
 
@@ -419,42 +475,59 @@ const TagInfo* MinoltaMakerNote::tagListCsStd() {
 //! Lookup table to translate Minolta Dynax 7D camera settings exposure mode values to readable labels
 constexpr TagDetails minoltaExposureMode7D[] = {
     {0, N_("Program")}, {1, N_("Aperture priority")}, {2, N_("Shutter priority")}, {3, N_("Manual")},
-    {4, N_("Auto")},    {5, N_("Program-shift A")},   {6, N_("Program-shift S")}};
+    {4, N_("Auto")},    {5, N_("Program-shift A")},   {6, N_("Program-shift S")},
+};
 
 //! Lookup table to translate Minolta Dynax 7D camera settings image size values to readable labels
-constexpr TagDetails minoltaImageSize7D[] = {{0, N_("Large")}, {1, N_("Medium")}, {2, N_("Small")}};
+constexpr TagDetails minoltaImageSize7D[] = {
+    {0, N_("Large")},
+    {1, N_("Medium")},
+    {2, N_("Small")},
+};
 
 //! Lookup table to translate Minolta Dynax 7D camera settings image quality values to readable labels
 constexpr TagDetails minoltaImageQuality7D[] = {
-    {0, N_("Raw")}, {16, N_("Fine")}, {32, N_("Normal")}, {34, N_("Raw+Jpeg")}, {48, N_("Economy")}};
+    {0, N_("Raw")}, {16, N_("Fine")}, {32, N_("Normal")}, {34, N_("Raw+Jpeg")}, {48, N_("Economy")},
+};
 
 //! Lookup table to translate Minolta Dynax 7D camera settings white balance values to readable labels
 constexpr TagDetails minoltaWhiteBalance7D[] = {
-    {0, N_("Auto")},        {1, N_("Daylight")}, {2, N_("Shade")},    {3, N_("Cloudy")},  {4, N_("Tungsten")},
-    {5, N_("Fluorescent")}, {256, N_("Kelvin")}, {512, N_("Manual")}, {512, N_("Manual")}  // To silence compiler
-                                                                                           // warning
+    {0, N_("Auto")},     {1, N_("Daylight")},    {2, N_("Shade")},    {3, N_("Cloudy")},
+    {4, N_("Tungsten")}, {5, N_("Fluorescent")}, {256, N_("Kelvin")}, {512, N_("Manual")},
 };
 
 //! Lookup table to translate Minolta Dynax 7D camera settings focus mode values to readable labels
 constexpr TagDetails minoltaFocusMode7D[] = {
-    {0, N_("Single-shot AF")}, {1, N_("Continuous AF")}, {3, N_("Manual")}, {4, N_("Automatic AF")}};
+    {0, N_("Single-shot AF")},
+    {1, N_("Continuous AF")},
+    {3, N_("Manual")},
+    {4, N_("Automatic AF")},
+};
 
 //! Lookup table to translate Minolta Dynax 7D camera settings AF points values to readable labels
-constexpr TagDetails minoltaAFPoints7D[] = {{1, N_("Center")},       {2, N_("Top")},           {4, N_("Top-right")},
-                                            {8, N_("Right")},        {16, N_("Bottom-right")}, {32, N_("Bottom")},
-                                            {64, N_("Bottom-left")}, {128, N_("Left")},        {256, N_("Top-left")}};
+constexpr TagDetails minoltaAFPoints7D[] = {
+    {1, N_("Center")},  {2, N_("Top")},          {4, N_("Top-right")}, {8, N_("Right")},      {16, N_("Bottom-right")},
+    {32, N_("Bottom")}, {64, N_("Bottom-left")}, {128, N_("Left")},    {256, N_("Top-left")},
+};
 
 //! Lookup table to translate Minolta Dynax 7D camera settings ISO settings values to readable labels
-constexpr TagDetails minoltaISOSetting7D[] = {{0, N_("Auto")}, {1, "100"},  {3, "200"}, {4, "400"},
-                                              {5, "800"},      {6, "1600"}, {7, "3200"}};
+constexpr TagDetails minoltaISOSetting7D[] = {
+    {0, N_("Auto")}, {1, "100"}, {3, "200"}, {4, "400"}, {5, "800"}, {6, "1600"}, {7, "3200"},
+};
 
 //! Lookup table to translate Minolta Dynax 7D camera settings color space values to readable labels
 constexpr TagDetails minoltaColorSpace7D[] = {
-    {0, N_("sRGB (Natural)")}, {1, N_("sRGB (Natural+)")}, {4, N_("Adobe RGB")}};
+    {0, N_("sRGB (Natural)")},
+    {1, N_("sRGB (Natural+)")},
+    {4, N_("Adobe RGB")},
+};
 
 //! Lookup table to translate Minolta Dynax 7D camera settings rotation values to readable labels
 constexpr TagDetails minoltaRotation7D[] = {
-    {72, N_("Horizontal (normal)")}, {76, N_("Rotate 90 CW")}, {82, N_("Rotate 270 CW")}};
+    {72, N_("Horizontal (normal)")},
+    {76, N_("Rotate 90 CW")},
+    {82, N_("Rotate 270 CW")},
+};
 
 // Minolta Dynax 7D Camera Settings Tag Info
 constexpr TagInfo MinoltaMakerNote::tagInfoCs7D_[] = {
@@ -523,98 +596,112 @@ const TagInfo* MinoltaMakerNote::tagListCs7D() {
 // -- Minolta Dynax 5D camera settings ---------------------------------------------------------------
 
 //! Lookup table to translate Minolta Dynax 5D camera settings exposure mode values to readable labels
-constexpr TagDetails minoltaExposureMode5D[] = {{0, N_("Program")},
-                                                {1, N_("Aperture priority")},
-                                                {2, N_("Shutter priority")},
-                                                {3, N_("Manual")},
-                                                {4, N_("Auto")},
-                                                {5, N_("Program Shift A")},
-                                                {6, N_("Program Shift S")},
-                                                {0x1013, N_("Portrait")},
-                                                {0x1023, N_("Sports")},
-                                                {0x1033, N_("Sunset")},
-                                                {0x1043, N_("Night View/Portrait")},
-                                                {0x1053, N_("Landscape")},
-                                                {0x1083, N_("Macro")}};
+constexpr TagDetails minoltaExposureMode5D[] = {
+    {0, N_("Program")},
+    {1, N_("Aperture priority")},
+    {2, N_("Shutter priority")},
+    {3, N_("Manual")},
+    {4, N_("Auto")},
+    {5, N_("Program Shift A")},
+    {6, N_("Program Shift S")},
+    {0x1013, N_("Portrait")},
+    {0x1023, N_("Sports")},
+    {0x1033, N_("Sunset")},
+    {0x1043, N_("Night View/Portrait")},
+    {0x1053, N_("Landscape")},
+    {0x1083, N_("Macro")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings image size values to readable labels
-constexpr TagDetails minoltaImageSize5D[] = {{0, N_("Large")}, {1, N_("Medium")}, {2, N_("Small")}};
+constexpr TagDetails minoltaImageSize5D[] = {
+    {0, N_("Large")},
+    {1, N_("Medium")},
+    {2, N_("Small")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings image quality values to readable labels
 constexpr TagDetails minoltaImageQuality5D[] = {
-    {0, N_("Raw")}, {16, N_("Fine")}, {32, N_("Normal")}, {34, N_("Raw+Jpeg")}, {48, N_("Economy")}};
+    {0, N_("Raw")}, {16, N_("Fine")}, {32, N_("Normal")}, {34, N_("Raw+Jpeg")}, {48, N_("Economy")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings white balance values to readable labels
-constexpr TagDetails minoltaWhiteBalance5D[] = {{0, N_("Auto")},  {1, N_("Daylight")}, {2, N_("Cloudy")},
-                                                {3, N_("Shade")}, {4, N_("Tungsten")}, {5, N_("Fluorescent")},
-                                                {6, N_("Flash")}, {256, N_("Kelvin")}, {512, N_("Manual")}};
+constexpr TagDetails minoltaWhiteBalance5D[] = {
+    {0, N_("Auto")},        {1, N_("Daylight")}, {2, N_("Cloudy")},   {3, N_("Shade")},    {4, N_("Tungsten")},
+    {5, N_("Fluorescent")}, {6, N_("Flash")},    {256, N_("Kelvin")}, {512, N_("Manual")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings metering mode values to readable labels
-constexpr TagDetails minoltaMeteringMode5D[] = {{0, N_("Multi-segment")}, {1, N_("Center weighted")}, {2, N_("Spot")}};
+constexpr TagDetails minoltaMeteringMode5D[] = {
+    {0, N_("Multi-segment")},
+    {1, N_("Center weighted")},
+    {2, N_("Spot")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings ISO settings values to readable labels
-constexpr TagDetails minoltaISOSetting5D[] = {{0, N_("Auto")},
-                                              {1, "100"},
-                                              {3, "200"},
-                                              {4, "400"},
-                                              {5, "800"},
-                                              {6, "1600"},
-                                              {7, "3200"},
-                                              {8, N_("200 (Zone Matching High)")},
-                                              {10, N_("80 (Zone Matching Low)")}};
+constexpr TagDetails minoltaISOSetting5D[] = {
+    {0, N_("Auto")},
+    {1, "100"},
+    {3, "200"},
+    {4, "400"},
+    {5, "800"},
+    {6, "1600"},
+    {7, "3200"},
+    {8, N_("200 (Zone Matching High)")},
+    {10, N_("80 (Zone Matching Low)")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings color space values to readable labels
-constexpr TagDetails minoltaColorSpace5D[] = {{0, N_("sRGB (Natural)")},
-                                              {1, N_("sRGB (Natural+)")},
-                                              {2, N_("Monochrome")},
-                                              {3, N_("Adobe RGB (ICC)")},
-                                              {4, N_("Adobe RGB")}};
+constexpr TagDetails minoltaColorSpace5D[] = {
+    {0, N_("sRGB (Natural)")},  {1, N_("sRGB (Natural+)")}, {2, N_("Monochrome")},
+    {3, N_("Adobe RGB (ICC)")}, {4, N_("Adobe RGB")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings rotation values to readable labels
 constexpr TagDetails minoltaRotation5D[] = {
-    {72, N_("Horizontal (normal)")}, {76, N_("Rotate 90 CW")}, {82, N_("Rotate 270 CW")}};
+    {72, N_("Horizontal (normal)")},
+    {76, N_("Rotate 90 CW")},
+    {82, N_("Rotate 270 CW")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings focus position values to readable labels
 constexpr TagDetails minoltaFocusPosition5D[] = {
     {0, N_("Wide")},       {1, N_("Central")}, {2, N_("Up")},        {3, N_("Up right")}, {4, N_("Right")},
-    {5, N_("Down right")}, {6, N_("Down")},    {7, N_("Down left")}, {8, N_("Left")},     {9, N_("Up left")}};
+    {5, N_("Down right")}, {6, N_("Down")},    {7, N_("Down left")}, {8, N_("Left")},     {9, N_("Up left")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings focus area values to readable labels
-constexpr TagDetails minoltaFocusArea5D[] = {{0, N_("Wide")}, {1, N_("Selection")}, {2, N_("Spot")}};
+constexpr TagDetails minoltaFocusArea5D[] = {
+    {0, N_("Wide")},
+    {1, N_("Selection")},
+    {2, N_("Spot")},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings focus mode values to readable labels
-constexpr TagDetails minoltaAFMode5D[] = {{0, "AF-A"}, {1, "AF-S"}, {2, "AF-D"}, {3, "DMF"}};
+constexpr TagDetails minoltaAFMode5D[] = {
+    {0, "AF-A"},
+    {1, "AF-S"},
+    {2, "AF-D"},
+    {3, "DMF"},
+};
 
 //! Lookup table to translate Minolta Dynax 5D camera settings picture finish values to readable labels
 constexpr TagDetails minoltaPictureFinish5D[] = {
-    {0, N_("Natural")},       {1, N_("Natural+")},       {2, N_("Portrait")},       {3, N_("Wind Scene")},
-    {4, N_("Evening Scene")}, {5, N_("Night Scene")},    {6, N_("Night Portrait")}, {7, N_("Monochrome")},
-    {8, N_("Adobe RGB")},     {9, N_("Adobe RGB (ICC)")}};
+    {0, N_("Natural")},       {1, N_("Natural+")},        {2, N_("Portrait")},       {3, N_("Wind Scene")},
+    {4, N_("Evening Scene")}, {5, N_("Night Scene")},     {6, N_("Night Portrait")}, {7, N_("Monochrome")},
+    {8, N_("Adobe RGB")},     {9, N_("Adobe RGB (ICC)")},
+};
 
 //! Method to convert Minolta Dynax 5D exposure manual bias values.
 std::ostream& MinoltaMakerNote::printMinoltaExposureManualBias5D(std::ostream& os, const Value& value,
                                                                  const ExifData*) {
   // From Xavier Raynaud: the value is converted from 0:256 to -5.33:5.33
-
-  std::ios::fmtflags f(os.flags());
-  std::ostringstream oss;
-  oss.copyfmt(os);
-  os << std::fixed << std::setprecision(2) << (static_cast<float>(value.toInt64() - 128) / 24);
-  os.copyfmt(oss);
-  os.flags(f);
-  return os;
+  return os << stringFormat("{:.2f}", static_cast<float>(value.toInt64() - 128) / 24);
 }
 
 //! Method to convert Minolta Dynax 5D exposure compensation values.
 std::ostream& MinoltaMakerNote::printMinoltaExposureCompensation5D(std::ostream& os, const Value& value,
                                                                    const ExifData*) {
-  std::ios::fmtflags f(os.flags());
-  std::ostringstream oss;
-  oss.copyfmt(os);
-  os << std::fixed << std::setprecision(2) << (static_cast<float>(value.toInt64() - 300) / 100);
-  os.copyfmt(oss);
-  os.flags(f);
-  return os;
+  return os << stringFormat("{:.2f}", static_cast<float>(value.toInt64() - 300) / 100);
 }
 
 // Minolta Dynax 5D Camera Settings Tag Info
@@ -698,152 +785,252 @@ const TagInfo* MinoltaMakerNote::tagListCs5D() {
 // -- Sony A100 camera settings ---------------------------------------------------------------
 
 //! Lookup table to translate Sony A100 camera settings drive mode 2 values to readable labels
-constexpr TagDetails sonyDriveMode2A100[] = {{0, N_("Self-timer 10 sec")},
-                                             {1, N_("Continuous")},
-                                             {4, N_("Self-timer 2 sec")},
-                                             {5, N_("Single Frame")},
-                                             {8, N_("White Balance Bracketing Low")},
-                                             {9, N_("White Balance Bracketing High")},
-                                             {770, N_("Single-frame Bracketing Low")},
-                                             {771, N_("Continuous Bracketing Low")},
-                                             {1794, N_("Single-frame Bracketing High")},
-                                             {1795, N_("Continuous Bracketing High")}};
+constexpr TagDetails sonyDriveMode2A100[] = {
+    {0, N_("Self-timer 10 sec")},
+    {1, N_("Continuous")},
+    {4, N_("Self-timer 2 sec")},
+    {5, N_("Single Frame")},
+    {8, N_("White Balance Bracketing Low")},
+    {9, N_("White Balance Bracketing High")},
+    {770, N_("Single-frame Bracketing Low")},
+    {771, N_("Continuous Bracketing Low")},
+    {1794, N_("Single-frame Bracketing High")},
+    {1795, N_("Continuous Bracketing High")},
+};
 
 //! Lookup table to translate Sony A100 camera settings focus mode values to readable labels
-constexpr TagDetails sonyFocusModeA100[] = {{0, "AF-S"}, {1, "AF-C"}, {4, "AF-A"}, {5, "Manual"}, {6, "DMF"}};
+constexpr TagDetails sonyFocusModeA100[] = {
+    {0, "AF-S"}, {1, "AF-C"}, {4, "AF-A"}, {5, "Manual"}, {6, "DMF"},
+};
 
 //! Lookup table to translate Sony A100 camera settings flash mode values to readable labels
 constexpr TagDetails sonyFlashModeA100[] = {
-    {0, N_("Auto")}, {2, N_("Rear flash sync")}, {3, N_("Wireless")}, {4, N_("Fill flash")}};
+    {0, N_("Auto")},
+    {2, N_("Rear flash sync")},
+    {3, N_("Wireless")},
+    {4, N_("Fill flash")},
+};
 
 //! Lookup table to translate Sony A100 camera settings metering mode values to readable labels
 constexpr TagDetails sonyMeteringModeA100[] = {
-    {0, N_("Multi-segment")}, {1, N_("Center weighted average")}, {2, N_("Spot")}};
+    {0, N_("Multi-segment")},
+    {1, N_("Center weighted average")},
+    {2, N_("Spot")},
+};
 
 //! Lookup table to translate Sony A100 camera settings zone matching mode values to readable labels
-constexpr TagDetails sonyZoneMatchingModeA100[] = {{0, N_("Off")}, {1, N_("Standard")}, {2, N_("Advanced")}};
+constexpr TagDetails sonyZoneMatchingModeA100[] = {
+    {0, N_("Off")},
+    {1, N_("Standard")},
+    {2, N_("Advanced")},
+};
 
 //! Lookup table to translate Sony A100 camera settings color space values to readable labels
 
-constexpr TagDetails sonyColorSpaceA100[] = {{0, N_("sRGB")}, {5, N_("Adobe RGB")}};
+constexpr TagDetails sonyColorSpaceA100[] = {
+    {0, N_("sRGB")},
+    {5, N_("Adobe RGB")},
+};
 
 //! Lookup table to translate Sony A100 camera settings drive mode values to readable labels
-constexpr TagDetails sonyDriveModeA100[] = {{0, N_("Single Frame")},
-                                            {1, N_("Continuous")},
-                                            {2, N_("Self-timer")},
-                                            {3, N_("Continuous Bracketing")},
-                                            {4, N_("Single-Frame Bracketing")},
-                                            {5, N_("White Balance Bracketing")}};
+constexpr TagDetails sonyDriveModeA100[] = {
+    {0, N_("Single Frame")},
+    {1, N_("Continuous")},
+    {2, N_("Self-timer")},
+    {3, N_("Continuous Bracketing")},
+    {4, N_("Single-Frame Bracketing")},
+    {5, N_("White Balance Bracketing")},
+};
 
 //! Lookup table to translate Sony A100 camera settings self timer time values to readable labels
-constexpr TagDetails sonySelfTimerTimeA100[] = {{0, "10s"}, {4, "2s"}};
+constexpr TagDetails sonySelfTimerTimeA100[] = {
+    {0, "10s"},
+    {4, "2s"},
+};
 
 //! Lookup table to translate Sony A100 camera settings continuous bracketing values to readable labels
-constexpr TagDetails sonyContinuousBracketingA100[] = {{0x303, N_("Low")}, {0x703, N_("High")}};
+constexpr TagDetails sonyContinuousBracketingA100[] = {
+    {0x303, N_("Low")},
+    {0x703, N_("High")},
+};
 
 //! Lookup table to translate Sony A100 camera settings single frame bracketing values to readable labels
-constexpr TagDetails sonySingleFrameBracketingA100[] = {{0x302, N_("Low")}, {0x702, N_("High")}};
+constexpr TagDetails sonySingleFrameBracketingA100[] = {
+    {0x302, N_("Low")},
+    {0x702, N_("High")},
+};
 
 //! Lookup table to translate Sony A100 camera settings white balance bracketing values to readable labels
-constexpr TagDetails sonyWhiteBalanceBracketingA100[] = {{0x8, N_("Low")}, {0x9, N_("High")}};
+constexpr TagDetails sonyWhiteBalanceBracketingA100[] = {
+    {0x8, N_("Low")},
+    {0x9, N_("High")},
+};
 
 //! Lookup table to translate Sony A100 camera settings white balance setting values to readable labels
-constexpr TagDetails sonyWhiteBalanceSettingA100[] = {{0x0000, N_("Auto")},
-                                                      {0x0001, N_("Preset")},
-                                                      {0x0002, N_("Custom")},
-                                                      {0x0003, N_("Color Temperature/Color Filter")},
-                                                      {0x8001, N_("Preset")},
-                                                      {0x8002, N_("Custom")},
-                                                      {0x8003, N_("Color Temperature/Color Filter")}};
+constexpr TagDetails sonyWhiteBalanceSettingA100[] = {
+    {0x0000, N_("Auto")},
+    {0x0001, N_("Preset")},
+    {0x0002, N_("Custom")},
+    {0x0003, N_("Color Temperature/Color Filter")},
+    {0x8001, N_("Preset")},
+    {0x8002, N_("Custom")},
+    {0x8003, N_("Color Temperature/Color Filter")},
+};
 
 //! Lookup table to translate Sony A100 camera settings preset white balance values to readable labels
-constexpr TagDetails sonyPresetWhiteBalanceA100[] = {{1, N_("Daylight")}, {2, N_("Cloudy")},      {3, N_("Shade")},
-                                                     {4, N_("Tungsten")}, {5, N_("Fluorescent")}, {6, N_("Flash")}};
+constexpr TagDetails sonyPresetWhiteBalanceA100[] = {
+    {1, N_("Daylight")}, {2, N_("Cloudy")},      {3, N_("Shade")},
+    {4, N_("Tungsten")}, {5, N_("Fluorescent")}, {6, N_("Flash")},
+};
 
 //! Lookup table to translate Sony A100 camera settings color temperature setting values to readable labels
-constexpr TagDetails sonyColorTemperatureSettingA100[] = {{0, N_("Temperature")}, {2, N_("Color Filter")}};
+constexpr TagDetails sonyColorTemperatureSettingA100[] = {
+    {0, N_("Temperature")},
+    {2, N_("Color Filter")},
+};
 
 //! Lookup table to translate Sony A100 camera settings custom WB setting values to readable labels
-constexpr TagDetails sonyCustomWBSettingA100[] = {{0, N_("Setup")}, {2, N_("Recall")}};
+constexpr TagDetails sonyCustomWBSettingA100[] = {
+    {0, N_("Setup")},
+    {2, N_("Recall")},
+};
 
 //! Lookup table to translate Sony A100 camera settings custom WB error values to readable labels
-constexpr TagDetails sonyCustomWBErrorA100[] = {{0, N_("Ok")}, {2, N_("Error")}};
+constexpr TagDetails sonyCustomWBErrorA100[] = {
+    {0, N_("Ok")},
+    {2, N_("Error")},
+};
 
 //! Lookup table to translate Sony A100 camera settings image size values to readable labels
-constexpr TagDetails sonyImageSizeA100[] = {{0, N_("Standard")}, {1, N_("Medium")}, {2, N_("Small")}};
+constexpr TagDetails sonyImageSizeA100[] = {
+    {0, N_("Standard")},
+    {1, N_("Medium")},
+    {2, N_("Small")},
+};
 
 //! Lookup table to translate Sony A100 camera settings instant playback setup values to readable labels
 constexpr TagDetails sonyInstantPlaybackSetupA100[] = {
-    {0, N_("Image and Information")}, {1, N_("Image Only")}, {3, N_("Image and Histogram")}};
+    {0, N_("Image and Information")},
+    {1, N_("Image Only")},
+    {3, N_("Image and Histogram")},
+};
 
 //! Lookup table to translate Sony A100 camera settings flash default setup values to readable labels
-constexpr TagDetails sonyFlashDefaultA100[] = {{0, N_("Auto")}, {1, N_("Fill Flash")}};
+constexpr TagDetails sonyFlashDefaultA100[] = {
+    {0, N_("Auto")},
+    {1, N_("Fill Flash")},
+};
 
 //! Lookup table to translate Sony A100 camera settings auto bracket order values to readable labels
-constexpr TagDetails sonyAutoBracketOrderA100[] = {{0, "0-+"}, {1, "-0+"}};
+constexpr TagDetails sonyAutoBracketOrderA100[] = {
+    {0, "0-+"},
+    {1, "-0+"},
+};
 
 //! Lookup table to translate Sony A100 camera settings focus hold button values to readable labels
-constexpr TagDetails sonyFocusHoldButtonA100[] = {{0, N_("Focus Hold")}, {1, N_("DOF Preview")}};
+constexpr TagDetails sonyFocusHoldButtonA100[] = {
+    {0, N_("Focus Hold")},
+    {1, N_("DOF Preview")},
+};
 
 //! Lookup table to translate Sony A100 camera settings AEL button values to readable labels
 constexpr TagDetails sonyAELButtonA100[] = {
-    {0, N_("Hold")}, {1, N_("Toggle")}, {2, N_("Spot Hold")}, {3, N_("Spot Toggle")}};
+    {0, N_("Hold")},
+    {1, N_("Toggle")},
+    {2, N_("Spot Hold")},
+    {3, N_("Spot Toggle")},
+};
 
 //! Lookup table to translate Sony A100 camera settings control dial set values to readable labels
-constexpr TagDetails sonyControlDialSetA100[] = {{0, N_("Shutter Speed")}, {1, N_("Aperture")}};
+constexpr TagDetails sonyControlDialSetA100[] = {
+    {0, N_("Shutter Speed")},
+    {1, N_("Aperture")},
+};
 
 //! Lookup table to translate Sony A100 camera settings exposure compensation mode values to readable labels
-constexpr TagDetails sonyExposureCompensationModeA100[] = {{0, N_("Ambient and Flash")}, {1, N_("Ambient Only")}};
+constexpr TagDetails sonyExposureCompensationModeA100[] = {
+    {0, N_("Ambient and Flash")},
+    {1, N_("Ambient Only")},
+};
 
 //! Lookup table to translate Sony A100 camera settings sony AF area illumination values to readable labels
-constexpr TagDetails sonyAFAreaIlluminationA100[] = {{0, N_("0.3 seconds")}, {1, N_("0.6 seconds")}, {2, N_("Off")}};
+constexpr TagDetails sonyAFAreaIlluminationA100[] = {
+    {0, N_("0.3 seconds")},
+    {1, N_("0.6 seconds")},
+    {2, N_("Off")},
+};
 
 //! Lookup table to translate Sony A100 camera settings monitor display off values to readable labels
-constexpr TagDetails sonyMonitorDisplayOffA100[] = {{0, N_("Automatic")}, {1, N_("Manual")}};
+constexpr TagDetails sonyMonitorDisplayOffA100[] = {
+    {0, N_("Automatic")},
+    {1, N_("Manual")},
+};
 
 //! Lookup table to translate Sony A100 camera settings record display values to readable labels
-constexpr TagDetails sonyRecordDisplayA100[] = {{0, N_("Auto-rotate")}, {1, N_("Horizontal")}};
+constexpr TagDetails sonyRecordDisplayA100[] = {
+    {0, N_("Auto-rotate")},
+    {1, N_("Horizontal")},
+};
 
 //! Lookup table to translate Sony A100 camera settings play display values to readable labels
-constexpr TagDetails sonyPlayDisplayA100[] = {{0, N_("Auto-rotate")}, {1, N_("Manual Rotate")}};
+constexpr TagDetails sonyPlayDisplayA100[] = {
+    {0, N_("Auto-rotate")},
+    {1, N_("Manual Rotate")},
+};
 
 //! Lookup table to translate Sony A100 camera settings metering off scale indicator values to readable labels
 constexpr TagDetails sonyMeteringOffScaleIndicatorA100[] = {
-    {0, N_("Within Range")}, {1, N_("Under/Over Range")}, {255, N_("Out of Range")}};
+    {0, N_("Within Range")},
+    {1, N_("Under/Over Range")},
+    {255, N_("Out of Range")},
+};
 
 //! Lookup table to translate Sony A100 camera settings exposure indicator values to readable labels
-constexpr TagDetails sonyExposureIndicatorA100[] = {{0, N_("Not Indicated")},
-                                                    {1, N_("Under Scale")},
-                                                    {119, N_("Bottom of Scale")},
-                                                    {120, "-2.0"},
-                                                    {121, "-1.7"},
-                                                    {122, "-1.5"},
-                                                    {123, "-1.3"},
-                                                    {124, "-1.0"},
-                                                    {125, "-0.7"},
-                                                    {126, "-0.5"},
-                                                    {127, "-0.3"},
-                                                    {128, "-0.0"},
-                                                    {129, "+0.3"},
-                                                    {130, "+0.5"},
-                                                    {131, "+0.7"},
-                                                    {132, "+1.0"},
-                                                    {133, "+1.3"},
-                                                    {134, "+1.5"},
-                                                    {135, "+1.7"},
-                                                    {136, "+2.0"},
-                                                    {253, N_("Top of Scale")},
-                                                    {254, N_("Over Scale")}};
+constexpr TagDetails sonyExposureIndicatorA100[] = {
+    {0, N_("Not Indicated")},
+    {1, N_("Under Scale")},
+    {119, N_("Bottom of Scale")},
+    {120, "-2.0"},
+    {121, "-1.7"},
+    {122, "-1.5"},
+    {123, "-1.3"},
+    {124, "-1.0"},
+    {125, "-0.7"},
+    {126, "-0.5"},
+    {127, "-0.3"},
+    {128, "-0.0"},
+    {129, "+0.3"},
+    {130, "+0.5"},
+    {131, "+0.7"},
+    {132, "+1.0"},
+    {133, "+1.3"},
+    {134, "+1.5"},
+    {135, "+1.7"},
+    {136, "+2.0"},
+    {253, N_("Top of Scale")},
+    {254, N_("Over Scale")},
+};
 
 //! Lookup table to translate Sony A100 camera settings focus mode switch values to readable labels
-constexpr TagDetails sonyFocusModeSwitchA100[] = {{0, N_("AM")}, {1, N_("MF")}};
+constexpr TagDetails sonyFocusModeSwitchA100[] = {
+    {0, N_("AM")},
+    {1, N_("MF")},
+};
 
 //! Lookup table to translate Sony A100 camera settings flash type switch values to readable labels
-constexpr TagDetails sonyFlashTypeA100[] = {{0, N_("Off")}, {1, N_("Built-in")}, {2, N_("External")}};
+constexpr TagDetails sonyFlashTypeA100[] = {
+    {0, N_("Off")},
+    {1, N_("Built-in")},
+    {2, N_("External")},
+};
 
 //! Lookup table to translate Sony A100 camera settings battery level switch values to readable labels
 constexpr TagDetails sonyBatteryLevelA100[] = {
-    {3, N_("Very Low")}, {4, N_("Low")}, {5, N_("Half Full")}, {6, N_("Sufficient Power Remaining")}};
+    {3, N_("Very Low")},
+    {4, N_("Low")},
+    {5, N_("Half Full")},
+    {6, N_("Sufficient Power Remaining")},
+};
 
 // Sony A100 Camera Settings Tag Info
 constexpr TagInfo MinoltaMakerNote::tagInfoCsA100_[] = {
@@ -924,7 +1111,7 @@ constexpr TagInfo MinoltaMakerNote::tagInfoCsA100_[] = {
      SectionId::makerTags, unsignedShort, 1, printValue},
     {0x0035, "CustomWBGreenLevel", N_("Custom WB Green Level"), N_("Custom WB green level"), IfdId::sony1MltCsA100Id,
      SectionId::makerTags, unsignedShort, 1, printValue},
-    {0x0036, "CustomWBBlueLevel", N_("Custom WB Blue Level"), N_("CustomWB blue level"), IfdId::sony1MltCsA100Id,
+    {0x0036, "CustomWBBlueLevel", N_("Custom WB Blue Level"), N_("Custom WB blue level"), IfdId::sony1MltCsA100Id,
      SectionId::makerTags, unsignedShort, 1, printValue},
     {0x0037, "CustomWBError", N_("Custom WB Error"), N_("Custom WB Error"), IfdId::sony1MltCsA100Id,
      SectionId::makerTags, unsignedShort, 1, EXV_PRINT_TAG(sonyCustomWBErrorA100)},
@@ -1031,7 +1218,7 @@ const TagInfo* MinoltaMakerNote::tagListCsA100() {
    25720/25721, 25790/25791, 25960/25961, 25980/25981, 26150/26151
    - No need to i18n these string.
 */
-extern TagDetails const minoltaSonyLensID[] = {
+static constexpr TagDetails minoltaSonyLensID[] = {
     {0, "Minolta AF 28-85mm F3.5-4.5 New"},
     {1, "Minolta AF 80-200mm F2.8 HS-APO G"},
     {2, "Minolta AF 28-70mm F2.8 G"},
@@ -1390,7 +1577,8 @@ extern TagDetails const minoltaSonyLensID[] = {
         "Manual lens | "             // 1
         "Sony E 50mm F1.8 OSS | "    // 2
         "E PZ 16-50mm F3.5-5.6 OSS"  // 3
-    }};
+    },
+};
 
 // ----------------------------------------------------------------------
 // #1145 begin - respect lenses with shared LensID
@@ -1446,35 +1634,36 @@ static long getKeyLong(const std::string& key, const ExifData* metadata, int whi
 /*! http://stackoverflow.com/questions/1798112/removing-leading-and-trailing-spaces-from-a-string
     trim from left
 */
-inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v") {
+static std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v") {
   s.erase(0, s.find_first_not_of(t));
   return s;
 }
 
 //! trim from right
-inline std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v") {
+static std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v") {
   s.erase(s.find_last_not_of(t) + 1);
   return s;
 }
 
 //! trim from left & right
-inline std::string& trim(std::string& s, const char* t = " \t\n\r\f\v") {
+static std::string& trim(std::string& s, const char* t = " \t\n\r\f\v") {
   return ltrim(rtrim(s, t), t);
 }
 
 // https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
 static std::vector<std::string> split(const std::string& str, const std::string& delim) {
   std::vector<std::string> tokens;
-  size_t prev = 0, pos = 0;
-  do {
+  size_t prev = 0;
+  size_t pos = 0;
+  while (pos < str.length() && prev < str.length()) {
     pos = str.find(delim, prev);
     if (pos == std::string::npos)
       pos = str.length();
     std::string token = str.substr(prev, pos - prev);
     if (!token.empty())
-      tokens.push_back(token);
+      tokens.push_back(std::move(token));
     prev = pos + delim.length();
-  } while (pos < str.length() && prev < str.length());
+  }
   return tokens;
 }
 
@@ -1483,7 +1672,7 @@ static bool inRange(long value, long min, long max) {
 }
 
 static std::ostream& resolvedLens(std::ostream& os, long lensID, long index) {
-  const TagDetails* td = find(minoltaSonyLensID, lensID);
+  auto td = Exiv2::find(minoltaSonyLensID, lensID);
   std::vector<std::string> tokens = split(td[0].label_, "|");
   return os << exvGettext(trim(tokens.at(index - 1)).c_str());
 }
@@ -1535,9 +1724,9 @@ static std::ostream& resolveLens0x34(std::ostream& os, const Value& value, const
     std::string model = getKeyString("Exif.Image.Model", metadata);
     std::string maxAperture = getKeyString("Exif.Photo.MaxApertureValue", metadata);
     long focalLength = getKeyLong("Exif.Photo.FocalLength", metadata);
-    std::string F2_8 = "760/256";
 
-    if (model == "SLT-A77V" && maxAperture == F2_8) {
+    // F2_8
+    if (model == "SLT-A77V" && maxAperture == "760/256") {
       index = 4;
     }
     if (model == "SLT-A77V" && inRange(focalLength, 70, 300)) {
@@ -1560,9 +1749,9 @@ static std::ostream& resolveLens0x80(std::ostream& os, const Value& value, const
     std::string model = getKeyString("Exif.Image.Model", metadata);
     std::string maxAperture = getKeyString("Exif.Photo.MaxApertureValue", metadata);
     long focalLength = getKeyLong("Exif.Photo.FocalLength", metadata);
-    std::string F4 = "1024/256";
 
-    if (model == "SLT-A77V" && maxAperture == F4 && inRange(focalLength, 18, 200)) {
+    // F4
+    if (model == "SLT-A77V" && maxAperture == "1024/256" && inRange(focalLength, 18, 200)) {
       index = 2;
     }
 
@@ -1582,9 +1771,9 @@ static std::ostream& resolveLens0xff(std::ostream& os, const Value& value, const
     std::string model = getKeyString("Exif.Image.Model", metadata);
     long focalLength = getKeyLong("Exif.Photo.FocalLength", metadata);
     std::string maxAperture = getKeyString("Exif.Photo.MaxApertureValue", metadata);
-    std::string F2_8 = "760/256";
 
-    if (model == "SLT-A77V" && maxAperture == F2_8 && inRange(focalLength, 17, 50)) {
+    // F2_8
+    if (model == "SLT-A77V" && maxAperture == "760/256" && inRange(focalLength, 17, 50)) {
       index = 1;
     }
 
@@ -1606,7 +1795,7 @@ static std::ostream& resolveLens0xffff(std::ostream& os, const Value& value, con
     std::string maxAperture = getKeyString("Exif.Photo.MaxApertureValue", metadata);
 
     std::string F1_8 = "434/256";
-    static constexpr auto maxApertures = std::array{
+    static constexpr const char* maxApertures[] = {
         "926/256",   // F3.5
         "1024/256",  // F4
         "1110/256",  // F4.5
@@ -1626,7 +1815,7 @@ static std::ostream& resolveLens0xffff(std::ostream& os, const Value& value, con
       } catch (...) {
       }
 
-    if (model == "ILCE-6000" && std::find(maxApertures.begin(), maxApertures.end(), maxAperture) != maxApertures.end())
+    if (model == "ILCE-6000" && Exiv2::find(maxApertures, maxAperture))
       try {
         long focalLength = getKeyLong("Exif.Photo.FocalLength", metadata);
         if (focalLength > 0) {
@@ -1648,16 +1837,23 @@ static std::ostream& resolveLens0xffff(std::ostream& os, const Value& value, con
   return EXV_PRINT_TAG(minoltaSonyLensID)(os, value, metadata);
 }
 
-//! List of lens ids which require special treatment from printMinoltaSonyLensID
-constexpr auto lensIdFct = std::array{
-    std::pair(0x001cu, &resolveLens0x1c), std::pair(0x0029u, &resolveLens0x29), std::pair(0x0034u, &resolveLens0x34),
-    std::pair(0x0080u, &resolveLens0x80), std::pair(0x00ffu, &resolveLens0xff), std::pair(0xffffu, &resolveLens0xffff),
-    //     std::pair(0x00ff, resolveLensTypeUsingExiftool), // was used for debugging
-};
-// #1145 end - respect lenses with shared LensID
-// ----------------------------------------------------------------------
-
 std::ostream& printMinoltaSonyLensID(std::ostream& os, const Value& value, const ExifData* metadata) {
+  //! List of lens ids which require special treatment from printMinoltaSonyLensID
+  static constexpr struct LensIdFct {
+    uint32_t idx;
+    PrintFct fct;
+
+    bool operator==(uint32_t i) const {
+      return i == idx;
+    }
+  } lensIdFct[] = {
+      {0x001cu, &resolveLens0x1c}, {0x0029u, &resolveLens0x29}, {0x0034u, &resolveLens0x34},
+      {0x0080u, &resolveLens0x80}, {0x00ffu, &resolveLens0xff}, {0xffffu, &resolveLens0xffff},
+      //{0x00ffu, &resolveLensTypeUsingExiftool}, // was used for debugging
+  };
+  // #1145 end - respect lenses with shared LensID
+  // ----------------------------------------------------------------------
+
   // #1034
   const std::string undefined("undefined");
   const std::string minolta("minolta");
@@ -1671,9 +1867,9 @@ std::ostream& printMinoltaSonyLensID(std::ostream& os, const Value& value, const
 
   // #1145 - respect lenses with shared LensID
   uint32_t index = value.toUint32();
-  for (auto&& [idx, fct] : lensIdFct)
-    if (metadata && idx == index && fct)
-      return fct(os, value, metadata);
+  if (metadata)
+    if (auto f = Exiv2::find(lensIdFct, index))
+      return f->fct(os, value, metadata);
   return EXV_PRINT_TAG(minoltaSonyLensID)(os, value, metadata);
 }
 
@@ -1681,10 +1877,11 @@ std::ostream& printMinoltaSonyLensID(std::ostream& os, const Value& value, const
 
 //! Lookup table to translate Minolta A100 and all other Sony Alpha camera color mode values to readable labels
 constexpr TagDetails minoltaSonyColorMode[] = {
-    {0, N_("Standard")}, {1, N_("Vivid Color")},         {2, N_("Portrait")},       {3, N_("Landscape")},
-    {4, N_("Sunset")},   {5, N_("Night View/Portrait")}, {6, N_("Black & White")},  {7, N_("AdobeRGB")},
-    {12, N_("Neutral")}, {100, N_("Neutral")},           {101, N_("Clear")},        {102, N_("Deep")},
-    {103, N_("Light")},  {104, N_("Night View")},        {105, N_("Autumn Leaves")}};
+    {0, N_("Standard")}, {1, N_("Vivid Color")},         {2, N_("Portrait")},        {3, N_("Landscape")},
+    {4, N_("Sunset")},   {5, N_("Night View/Portrait")}, {6, N_("Black & White")},   {7, N_("AdobeRGB")},
+    {12, N_("Neutral")}, {100, N_("Neutral")},           {101, N_("Clear")},         {102, N_("Deep")},
+    {103, N_("Light")},  {104, N_("Night View")},        {105, N_("Autumn Leaves")},
+};
 
 std::ostream& printMinoltaSonyColorMode(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyColorMode)(os, value, metadata);
@@ -1693,7 +1890,10 @@ std::ostream& printMinoltaSonyColorMode(std::ostream& os, const Value& value, co
 // ----------------------------------------------------------------------------------------------------
 
 //! Lookup table to translate Minolta/Sony bool function values to readable labels
-constexpr TagDetails minoltaSonyBoolFunction[] = {{0, N_("Off")}, {1, N_("On")}};
+constexpr TagDetails minoltaSonyBoolFunction[] = {
+    {0, N_("Off")},
+    {1, N_("On")},
+};
 
 std::ostream& printMinoltaSonyBoolValue(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyBoolFunction)(os, value, metadata);
@@ -1702,7 +1902,10 @@ std::ostream& printMinoltaSonyBoolValue(std::ostream& os, const Value& value, co
 // ----------------------------------------------------------------------------------------------------
 
 //! Lookup table to translate Minolta/Sony bool inverse function values to readable labels
-constexpr TagDetails minoltaSonyBoolInverseFunction[] = {{0, N_("On")}, {1, N_("Off")}};
+constexpr TagDetails minoltaSonyBoolInverseFunction[] = {
+    {0, N_("On")},
+    {1, N_("Off")},
+};
 
 std::ostream& printMinoltaSonyBoolInverseValue(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyBoolInverseFunction)(os, value, metadata);
@@ -1711,7 +1914,11 @@ std::ostream& printMinoltaSonyBoolInverseValue(std::ostream& os, const Value& va
 // ----------------------------------------------------------------------------------------------------
 
 //! Lookup table to translate Sony camera settings focus mode values to readable labels
-constexpr TagDetails minoltaSonyAFAreaMode[] = {{0, N_("Wide")}, {1, N_("Local")}, {2, N_("Spot")}};
+constexpr TagDetails minoltaSonyAFAreaMode[] = {
+    {0, N_("Wide")},
+    {1, N_("Local")},
+    {2, N_("Spot")},
+};
 
 std::ostream& printMinoltaSonyAFAreaMode(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyAFAreaMode)(os, value, metadata);
@@ -1723,7 +1930,8 @@ std::ostream& printMinoltaSonyAFAreaMode(std::ostream& os, const Value& value, c
 constexpr TagDetails minoltaSonyLocalAFAreaPoint[] = {
     {1, N_("Center")},       {2, N_("Top")},        {3, N_("Top-Right")},   {4, N_("Right")},
     {5, N_("Bottom-Right")}, {6, N_("Bottom")},     {7, N_("Bottom-Left")}, {8, N_("Left")},
-    {9, N_("Top-Left")},     {10, N_("Far-Right")}, {11, N_("Far-Left")}};
+    {9, N_("Top-Left")},     {10, N_("Far-Right")}, {11, N_("Far-Left")},
+};
 
 std::ostream& printMinoltaSonyLocalAFAreaPoint(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyLocalAFAreaPoint)(os, value, metadata);
@@ -1733,7 +1941,8 @@ std::ostream& printMinoltaSonyLocalAFAreaPoint(std::ostream& os, const Value& va
 
 //! Lookup table to translate Sony camera settings dynamic range optimizer mode values to readable labels
 constexpr TagDetails minoltaSonyDynamicRangeOptimizerMode[] = {
-    {0, N_("Off")}, {1, N_("Standard")}, {2, N_("Advanced Auto")}, {3, N_("Advanced Level")}, {4097, N_("Auto")}};
+    {0, N_("Off")}, {1, N_("Standard")}, {2, N_("Advanced Auto")}, {3, N_("Advanced Level")}, {4097, N_("Auto")},
+};
 
 std::ostream& printMinoltaSonyDynamicRangeOptimizerMode(std::ostream& os, const Value& value,
                                                         const ExifData* metadata) {
@@ -1743,7 +1952,10 @@ std::ostream& printMinoltaSonyDynamicRangeOptimizerMode(std::ostream& os, const 
 // ----------------------------------------------------------------------------------------------------
 
 //! Lookup table to translate Sony camera settings priority setup shutter release values to readable labels
-constexpr TagDetails minoltaSonyPrioritySetupShutterRelease[] = {{0, N_("AF")}, {1, N_("Release")}};
+constexpr TagDetails minoltaSonyPrioritySetupShutterRelease[] = {
+    {0, N_("AF")},
+    {1, N_("Release")},
+};
 
 std::ostream& printMinoltaSonyPrioritySetupShutterRelease(std::ostream& os, const Value& value,
                                                           const ExifData* metadata) {
@@ -1753,9 +1965,10 @@ std::ostream& printMinoltaSonyPrioritySetupShutterRelease(std::ostream& os, cons
 // ----------------------------------------------------------------------------------------------------
 
 //! Lookup table to translate Sony camera settings quality values to readable labels
-constexpr TagDetails minoltaSonyQualityCs[] = {{0, N_("RAW")},      {2, N_("CRAW")},      {16, N_("Extra Fine")},
-                                               {32, N_("Fine")},    {34, N_("RAW+JPEG")}, {35, N_("CRAW+JPEG")},
-                                               {48, N_("Standard")}};
+constexpr TagDetails minoltaSonyQualityCs[] = {
+    {0, N_("RAW")},       {2, N_("CRAW")},       {16, N_("Extra Fine")}, {32, N_("Fine")},
+    {34, N_("RAW+JPEG")}, {35, N_("CRAW+JPEG")}, {48, N_("Standard")},
+};
 
 std::ostream& printMinoltaSonyQualityCs(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyQualityCs)(os, value, metadata);
@@ -1765,7 +1978,10 @@ std::ostream& printMinoltaSonyQualityCs(std::ostream& os, const Value& value, co
 
 //! Lookup table to translate Sony camera settings rotation values to readable labels
 constexpr TagDetails minoltaSonyRotation[] = {
-    {0, N_("Horizontal (normal)")}, {1, N_("Rotate 90 CW")}, {2, N_("Rotate 270 CW")}};
+    {0, N_("Horizontal (normal)")},
+    {1, N_("Rotate 90 CW")},
+    {2, N_("Rotate 270 CW")},
+};
 
 std::ostream& printMinoltaSonyRotation(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyRotation)(os, value, metadata);
@@ -1809,15 +2025,17 @@ std::ostream& printMinoltaSonySceneMode(std::ostream& os, const Value& value, co
 // ----------------------------------------------------------------------------------------------------
 
 //! Lookup table to translate Sony/Minolta teleconverter model values to readable labels
-constexpr TagDetails minoltaSonyTeleconverterModel[] = {{0x00, N_("None")},
-                                                        {0x04, N_("Minolta/Sony AF 1.4x APO (D) (0x04)")},
-                                                        {0x05, N_("Minolta/Sony AF 2x APO (D) (0x05)")},
-                                                        {0x48, N_("Minolta/Sony AF 2x APO (D)")},
-                                                        {0x50, N_("Minolta AF 2x APO II")},
-                                                        {0x60, N_("Minolta AF 2x APO")},
-                                                        {0x88, N_("Minolta/Sony AF 1.4x APO (D)")},
-                                                        {0x90, N_("Minolta AF 1.4x APO II")},
-                                                        {0xa0, N_("Minolta AF 1.4x APO")}};
+constexpr TagDetails minoltaSonyTeleconverterModel[] = {
+    {0x00, N_("None")},
+    {0x04, N_("Minolta/Sony AF 1.4x APO (D) (0x04)")},
+    {0x05, N_("Minolta/Sony AF 2x APO (D) (0x05)")},
+    {0x48, N_("Minolta/Sony AF 2x APO (D)")},
+    {0x50, N_("Minolta AF 2x APO II")},
+    {0x60, N_("Minolta AF 2x APO")},
+    {0x88, N_("Minolta/Sony AF 1.4x APO (D)")},
+    {0x90, N_("Minolta AF 1.4x APO II")},
+    {0xa0, N_("Minolta AF 1.4x APO")},
+};
 
 std::ostream& printMinoltaSonyTeleconverterModel(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyTeleconverterModel)(os, value, metadata);
@@ -1826,7 +2044,11 @@ std::ostream& printMinoltaSonyTeleconverterModel(std::ostream& os, const Value& 
 // ----------------------------------------------------------------------------------------------------
 
 //! Lookup table to translate Sony/Minolta zone matching values to readable labels
-constexpr TagDetails minoltaSonyZoneMatching[] = {{0, N_("ISO Setting Used")}, {1, N_("High Key")}, {2, N_("Low Key")}};
+constexpr TagDetails minoltaSonyZoneMatching[] = {
+    {0, N_("ISO Setting Used")},
+    {1, N_("High Key")},
+    {2, N_("Low Key")},
+};
 
 std::ostream& printMinoltaSonyZoneMatching(std::ostream& os, const Value& value, const ExifData* metadata) {
   return EXV_PRINT_TAG(minoltaSonyZoneMatching)(os, value, metadata);

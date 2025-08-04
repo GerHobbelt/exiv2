@@ -17,11 +17,17 @@
 
 // *****************************************************************************
 // included header files
-#include "tags.hpp"
+#include <iosfwd>
+#include <string>
 
 // *****************************************************************************
 // namespace extensions
-namespace Exiv2::Internal {
+namespace Exiv2 {
+class ExifData;
+class Value;
+struct TagInfo;
+
+namespace Internal {
 // *****************************************************************************
 // class definitions
 
@@ -144,6 +150,8 @@ class Nikon3MakerNote {
   //@{
   //! Print ISO setting
   static std::ostream& print0x0002(std::ostream& os, const Value& value, const ExifData*);
+  //! Print AF2 Area Mode
+  static std::ostream& printAf2AreaMode(std::ostream& os, const Value& value, const ExifData* metadata);
   //! Print autofocus mode
   static std::ostream& print0x0007(std::ostream& os, const Value& value, const ExifData*);
   //! Print lens type
@@ -169,10 +177,10 @@ class Nikon3MakerNote {
   static std::ostream& printLensId2(std::ostream& os, const Value& value, const ExifData* metadata);
   static std::ostream& printLensId3(std::ostream& os, const Value& value, const ExifData* metadata);
   static std::ostream& printLensId4(std::ostream& os, const Value& value, const ExifData* metadata);
-  //! Print lensname for ZMount Lens in new LensData as used for e.g. Nikon Z 6/7
-  static std::ostream& printLensId4ZMount(std::ostream& os, const Value& value, const ExifData*);
   //! Print focus distance
   static std::ostream& printFocusDistance(std::ostream& os, const Value& value, const ExifData*);
+  //! Print focus distance for new LensData as used for e.g. Nikon Z 6/7
+  static std::ostream& printFocusDistanceLd4(std::ostream& os, const Value& value, const ExifData*);
   //! Print lens aperture value
   static std::ostream& printAperture(std::ostream& os, const Value& value, const ExifData*);
   //! Print lens aperture value for new LensData as used for e.g. Nikon Z 6/7
@@ -305,6 +313,7 @@ class Nikon3MakerNote {
 
 };  // class Nikon3MakerNote
 
-}  // namespace Exiv2::Internal
+}  // namespace Internal
+}  // namespace Exiv2
 
 #endif  // #ifndef NIKONMN_INT_HPP_

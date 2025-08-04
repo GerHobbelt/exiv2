@@ -21,10 +21,10 @@ namespace Exiv2 {
 
 //! Native preview information. This is meant to be used only by the PreviewManager.
 struct NativePreview {
-  size_t position_;       //!< Position
-  size_t size_;           //!< Size
-  size_t width_;          //!< Width
-  size_t height_;         //!< Height
+  size_t position_{};     //!< Position
+  size_t size_{};         //!< Size
+  size_t width_{};        //!< Width
+  size_t height_{};       //!< Height
   std::string filter_;    //!< Filter
   std::string mimeType_;  //!< MIME type
 };
@@ -199,7 +199,7 @@ class EXIV2API Image {
   /*!
     @brief Returns the status of the ICC profile in the image instance
    */
-  virtual bool iccProfileDefined() {
+  [[nodiscard]] virtual bool iccProfileDefined() const {
     return !iccProfile_.empty();
   }
 
@@ -409,7 +409,7 @@ class EXIV2API Image {
   /*!
     @brief Return a reference to the BasicIo instance being used for Io.
 
-    This refence is particularly useful to reading the results of
+    This reference is particularly useful to reading the results of
     operations on a MemIo instance. For example after metadata has
     been modified and the writeMetadata() method has been called,
     this method can be used to get access to the modified image.
@@ -430,9 +430,9 @@ class EXIV2API Image {
   [[nodiscard]] AccessMode checkMode(MetadataId metadataId) const;
   /*!
     @brief Check if image supports a particular type of metadata.
-       This method is deprecated. Use checkMode() instead.
+    @deprecated This method is deprecated. Use checkMode() instead.
    */
-  [[nodiscard]] bool supportsMetadata(MetadataId metadataId) const;
+  [[deprecated]] [[nodiscard]] bool supportsMetadata(MetadataId metadataId) const;
   //! Return the flag indicating the source when writing XMP metadata.
   [[nodiscard]] bool writeXmpFromPacket() const;
   //! Return list of native previews. This is meant to be used only by the PreviewManager.
@@ -522,7 +522,9 @@ class EXIV2API ImageFactory {
           read the remote file.
    */
   static BasicIo::UniquePtr createIo(const std::string& path, bool useCurl = true);
-
+#ifdef _WIN32
+  static BasicIo::UniquePtr createIo(const std::wstring& path);
+#endif
   /*!
     @brief Create an Image subclass of the appropriate type by reading
         the specified file. %Image type is derived from the file
@@ -537,7 +539,9 @@ class EXIV2API ImageFactory {
         unknown image type.
    */
   static Image::UniquePtr open(const std::string& path, bool useCurl = true);
-
+#ifdef _WIN32
+  static Image::UniquePtr open(const std::wstring& path);
+#endif
   /*!
     @brief Create an Image subclass of the appropriate type by reading
         the provided memory. %Image type is derived from the memory
@@ -657,15 +661,6 @@ class EXIV2API ImageFactory {
              false if the data does not match
   */
   static bool checkType(ImageType type, BasicIo& io, bool advance);
-
-  //! @name Creators
-  //@{
-  ~ImageFactory() = delete;
-  //! Prevent copy construction: not implemented.
-  ImageFactory(const ImageFactory&) = delete;
-  ImageFactory& operator=(const ImageFactory&) = delete;
-  //@}
-
 };  // class ImageFactory
 
 // *****************************************************************************

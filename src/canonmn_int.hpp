@@ -17,11 +17,17 @@
 
 // *****************************************************************************
 // included header files
-#include "tags.hpp"
+#include <cstdint>
+#include <iosfwd>
 
 // *****************************************************************************
 // namespace extensions
-namespace Exiv2::Internal {
+namespace Exiv2 {
+class ExifData;
+class Value;
+struct TagInfo;
+
+namespace Internal {
 // *****************************************************************************
 // class definitions
 
@@ -103,6 +109,8 @@ class CanonMakerNote {
   static std::ostream& printFocalLength(std::ostream& os, const Value& value, const ExifData*);
   //! Print the image number
   static std::ostream& print0x0008(std::ostream& os, const Value& value, const ExifData*);
+  //! Print 0x000a
+  static std::ostream& print0x000a(std::ostream& os, const Value& value, const ExifData*);
   //! Print the serial number of the camera
   static std::ostream& print0x000c(std::ostream& os, const Value& value, const ExifData*);
   //! Self timer
@@ -111,6 +119,8 @@ class CanonMakerNote {
   static std::ostream& printCsLensType(std::ostream& os, const Value& value, const ExifData* metadata);
   //! Camera lens information
   static std::ostream& printCsLens(std::ostream& os, const Value& value, const ExifData*);
+  //! CanonLe lens serial number
+  static std::ostream& printLe0x0000(std::ostream& os, const Value& value, const ExifData*);
   //! AutoISO speed used
   static std::ostream& printSi0x0001(std::ostream& os, const Value& value, const ExifData*);
   //! ISO speed used
@@ -199,6 +209,7 @@ class CanonMakerNote {
  */
 float canonEv(int64_t val);
 
-}  // namespace Exiv2::Internal
+}  // namespace Internal
+}  // namespace Exiv2
 
 #endif  // EXIV2_CANONMN_INT_HPP

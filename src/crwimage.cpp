@@ -13,7 +13,9 @@
 #include "futils.hpp"
 #include "tags.hpp"
 
+#ifdef EXIV2_DEBUG_MESSAGES
 #include <iostream>
+#endif
 
 // *****************************************************************************
 // class member definitions
@@ -106,8 +108,7 @@ void CrwParser::decode(CrwImage* pCrwImage, const byte* pData, size_t size) {
   header.decode(*pCrwImage);
 
   // a hack to get absolute offset of preview image inside CRW structure
-  auto preview = header.findComponent(0x2007, 0x0000);
-  if (preview) {
+  if (auto preview = header.findComponent(0x2007, 0x0000)) {
     (pCrwImage->exifData())["Exif.Image2.JPEGInterchangeFormat"] = static_cast<uint32_t>(preview->pData() - pData);
     (pCrwImage->exifData())["Exif.Image2.JPEGInterchangeFormatLength"] = static_cast<uint32_t>(preview->size());
   }
@@ -122,7 +123,7 @@ void CrwParser::encode(Blob& blob, const byte* pData, size_t size, const CrwImag
 
   // Encode Exif tags from image into the CRW parse tree and write the
   // structure to the binary image blob
-  Internal::CrwMap::encode(&header, *pCrwImage);
+  Internal::CrwMap::encode(header, *pCrwImage);
   header.write(blob);
 }
 

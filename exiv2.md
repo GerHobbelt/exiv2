@@ -75,6 +75,7 @@ BMP  | -          | -          | -          | -              | -           | -
 CR2  | Read/Write | Read/Write | Read/Write | -              | Read/Write  | Read/Write
 CR3  | Read       | Read       | Read       | -              | -           | Read
 CRW  | Read/Write | -          | -          | Read/Write     | -           | Read/Write
+DCP  | Read/Write | -          | -          | -              | -           | -
 DNG  | Read/Write | Read/Write | Read/Write | -              | Read/Write  | Read/Write
 EPS  | -          | -          | Read/Write |                | -           | -
 EXV  | Read/Write | Read/Write | Read/Write | Read/Write     | Read/Write  | Read/Write
@@ -454,11 +455,12 @@ environment variable). The *fmt* string follows the definitions in
 date and time. In addition, the following special character sequences are 
 also provided:
 
-| Variable       | Description                                     |
-|:------         |:----                                            |
-| :basename:     | Original filename without extension             |
-| :dirname:      | Name of the directory holding the original file |
-| :parentname:   | Name of parent directory                        |
+| Variable       | Description                                                                                                                   |
+|:------         |:----                                                                                                                          |
+| :basename:     | Original filename without extension                                                                                           |
+| :basesuffix:   | Suffix in original filename, starts with first dot and ends before extension, e.g. PANO, MP, NIGHT added by Google Camera app |
+| :dirname:      | Name of the directory holding the original file                                                                               |
+| :parentname:   | Name of parent directory                                                                                                      |
 
 The default *fmt* is %Y%m%d_%H%M%S
 
@@ -488,6 +490,13 @@ $ exiv2 --verbose --rename ':basename:_%d_%b_%Y' Stonehenge.jpg
 File 1/1: Stonehenge.jpg
 exiv2.exe: File `./Stonehenge_16_Jul_2015.jpg' exists. [O]verwrite, [r]ename or [s]kip? r
 Renaming file to ./Stonehenge_16_Jul_2015_1.jpg
+```
+
+If the filename contains a suffix, which shall be included in new filename:
+```
+$ exiv2 --verbose --rename '%d_%b_%Y:basesuffix:' Stonehenge.PANO.jpg
+File 1/1: Stonehenge.PANO.jpg
+Renaming file to '16_Jul_2015.PANO'.jpg
 ```
 
 <div id="adjust_time">
