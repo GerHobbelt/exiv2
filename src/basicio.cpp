@@ -39,6 +39,9 @@
 #include <fcntl.h>  // _O_BINARY in FileIo::FileIo
 #include <io.h>
 #include <windows.h>
+
+#undef min
+#undef max
 #endif
 namespace fs = std::filesystem;
 #endif

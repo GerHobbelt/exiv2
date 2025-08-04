@@ -6,6 +6,9 @@
 // Define to 1 if you want to use libcurl in httpIO.
 #define EXV_USE_CURL
 
+// Define to 1 if you want to enable filesystem access
+#define EXV_ENABLE_FILESYSTEM
+
 // Define if you require webready support.
 #define EXV_ENABLE_WEBREADY
 
@@ -16,10 +19,21 @@
 /* #undef EXV_HAVE_LIBINTL_H */
 
 // Define if you want translation of program messages to the user's native language
+#if !defined(BUILD_MONOLITHIC)
 #define EXV_ENABLE_NLS
+#endif
 
 // Define if you want to support video metadata
 #define EXV_ENABLE_VIDEO
+
+// Define if you want BMFF support.
+#define EXV_ENABLE_BMFF
+
+// Define if you want to use the inih library.
+#define EXV_ENABLE_INIH
+
+// Define if you have the std::format function.
+#define EXV_HAVE_STD_FORMAT
 
 // Define if you have the strerror_r function.
 /* #undef EXV_HAVE_STRERROR_R */
@@ -32,7 +46,17 @@
 
 /* Define to `const' or to empty, depending on the second argument of `iconv'. */
 /* #define ICONV_ACCEPTS_CONST_INPUT */
-#if defined(ICONV_ACCEPTS_CONST_INPUT) || defined(__NetBSD__)
+
+#if defined(__NetBSD__)
+#include <sys/param.h>
+#if __NetBSD_Prereq__(9,99,17)
+#define NETBSD_POSIX_ICONV 1
+#else
+#define NETBSD_POSIX_ICONV 0
+#endif
+#endif
+
+#if defined(ICONV_ACCEPTS_CONST_INPUT) || (defined(__NetBSD__) && !NETBSD_POSIX_ICONV)
 #define EXV_ICONV_CONST const
 #else
 #define EXV_ICONV_CONST
@@ -77,6 +101,9 @@
 // Define if you have the <process.h> header file.
 #define EXV_HAVE_PROCESS_H
 
+// Define if you have the brotli library.
+#define EXV_HAVE_BROTLI
+
 /* Define if you have (Exiv2/xmpsdk) Adobe XMP Toolkit. */
 #define EXV_HAVE_XMP_TOOLKIT
 
@@ -84,15 +111,15 @@
 #define EXV_PACKAGE_NAME "exiv2"
 
 /* Define to the full name and version of this package. */
-#define EXV_PACKAGE_STRING "exiv2 0.27.2"
+#define EXV_PACKAGE_STRING "exiv2 1.00.0.9"
 
 /* Define to the version of this package. */
-#define EXV_PACKAGE_VERSION "0.27.2"
+#define EXV_PACKAGE_VERSION "1.00.0.9"
 
-#define EXIV2_MAJOR_VERSION (0)
-#define EXIV2_MINOR_VERSION (27)
-#define EXIV2_PATCH_VERSION (2)
-#define EXIV2_TWEAK_VERSION ()
+#define EXIV2_MAJOR_VERSION (1)
+#define EXIV2_MINOR_VERSION (0)
+#define EXIV2_PATCH_VERSION (0)
+#define EXIV2_TWEAK_VERSION (9)
 
 // Definition to enable translation of Nikon lens names.
 #define EXV_HAVE_LENSDATA

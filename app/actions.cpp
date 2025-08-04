@@ -34,6 +34,9 @@
 #include <io.h>
 #include <sys/utime.h>
 #include <windows.h>
+
+#undef min
+#undef max
 #else
 #include <utime.h>
 #endif

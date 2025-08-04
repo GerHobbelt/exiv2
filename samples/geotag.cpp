@@ -403,7 +403,7 @@ bool readDir(const char* path, Options& options) {
   bool bResult = false;
 
 #ifdef _MSC_VER
-  DWORD attrs = GetFileAttributes(path);
+  DWORD attrs = GetFileAttributesA(path);
   bool bOKAttrs = attrs != INVALID_FILE_ATTRIBUTES;
   bool bIsDir = (attrs & FILE_ATTRIBUTE_DIRECTORY) ? true : false;
 
@@ -414,8 +414,8 @@ bool readDir(const char* path, Options& options) {
     strcpy_s(search, _MAX_PATH, path);
     strcat_s(search, _MAX_PATH, "\\*");
 
-    WIN32_FIND_DATA ffd;
-    HANDLE hFind = FindFirstFile(search, &ffd);
+    WIN32_FIND_DATAA ffd;
+    HANDLE hFind = FindFirstFileA(search, &ffd);
     BOOL bGo = hFind != INVALID_HANDLE_VALUE;
 
     if (bGo) {
@@ -428,7 +428,7 @@ bool readDir(const char* path, Options& options) {
             gFiles.push_back(std::move(pathName));
           }
         }
-        bGo = FindNextFile(hFind, &ffd) != 0;
+        bGo = FindNextFileA(hFind, &ffd) != 0;
       }
       // CloseHandle(hFind);
     }
