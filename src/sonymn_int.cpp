@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "config.h"
-
 // included header files
 #include "sonymn_int.hpp"
 
@@ -17,6 +15,7 @@
 
 #include <array>
 #include <cmath>
+#include <iomanip>
 
 // *****************************************************************************
 // class member definitions
@@ -526,9 +525,11 @@ constexpr TagDetails sonyModelId[] = {
     {398, "ILX-LR1"},
     {399, "ZV-E10M2"},
     {400, "ILCE-1M2"},
+    {401, "DSC-RX1RM3"},
     {402, "ILCE-6400A"},
     {403, "ILCE-6100A"},
     {404, "DSC-RX100M7A"},
+    {406, "ILME-FX2"},
     {408, "ZV-1A"},
 };
 

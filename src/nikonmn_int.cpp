@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 // included header files
 #include "nikonmn_int.hpp"
 
@@ -14,6 +16,7 @@
 // + standard includes
 #include <array>
 #include <cmath>
+#include <iomanip>
 
 // *****************************************************************************
 // class member definitions
@@ -1736,6 +1739,8 @@ constexpr TagDetails nikonZMountLensId[] = {
     {51, "Nikon Nikkor Z 35mm f/1.4"},
     {52, "Nikon Nikkor Z 50mm f/1.4"},
     {2305, "Laowa FFII 10mm F2.8 C&D Dreamer"},
+    {2820, "Viltrox AF 16mm F1.8"},
+    {2822, "Viltrox AF 20mm F2.8"},
     {53251, "Sigma 56mm F1.4 DC DN | C"},
     {57346, "Tamron 35-150mm F/2-2.8 Di III VXD"},
 };
@@ -3220,6 +3225,7 @@ std::ostream& Nikon3MakerNote::printLensId(std::ostream& os, const Value& value,
       {0x9F, 0x4C, 0x44, 0x44, 0x18, 0x18, 0xA1, 0x06, 0x00, 0x00, 0x00, "Yongnuo", "", "YN35mm F2N"},
       {0x9F, 0x48, 0x48, 0x48, 0x24, 0x24, 0xA1, 0x06, 0x00, 0x00, 0x00, "Yongnuo", "", "YN40mm F2.8N"},
       {0x9A, 0x4C, 0x50, 0x50, 0x14, 0x14, 0x9C, 0x06, 0x00, 0x00, 0x00, "Yongnuo", "", "YN50mm F1.8N"},
+      {0x9F, 0x4D, 0x50, 0x50, 0x14, 0x14, 0xA0, 0x06, 0x00, 0x00, 0x00, "Yongnuo", "", "YN50mm F1.8N"},
       {0x9F, 0x54, 0x68, 0x68, 0x18, 0x18, 0xA2, 0x06, 0x00, 0x00, 0x00, "Yongnuo", "", "YN100mm F2N"},
       //
       {0x02, 0x40, 0x44, 0x5C, 0x2C, 0x34, 0x02, 0x00, 0x00, 0x00, 0x00, "Exakta", "", "AF 35-70mm 1:3.5-4.5 MC"},
