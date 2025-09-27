@@ -2934,15 +2934,15 @@ std::ostream& printCsLensTypeByMetadata(std::ostream& os, const Value& value, co
       // anything at the start
       ".*?"
       // maybe min focal length and hyphen, surely max focal length e.g.: 24-70mm
-      "(?:([0-9]+)-)?([0-9]+)mm"
+      R"((?:(\d+)-)?(\d+)mm)"
       // anything in-between
       ".*?"
       // maybe short focal length max aperture and hyphen, surely at least single max aperture e.g.: f/4.5-5.6
       // short and tele indicate apertures at the short (focal_length_min) and tele (focal_length_max)
       // position of the lens
-      "(?:(?:f\\/)|T|F)(?:([0-9]+(?:\\.[0-9]+)?)-)?([0-9]+(?:\\.[0-9])?)"
+      R"((?:(?:f/)|T|F)(?:(\d+(?:\.\d+)?)-)?(\d+(?:\.\d)?))"
       // check if there is a teleconverter pattern e.g. + 1.4x
-      "(?:.*?\\+.*?([0-9.]+)x)?");
+      R"((?:.*?\+.*?(\d+(?:\.\d+)?)x)?)");
 
   bool unmatched = true;
   // we loop over all our lenses to print out all matching lenses
@@ -2967,8 +2967,8 @@ std::ostream& printCsLensTypeByMetadata(std::ostream& os, const Value& value, co
     auto aperMaxTele = string_to_float(base_match[4].str()) * tc;
     auto aperMaxShort = base_match[3].length() > 0 ? string_to_float(base_match[3].str()) * tc : aperMaxTele;
 
-    if (flMin != exifFlMin || flMax != exifFlMax || exifAperMax < (aperMaxShort - .1 * tc) ||
-        exifAperMax > (aperMaxTele + .1 * tc)) {
+    if (flMin != exifFlMin || flMax != exifFlMax || exifAperMax < (aperMaxShort - (.1 * tc)) ||
+        exifAperMax > (aperMaxTele + (.1 * tc))) {
       continue;
     }
 
